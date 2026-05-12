@@ -1,0 +1,7 @@
+pandas>=2.0
+langchain>=0.2
+langchain-community>=0.2
+faiss-cpu>=1.7
+sentence-transformers>=2.2
+pypdf>=4.0
+anthropic>=0.28        # optional: use with ChatAnthropic LLM
