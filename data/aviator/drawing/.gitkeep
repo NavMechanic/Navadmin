@@ -1,0 +1,10 @@
+# DOI & SOP Drawings Placeholder
+
+This directory is for the extracted contents of "DOI & SOP.zip" from the aviator drawing folder on Google Drive.
+
+To populate this directory:
+1. Download DOI_SOP.zip from: https://drive.google.com/drive/folders/16QUsfsiZc2MhCyFMrdyHYLA_huW8bX61
+2. Extract it here: unzip /path/to/DOI_SOP.zip -d .
+3. Commit the extracted files
+
+See ../README.md for more details.
