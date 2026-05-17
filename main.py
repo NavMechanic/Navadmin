@@ -46,6 +46,34 @@ def cmd_query(args) -> None:
     print()
 
 
+def cmd_ingest_drive(args) -> None:
+    """Ingest documents from the Aviator Google Drive folders."""
+    from rag.ingestion.drive_loader import AviatorDriveLoader
+    from rag.pipeline import RAGPipeline
+    from rag.chunking.strategies import ChunkingStrategy
+
+    pipeline = RAGPipeline()
+    loader = AviatorDriveLoader(credentials_path=args.credentials)
+
+    if args.local_mirror:
+        docs = loader.load_local_aviator_mirror(args.local_mirror)
+    else:
+        docs = loader.load_all_aviator()
+
+    print(f"Loaded {len(docs)} document(s) from Drive.")
+    if not docs:
+        print("No documents found — nothing to ingest.")
+        return
+
+    embedder = pipeline._embedder if pipeline.config.chunking.strategy == "semantic" else None
+    chunker = ChunkingStrategy(pipeline.config.chunking)
+    chunks = chunker.chunk(docs, embedder=embedder)
+    print(f"Created {len(chunks)} chunk(s). Embedding and storing …")
+    pipeline._vector_store.add_chunks(chunks)
+    pipeline._retriever.index_for_bm25(chunks)
+    print(f"Done. {len(chunks)} chunk(s) indexed from Aviator Drive data.")
+
+
 def cmd_reset(args) -> None:
     from rag.pipeline import RAGPipeline
 
@@ -85,6 +113,25 @@ def build_parser() -> argparse.ArgumentParser:
         help="Reference answer for context recall scoring",
     )
     query_parser.set_defaults(func=cmd_query)
+
+    # ingest-drive
+    drive_parser = subparsers.add_parser(
+        "ingest-drive",
+        help="Ingest Aviator documents from Google Drive",
+    )
+    drive_parser.add_argument(
+        "--credentials",
+        metavar="PATH",
+        default=None,
+        help="Path to Google service-account JSON (defaults to GOOGLE_APPLICATION_CREDENTIALS env var)",
+    )
+    drive_parser.add_argument(
+        "--local-mirror",
+        metavar="DIR",
+        default=None,
+        help="Load from a local directory mirror instead of the live Drive API (e.g. data/aviator)",
+    )
+    drive_parser.set_defaults(func=cmd_ingest_drive)
 
     # reset
     reset_parser = subparsers.add_parser(

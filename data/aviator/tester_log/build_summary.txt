@@ -1,0 +1,61 @@
+AVIATOR BUILD SUMMARY - AVIATOR26 INDIA (SA78F13406) - MODEL SA71
+Technology: ANDROID-AVIATOR26 | Family: AVIATOR26_INDIA
+Reporting Period: 12-MAY-2026 to 16-MAY-2026
+
+=== OVERALL SUMMARY (All Days) ===
+FE FTY: 100% | BE FTY: 100% | Total FTY: 100%
+
+Process Yields:
+  DEPTHVAL:  93.65% Yield | 1.59 DPHU | 63 handles (59 pass / 4 fail)
+  FODTEST:   97.40% Yield | 1.30 DPHU | 77 handles (75 pass / 2 fail)
+  L2AR:      78.08% Yield | 16.44 DPHU | 73 handles (57 pass / 16 fail)  [CRITICAL]
+  L2VISION:  96.00% Yield | 2.67 DPHU | 75 handles (72 pass / 3 fail)
+  LCDCAL:    100% Yield   | 0 DPHU | 76 handles (76 pass / 0 fail)
+  UCT:       90.00% Yield | 2.22 DPHU | 90 handles (81 pass / 9 fail)
+
+=== DEPTHVAL FAILURES ===
+1. REAR_MACRO_FOCUS_SCORE_AUTO (RMAFSA): 1 failure. Val 1487023 vs limit [1500000, 10000000]. NTF on retest.
+2. REAR_WIDE_FOCUS_SCORE_POSITION_40 (RWDFSP40): 1 failure. Val 2212483 vs limit [20000, 1500000].
+3. START_ACTIVITY_CAMERA2_FACTORY (STACCM2F): 1 failure. Android CommandResponseTimeout (-9069996). NTF on retest.
+4. ANDROID_TELL_CAMERA2_TAKE_PICTURE_REAR_MAIN_POS_10 (ATCTRM10): 1 failure. CommandResponseTimeout. NTF.
+
+=== FODTEST FAILURES ===
+1. ANDROID_CONNECT: CommandResponseTimeout (-9069996). NTF on retest.
+2. ANDROID_TELL_FINGERPRINT_SELF_TEST (ATFPCSFS): 1 defect. CommandResponseTimeout. Failed 3 retries.
+
+=== L2AR FAILURES (Top Issues) ===
+1. QC_LTE_BC01_TX_POWER_MCH_18300_ANT_CW (QL01T0M1): 6 failures, 8.22% fail rate, 8.22 DPHU. DEFECT.
+   Values range: -39.77 to 12.0 (limit 15-25). Multiple units failed L2_AR_020 and L2_AR_075.
+2. AUDIO_OUTPUT_EARPIECE_16K_HOHD_00140 (E1EH008C): 2 failures, NTF on retest.
+   Values: 25.60 and 27.64 vs UL 25.0.
+3. CAP2_COMP_ASM_VALUE_05 (CAPASMB6): 2 failures (defect). Values 57 and 58 vs limit [101.5, 188.5].
+4. MIC_1_LEVEL_DFT_SPEC_04100 (MB1D4100): 1 defect. Val -34.09 vs limit [-34, -26].
+5. MIC_1_LEVEL_DFT_SPEC_00300 (M1DD0300): 1 defect. Val -71.30 vs limit [-34, -26].
+6. QC_LTE_BC05_TX_POWER_MCH_20525_ANT_CW (QL05T0M1): 1 defect. Val 5.48 vs limit [15, 25].
+7. MIC_2_STATUS: SweepTimedOut (-9039635), NTF on retest.
+8. QC_NS_N78_RX_RSSI_C3_MCH_636667_ANT_CW (QN78R3M1): 1 NTF. Val -48.5 vs limit [-67, -53].
+
+=== L2VISION FAILURES ===
+1. CAMERA_ID_01_30CM_2DOT_FOCUS_MTF_SPEC (C30MTFD1): 1 defect. Val 0.386 vs LL 0.4.
+2. ROBOTMOVE_STATUS (RBMVS): SerialCommPortReceiveFromDeviceFailed (-9039860). NTF on retest.
+3. ANDROID_CAMERA2_CLOSE_CAMERA (ATLCAMCL): CommandResponseTimeout. 1 defect.
+
+=== UCT FAILURES ===
+1. WIRELESS_CHARGER_CHECK_FW_VERSION (WRCECFWV): 5 failures (1 defect, 4 NTF).
+   Error: Response '00000000' does not match expected '0001;' (-9039980).
+2. FPC_Connection_Test_RESPONE_STATUS (FPCCTRSP): 2 failures. String Mismatch: Total_Result=false. NTF on retest.
+3. battery ID match spec: 1 defect. Val=1 (fail=true). Persisted on retest.
+4. CHECK_BATTERY_TURBO_CHARGE_RATE_90W (BATTTC90): 1 NTF. Val=0 vs expected 90.
+
+=== DAILY BREAKDOWN ===
+12-MAY-26: UCT 100% (1 unit)
+13-MAY-26: UCT 88.24% (2 WIRELESS_CHARGER_CHECK_FW_VERSION NTF)
+14-MAY-26: DEPTHVAL 85.71%, L2AR 72.22% (BC01 TX power 3 defects), UCT 87.5%
+15-MAY-26: DEPTHVAL 93.94%, FODTEST 96.3%, L2AR 78.43% (BC01 TX power, CAP2), UCT 91.49%
+16-MAY-26: L2VISION 80% (CAMERA2_CLOSE_CAMERA defect); All other processes 100%
+
+=== KEY ACTION ITEMS ===
+- L2AR: QC_LTE_BC01_TX_POWER (LTE Band 1, TX at 18300 MHz ch) — antenna/RF calibration issue. Multiple units OOL.
+- L2AR: CAP2_COMP_ASM_VALUE_05 — capacitance assembly value out of spec.
+- UCT: WIRELESS_CHARGER_FW_VERSION — WLC firmware returning 0x00000000 instead of 0x0001.
+- UCT: battery ID match — battery authentication failure. Possible battery/system pairing issue.

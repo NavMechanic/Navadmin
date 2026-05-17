@@ -1,0 +1,73 @@
+SPECIFICATION - MICRO SPEAKER
+MODEL: XHSR121009LY-07-RH
+SUPPLIER: ZHEJIANG HAOSHENG ELECTRONIC TECHNOLOGY CO.,LTD.
+ISSUE: A/2, DATE: 2024-11-02
+
+1. PRODUCT OUTLINE
+Scope: Typical speaker unit for telephone handset
+Net Weight: Approx 0.97 grams
+Operating Temperature Range: -30C to +70C without loss of function
+Storage Temperature Range: -40C to +85C
+
+2. ELECTROACOUSTIC CHARACTERISTICS
+Impedance: AC 7 ±15% ohm (at 2KHz, free air); DC 6 ±10% ohm
+Sound Pressure Level:
+  RCV: 126 ±2dB at 1KHz (0.59V, Type 3.2HL)
+  SPK: 92 ±2dB at 2KHz (EQ power, 10cm, 5cc box); 85±3dB at 500Hz
+Bass Resonance Frequency: 600±80 Hz in free air, 0.59V
+Rated Power: RCV 50mW (0.59V); SPK: EQ Input Power
+
+3. GENERAL RELIABILITY
+Temperature Shock: -40°C to +85°C, 15min each, 30 cycles
+Humidity: +70°C, 95% RH, 120 hours (no bias)
+Random Vibration: 20-2000 Hz, +3dB/oct 20-80Hz, 8g RMS 80-350Hz, -3dB/oct 350-2000Hz, 15min/plane
+Sinusoidal Vibration: 10-2000Hz, 0.06" double amplitude, 15g, 2hr/plane
+Mechanical Shock: 3000g ±15%, 0.3ms pulse, 6 directions
+Drop Test: 1.67m (5 feet), 3x per direction, 18 total drops
+Operating Life: +70°C, 96 hours, rated power
+RST: 48 samples, +25°C, 96 hours, f0±50Hz sweep
+Waterproof: IPX8, 1.5m depth, 30 minutes
+Air Leak: 20KPa, <50Pa loss
+
+4. MECHANICAL LAYOUT
+Parts:
+  1: Frame (PPA)
+  2: Pole Piece ring (SPCC) - Hongxingzi/Ruilinda
+  3: Yoke (SPCC) - Hongxingzi
+  4: Magnet N55H x3 - Youyan/Zhongzhen
+  5: Pole Piece (SPCC)
+  6: Diaphragm (PEEK) x3
+  7: Dome (PMI+Al) - Yindechang/Xunshuoo/Yuda
+  8: Voice Coil RCW ETP18 0.062 - Yilisule
+  9: FPC PI+Copper x2 - Zhongsheng/Tongnuo
+  10: Cover Cu - Shishang/Hongxingzi/Hexingyuan
+  11: Front Mesh HYM075TW - Jienuo/Xutai/Youpake
+  12: Back Mesh HYM080TW x4
+  13: FPC PI+Copper - Zhongsheng
+
+Permitted Forces:
+  Side 1 to Side 3: 10N max
+  Side 2 to Side 4: 10N max
+  Front Cover to Back of frame: 15N max
+  Pull force (yoke/cover): 10N max
+
+Holding Pressure: ≤35N, ≤20 seconds
+
+5. SPK MODE FREQUENCY RESPONSE (Table 1, selected limits)
+  200Hz: 65-75dB; 500Hz: 81-90dB; 1000Hz: 90-97dB; 2000Hz: 90-94dB; 5000Hz: 88-96dB
+  CPK>1.33 required at 500Hz, 800Hz, 2KHz
+
+6. SPK MODE THD LIMITS (Table 2)
+  200Hz: 83% max; 500Hz: 28% max; 1000Hz: 12% max; 2000Hz: 8% max
+
+7. RCV MODE FREQUENCY RESPONSE (Table 5, selected)
+  200Hz: 95-106dB; 1000Hz: 124-128dB; 2000Hz: 117-128dB; 5000Hz: 101-119dB
+
+8. T/S PARAMETERS
+  Re: 6.1 ohm; Le: 0.021mH; BL: 0.462N/A; D0: 9.77mm
+  Mm: 0.042g; F0: 591.4Hz; Qms: 3.504; Xmax: 0.45mm; Sd: 75mm²
+  Tmax: 100°; Tcoeff: 0.00393
+
+9. PACKAGE
+  50 pcs/tray; 40 trays/carton; 2000 pcs/carton
+  Gross Weight: 7KGS; Net Weight: 2.05KGS
