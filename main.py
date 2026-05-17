@@ -12,14 +12,90 @@ def cmd_ingest(args) -> None:
     print(f"Ingested {count} chunk(s) from: {args.path}")
 
 
+def cmd_ingest_telemetry(args) -> None:
+    """Parse NexTest tester log files and index as structured failure events."""
+    from rag.pipeline import RAGPipeline
+
+    pipeline = RAGPipeline()
+    count = pipeline.ingest_telemetry(args.path)
+    print(f"Ingested {count} telemetry chunk(s) from: {args.path}")
+
+
+def cmd_ingest_fea(args) -> None:
+    """Parse FEA mesh JSON/CSV and index stress voxels."""
+    from rag.pipeline import RAGPipeline
+
+    pipeline = RAGPipeline()
+    count = pipeline.ingest_fea(args.path)
+    print(f"Ingested {count} FEA voxel chunk(s) from: {args.path}")
+
+
+def cmd_ingest_cad(args) -> None:
+    """Parse STEP file or CAD JSON manifest and index components."""
+    from rag.pipeline import RAGPipeline
+
+    pipeline = RAGPipeline()
+    count = pipeline.ingest_cad(args.path)
+    print(f"Ingested {count} CAD component chunk(s) from: {args.path}")
+
+
+def _parse_spatial_bbox(bbox_str: str) -> dict:
+    """Parse 'x_min,x_max,y_min,y_max,z_min,z_max' into bbox dict."""
+    parts = [float(p.strip()) for p in bbox_str.split(",")]
+    if len(parts) != 6:
+        raise ValueError(
+            "Spatial bbox must be 6 comma-separated floats: x_min,x_max,y_min,y_max,z_min,z_max"
+        )
+    return {
+        "x_axis_range": [parts[0], parts[1]],
+        "y_axis_range": [parts[2], parts[3]],
+        "z_axis_range": [parts[4], parts[5]],
+    }
+
+
+def _parse_telemetry_event_arg(te_arg: str):
+    """Parse '<log_file>:<track_id>' into a TelemetryEvent by scanning the log file."""
+    from rag.ingestion.telemetry_parser import TelemetryParser
+
+    if ":" not in te_arg:
+        print(f"Warning: --telemetry-event should be 'log_file:track_id', got: {te_arg}")
+        return None
+
+    log_path, track_id = te_arg.rsplit(":", 1)
+    parser = TelemetryParser()
+    events = parser.parse_log_file(log_path)
+    matched = [e for e in events if e.track_id == track_id]
+
+    if not matched:
+        print(f"Warning: no failure event found for track_id={track_id} in {log_path}")
+        return None
+
+    return matched[0]
+
+
 def cmd_query(args) -> None:
     from rag.pipeline import RAGPipeline
 
     pipeline = RAGPipeline()
+
+    spatial_bbox = None
+    if getattr(args, "spatial_bbox", None):
+        try:
+            spatial_bbox = _parse_spatial_bbox(args.spatial_bbox)
+        except ValueError as exc:
+            print(f"Error parsing --spatial-bbox: {exc}", file=sys.stderr)
+            sys.exit(1)
+
+    telemetry_event = None
+    if getattr(args, "telemetry_event", None):
+        telemetry_event = _parse_telemetry_event_arg(args.telemetry_event)
+
     result = pipeline.query(
         question=args.question,
         evaluate=args.evaluate,
         ground_truth=args.ground_truth,
+        spatial_bbox=spatial_bbox,
+        telemetry_event=telemetry_event,
     )
 
     print("\n" + "=" * 60)
@@ -96,6 +172,36 @@ def build_parser() -> argparse.ArgumentParser:
     ingest_parser.add_argument("path", help="Path to a file or directory to ingest")
     ingest_parser.set_defaults(func=cmd_ingest)
 
+    # ingest-telemetry
+    ingest_tel_parser = subparsers.add_parser(
+        "ingest-telemetry",
+        help="Parse NexTest tester log files and index as structured failure events",
+    )
+    ingest_tel_parser.add_argument(
+        "path", help="Path to a NexTest .log/.txt file or directory of log files"
+    )
+    ingest_tel_parser.set_defaults(func=cmd_ingest_telemetry)
+
+    # ingest-fea
+    ingest_fea_parser = subparsers.add_parser(
+        "ingest-fea",
+        help="Parse FEA mesh JSON/CSV and index stress voxels",
+    )
+    ingest_fea_parser.add_argument(
+        "path", help="Path to FEA mesh file (.json or .csv)"
+    )
+    ingest_fea_parser.set_defaults(func=cmd_ingest_fea)
+
+    # ingest-cad
+    ingest_cad_parser = subparsers.add_parser(
+        "ingest-cad",
+        help="Parse STEP file or CAD JSON manifest and index components",
+    )
+    ingest_cad_parser.add_argument(
+        "path", help="Path to STEP file (.stp/.step) or CAD JSON manifest (.json)"
+    )
+    ingest_cad_parser.set_defaults(func=cmd_ingest_cad)
+
     # query
     query_parser = subparsers.add_parser(
         "query", help="Ask a question against the indexed documents"
@@ -111,6 +217,18 @@ def build_parser() -> argparse.ArgumentParser:
         metavar="TEXT",
         default=None,
         help="Reference answer for context recall scoring",
+    )
+    query_parser.add_argument(
+        "--spatial-bbox",
+        metavar="x_min,x_max,y_min,y_max,z_min,z_max",
+        default=None,
+        help="Spatial bounding box filter for FEA/CAD queries (6 comma-separated floats)",
+    )
+    query_parser.add_argument(
+        "--telemetry-event",
+        metavar="LOG_FILE:TRACK_ID",
+        default=None,
+        help="Load a specific failure event from a log file for RCA prompt (format: path:track_id)",
     )
     query_parser.set_defaults(func=cmd_query)
 

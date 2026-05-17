@@ -44,6 +44,46 @@ class Retriever:
         if self._bm25_corpus:
             self._bm25 = BM25Okapi(self._bm25_corpus)
 
+    def rebuild_bm25_from_store(self) -> None:
+        """Rebuild the BM25 index by scrolling all documents from the vector store.
+
+        Use this after switching to a new vector store backend (e.g. Qdrant)
+        to restore hybrid retrieval without re-ingesting documents.
+        """
+        self._bm25_corpus = []
+        self._bm25_ids = []
+        self._bm25 = None
+
+        count = self.vector_store.get_collection_count()
+        if count == 0:
+            return
+
+        # Scroll all points from the Qdrant collection
+        try:
+            scroll_result = self.vector_store._client.scroll(
+                collection_name=self.vector_store.config.collection_name,
+                limit=count,
+                with_payload=True,
+                with_vectors=False,
+            )
+            points = scroll_result[0]
+        except Exception:
+            # Fall back gracefully if the store doesn't support scroll
+            return
+
+        for point in points:
+            payload = point.payload or {}
+            text = payload.get("text", "")
+            chunk_index = payload.get("chunk_index", str(point.id))
+            chunk_id = f"chunk_{chunk_index}"
+            if text:
+                tokenized = text.lower().split()
+                self._bm25_corpus.append(tokenized)
+                self._bm25_ids.append(chunk_id)
+
+        if self._bm25_corpus:
+            self._bm25 = BM25Okapi(self._bm25_corpus)
+
     # ------------------------------------------------------------------
     # Public interface
     # ------------------------------------------------------------------
