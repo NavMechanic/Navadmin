@@ -158,6 +158,39 @@ def cmd_reset(args) -> None:
     print("Vector index has been reset.")
 
 
+def cmd_twin_simulate(args) -> None:
+    """Run a batch simulation of the Digital Twin and print results."""
+    from rag.digital_twin.twin import DigitalTwin
+
+    rag_pipeline = None
+    if getattr(args, "with_rag", False):
+        from rag.pipeline import RAGPipeline
+        rag_pipeline = RAGPipeline()
+
+    twin = DigitalTwin(rag_pipeline=rag_pipeline)
+    print(f"Running batch simulation ({args.n} cycles)…")
+    twin.run_batch_simulation(n=args.n)
+
+    print(f"\nPredicted yield:  {twin.yield_rate() * 100:.1f}%")
+    fm = twin.top_failure_modes()
+    if fm:
+        print("\nPredicted failure mode Pareto:")
+        for code, count in fm.items():
+            print(f"  {count:3d}x  {code}")
+    else:
+        print("No predicted failures.")
+
+
+def cmd_twin_dashboard(args) -> None:
+    """Launch the Streamlit digital twin dashboard."""
+    import subprocess, sys
+
+    cmd = [sys.executable, "-m", "streamlit", "run", "dashboard/app.py"]
+    if getattr(args, "with_rag", False):
+        cmd += ["--", "--with-rag"]
+    subprocess.run(cmd)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="navadmin-rag",
@@ -256,6 +289,32 @@ def build_parser() -> argparse.ArgumentParser:
         "reset", help="Clear the vector index"
     )
     reset_parser.set_defaults(func=cmd_reset)
+
+    # twin-simulate
+    twin_sim_parser = subparsers.add_parser(
+        "twin-simulate",
+        help="Run a Digital Twin batch simulation and print predicted yield",
+    )
+    twin_sim_parser.add_argument(
+        "-n", type=int, default=50,
+        help="Number of simulated assembly cycles (default: 50)",
+    )
+    twin_sim_parser.add_argument(
+        "--with-rag", action="store_true",
+        help="Connect the RAG pipeline for contextual RCA output",
+    )
+    twin_sim_parser.set_defaults(func=cmd_twin_simulate)
+
+    # twin-dashboard
+    twin_dash_parser = subparsers.add_parser(
+        "twin-dashboard",
+        help="Launch the Streamlit digital twin live dashboard",
+    )
+    twin_dash_parser.add_argument(
+        "--with-rag", action="store_true",
+        help="Enable RAG-powered RCA panel in the dashboard",
+    )
+    twin_dash_parser.set_defaults(func=cmd_twin_dashboard)
 
     return parser
 

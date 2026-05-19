@@ -10,3 +10,8 @@ tiktoken>=0.7.0
 google-api-python-client>=2.100.0
 google-auth-httplib2>=0.2.0
 google-auth-oauthlib>=1.1.0
+# Phase 2 — Digital Twin Platform
+streamlit>=1.35.0
+plotly>=5.22.0
+# MQTT broker (optional — required for live PLC streaming)
+paho-mqtt>=2.0.0
