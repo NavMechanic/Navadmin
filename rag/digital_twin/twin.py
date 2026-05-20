@@ -16,6 +16,7 @@ from rag.digital_twin.nodes.press_node import PressNode, PressReading, PressPred
 if TYPE_CHECKING:
     from rag.pipeline import RAGPipeline
     from rag.fmea.fmea import FMEAAssessment
+    from rag.ipc.ipc_a610g import IPCInspector, IPCInspectionResult
 
 
 @dataclass
@@ -29,13 +30,23 @@ class TwinSnapshot:
     overall_risk: str          # "PASS" / "RISK" / "FAIL"
     risk_score: float          # 0.0–1.0
     flagged_tests: list[str]   # predicted failing test codes
-    rag_context: Optional[str] = None   # relevant doc snippets from RAG
-    triggered_fmea_ids: list[str] = field(default_factory=list)  # matched FMEA item IDs
-    triggered_fmea_rpn: list[int] = field(default_factory=list)   # corresponding RPNs
+    rag_context: Optional[str] = None
+    triggered_fmea_ids: list[str] = field(default_factory=list)
+    triggered_fmea_rpn: list[int] = field(default_factory=list)
+    ipc_defects: int = 0                            # IPC-A-610G Defect count
+    ipc_process_indicators: int = 0                 # IPC-A-610G PI count
+    ipc_results: list = field(default_factory=list) # list[IPCInspectionResult]
 
     def to_dict(self) -> dict:
         d = asdict(self)
         d["timestamp"] = self.timestamp.isoformat()
+        # IPCInspectionResult objects are not auto-serialisable — convert to strings
+        d["ipc_results"] = [
+            {"section": r.criteria_section, "title": r.criteria_title,
+             "stage": r.assembly_stage, "value": r.measured_value,
+             "units": r.units, "condition": r.condition.value}
+            for r in self.ipc_results
+        ] if self.ipc_results else []
         return d
 
     def to_json(self) -> str:
@@ -72,6 +83,7 @@ class DigitalTwin:
         config: TwinConfig = None,
         rag_pipeline: Optional["RAGPipeline"] = None,
         fmea_assessment: Optional["FMEAAssessment"] = None,
+        ipc_inspector: Optional["IPCInspector"] = None,
     ) -> None:
         self.config = config or TwinConfig()
         self.node_a = FasteningNode()
@@ -79,7 +91,9 @@ class DigitalTwin:
         self.node_c = PressNode()
         self._rag = rag_pipeline
         self._fmea = fmea_assessment
+        self._ipc = ipc_inspector
         self._history: list[TwinSnapshot] = []
+        self._ipc_history: list[list] = []  # parallel list of IPC results per snapshot
 
     # ------------------------------------------------------------------
     # Core prediction
@@ -117,6 +131,16 @@ class DigitalTwin:
             triggered_fmea_ids = [item.item_id for item in triggered]
             triggered_fmea_rpn = [item.rpn for item in triggered]
 
+        # IPC-A-610G inspection
+        ipc_results = []
+        ipc_defects = 0
+        ipc_pis = 0
+        if self._ipc is not None:
+            ipc_results = self._ipc.inspect(pred_a, pred_b, pred_c)
+            ipc_defects = self._ipc.defect_count(ipc_results)
+            ipc_pis = self._ipc.process_indicator_count(ipc_results)
+            self._ipc_history.append(ipc_results)
+
         snap = TwinSnapshot(
             snapshot_id=f"SNAP_{datetime.utcnow().strftime('%Y%m%d_%H%M%S_%f')}",
             timestamp=datetime.utcnow(),
@@ -129,9 +153,16 @@ class DigitalTwin:
             rag_context=rag_context,
             triggered_fmea_ids=triggered_fmea_ids,
             triggered_fmea_rpn=triggered_fmea_rpn,
+            ipc_defects=ipc_defects,
+            ipc_process_indicators=ipc_pis,
+            ipc_results=ipc_results,
         )
         self._history.append(snap)
         return snap
+
+    def ipc_variability_history(self) -> list[list]:
+        """IPC results per snapshot, for variability heatmap."""
+        return self._ipc_history
 
     # ------------------------------------------------------------------
     # Batch simulation (no live PLC needed)

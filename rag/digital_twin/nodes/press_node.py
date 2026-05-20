@@ -63,6 +63,9 @@ class PressPrediction:
     ip68_outcome: str            # "PASS" | "FAIL"
     combined_outcome: str        # "PASS" only if both PASS
     confidence: float            # 0.0 – 1.0
+    # IPC-A-610G proxy metrics (process-fixture-aware, correctly scaled)
+    warp_proxy_mm: float = 0.0   # §14.5.1 proxy: |gap - nominal| in mm
+    stress_index: float = 0.0    # §14.5.3 proxy: bending stress / nominal (1.0 = nominal force)
 
 
 # ---------------------------------------------------------------------------
@@ -288,6 +291,16 @@ class PressNode:
             else 0.70
         )
 
+        # IPC-A-610G proxy metrics
+        # §14.5.1 warp proxy: gap clearance deviation from nominal (fixture-aware)
+        warp_proxy = abs(gap_clearance_mm - self.nominal_gap_mm)
+        # §14.5.3 stress index: normalised relative to nominal press force bending
+        # Normalise against inlay nominal (1400 N), not display press nominal
+        inlay_nominal_stress = self.compute_bending_stress(
+            1400.0, self.pcb_length_mm, self.pcb_thickness_mm
+        )
+        stress_index = bending_stress_mpa / inlay_nominal_stress if inlay_nominal_stress > 0 else 1.0
+
         return PressPrediction(
             deflection_mm=round(deflection_mm, 6),
             bending_stress_mpa=round(bending_stress_mpa, 4),
@@ -297,6 +310,8 @@ class PressNode:
             ip68_outcome=ip68_outcome,
             combined_outcome=combined_outcome,
             confidence=confidence,
+            warp_proxy_mm=round(warp_proxy, 6),
+            stress_index=round(stress_index, 4),
         )
 
     # ------------------------------------------------------------------

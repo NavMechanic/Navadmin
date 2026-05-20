@@ -239,6 +239,61 @@ def cmd_fmea_check_twin(args) -> None:
     print(twin.fmea_report())
 
 
+def cmd_ipc_check(args) -> None:
+    """Run IPC-A-610G inspection against a single nominal or batch prediction."""
+    from rag.ipc.ipc_a610g import IPCInspector, IPCClass
+    from rag.digital_twin.twin import DigitalTwin
+    from rag.fmea.fmea import load_pfmea_csv, load_dfmea_csv, FMEAAssessment
+    from pathlib import Path
+
+    inspector = IPCInspector(ipc_class=IPCClass.CLASS_2)
+
+    pfmea_path = "data/PFMEA_Aviator_Assembly.csv"
+    dfmea_path = "data/DFMEA_Aviator_Design.csv"
+    fmea = None
+    if Path(pfmea_path).exists() and Path(dfmea_path).exists():
+        fmea = FMEAAssessment(load_pfmea_csv(pfmea_path), load_dfmea_csv(dfmea_path))
+
+    twin = DigitalTwin(fmea_assessment=fmea, ipc_inspector=inspector)
+    n = args.n
+    print(f"Running IPC-A-610G inspection across {n} simulated cycles…\n")
+    twin.run_batch_simulation(n=n)
+
+    # Show last snapshot IPC report
+    last = twin._history[-1]
+    if last.ipc_results:
+        print(inspector.format_report(last.ipc_results))
+    else:
+        print("No IPC results — check that IPCInspector is wired up.")
+
+    # Aggregate variability summary
+    all_ipc = twin._ipc_history
+    if all_ipc:
+        print(f"\n=== Process Variability Summary ({n} cycles) ===")
+        from collections import Counter
+        all_conditions = [r.condition.value for cycle in all_ipc for r in cycle]
+        counts = Counter(all_conditions)
+        for cond in ("Target", "Acceptable", "Process Indicator", "Defect"):
+            pct = counts.get(cond, 0) / len(all_conditions) * 100 if all_conditions else 0
+            print(f"  {cond:20s}: {counts.get(cond,0):4d}  ({pct:.1f}%)")
+
+        print("\nMost variable IPC criteria (highest Defect+PI rate):")
+        from collections import defaultdict
+        section_counts = defaultdict(lambda: {"Defect": 0, "PI": 0, "total": 0})
+        for cycle in all_ipc:
+            for r in cycle:
+                section_counts[r.criteria_section]["total"] += 1
+                if r.condition.value == "Defect":
+                    section_counts[r.criteria_section]["Defect"] += 1
+                elif r.condition.value == "Process Indicator":
+                    section_counts[r.criteria_section]["PI"] += 1
+        ranked = sorted(section_counts.items(),
+                        key=lambda x: -(x[1]["Defect"] + x[1]["PI"]))
+        for sec, c in ranked[:5]:
+            bad_rate = (c["Defect"] + c["PI"]) / c["total"] * 100
+            print(f"  §{sec}: {bad_rate:.1f}% Defect+PI rate")
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="navadmin-rag",
@@ -401,6 +456,17 @@ def build_parser() -> argparse.ArgumentParser:
         help="Path to DFMEA CSV",
     )
     fmea_check_parser.set_defaults(func=cmd_fmea_check_twin)
+
+    # ipc-check
+    ipc_parser = subparsers.add_parser(
+        "ipc-check",
+        help="Run IPC-A-610G Class 2 inspection against simulated assembly cycles",
+    )
+    ipc_parser.add_argument(
+        "-n", type=int, default=50,
+        help="Number of simulated cycles (default: 50)",
+    )
+    ipc_parser.set_defaults(func=cmd_ipc_check)
 
     return parser
 
