@@ -15,6 +15,7 @@ from rag.digital_twin.nodes.press_node import PressNode, PressReading, PressPred
 
 if TYPE_CHECKING:
     from rag.pipeline import RAGPipeline
+    from rag.fmea.fmea import FMEAAssessment
 
 
 @dataclass
@@ -29,6 +30,8 @@ class TwinSnapshot:
     risk_score: float          # 0.0–1.0
     flagged_tests: list[str]   # predicted failing test codes
     rag_context: Optional[str] = None   # relevant doc snippets from RAG
+    triggered_fmea_ids: list[str] = field(default_factory=list)  # matched FMEA item IDs
+    triggered_fmea_rpn: list[int] = field(default_factory=list)   # corresponding RPNs
 
     def to_dict(self) -> dict:
         d = asdict(self)
@@ -60,18 +63,22 @@ class DigitalTwin:
 
     Optionally links to the RAG pipeline to pull relevant design/process docs
     alongside each prediction, enabling contextual RCA.
+
+    Can also assess PFMEA and DFMEA checklists against predicted failures.
     """
 
     def __init__(
         self,
         config: TwinConfig = None,
         rag_pipeline: Optional["RAGPipeline"] = None,
+        fmea_assessment: Optional["FMEAAssessment"] = None,
     ) -> None:
         self.config = config or TwinConfig()
         self.node_a = FasteningNode()
         self.node_b = DispensingNode()
         self.node_c = PressNode()
         self._rag = rag_pipeline
+        self._fmea = fmea_assessment
         self._history: list[TwinSnapshot] = []
 
     # ------------------------------------------------------------------
@@ -98,6 +105,18 @@ class DigitalTwin:
         if query_rag and self._rag is not None:
             rag_context = self._fetch_rag_context(pred_a, pred_b, pred_c, flagged)
 
+        # Assess FMEA items if available
+        triggered_fmea_ids = []
+        triggered_fmea_rpn = []
+        if self._fmea is not None:
+            risky_nodes = [n for n in ("A_FASTENING", "B_DISPENSING", "C_PRESS")
+                          if (n == "A_FASTENING" and pred_a.test_outcome in ("RISK", "FAIL")) or
+                             (n == "B_DISPENSING" and pred_b.test_outcome in ("RISK", "FAIL")) or
+                             (n == "C_PRESS" and pred_c.combined_outcome in ("RISK", "FAIL"))]
+            triggered = self._fmea.triggered_items(flagged, risky_nodes)
+            triggered_fmea_ids = [item.item_id for item in triggered]
+            triggered_fmea_rpn = [item.rpn for item in triggered]
+
         snap = TwinSnapshot(
             snapshot_id=f"SNAP_{datetime.utcnow().strftime('%Y%m%d_%H%M%S_%f')}",
             timestamp=datetime.utcnow(),
@@ -108,6 +127,8 @@ class DigitalTwin:
             risk_score=round(risk_score, 4),
             flagged_tests=flagged,
             rag_context=rag_context,
+            triggered_fmea_ids=triggered_fmea_ids,
+            triggered_fmea_rpn=triggered_fmea_rpn,
         )
         self._history.append(snap)
         return snap
@@ -163,6 +184,55 @@ class DigitalTwin:
             return "RAG pipeline not connected. Initialise DigitalTwin with rag_pipeline=RAGPipeline()."
         result = self._rag.query(question)
         return result.answer
+
+    # ------------------------------------------------------------------
+    # FMEA integration
+    # ------------------------------------------------------------------
+
+    def fmea_report(self) -> str:
+        """Generate FMEA assessment report based on all snapshots in history."""
+        if self._fmea is None:
+            return "FMEA assessment not initialised."
+
+        # Collect all triggered FMEA items from history
+        all_triggered = {}
+        for snap in self._history:
+            for fid, rpn in zip(snap.triggered_fmea_ids, snap.triggered_fmea_rpn):
+                if fid not in all_triggered:
+                    all_triggered[fid] = rpn
+
+        if not all_triggered:
+            return "No FMEA items triggered across all snapshots."
+
+        # Look up items
+        item_map = {item.item_id: item for item in self._fmea.all_items}
+        triggered_items = [item_map[fid] for fid in all_triggered if fid in item_map]
+        triggered_items.sort(key=lambda x: -x.rpn)
+
+        lines = [
+            "=" * 80,
+            "FMEA Risk Assessment Report",
+            "=" * 80,
+            f"Cycles analyzed: {len(self._history)}",
+            f"High-risk FMEA items triggered: {len(triggered_items)}",
+            "",
+        ]
+
+        for item in triggered_items[:20]:  # Top 20
+            lines.append(f"[{item.item_id}] {item.failure_mode}")
+            lines.append(f"  RPN: {item.severity}×{item.occurrence}×{item.detection} = {item.rpn}")
+            lines.append(f"  Effects: {item.effects}")
+            lines.append(f"  Recommended action: {item.recommended_actions}")
+            lines.append(f"  Owner: {item.responsibility}")
+            lines.append("")
+
+        return "\n".join(lines)
+
+    def high_risk_fmea(self, rpn_threshold: int = 100) -> list:
+        """Return high-RPN FMEA items from the assessment."""
+        if self._fmea is None:
+            return []
+        return self._fmea.high_rpn_items(threshold=rpn_threshold)
 
     # ------------------------------------------------------------------
     # Internal helpers

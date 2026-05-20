@@ -191,6 +191,54 @@ def cmd_twin_dashboard(args) -> None:
     subprocess.run(cmd)
 
 
+def cmd_fmea_assess(args) -> None:
+    """Assess PFMEA and DFMEA checklists and print high-risk items."""
+    from rag.fmea.fmea import load_pfmea_csv, load_dfmea_csv, FMEAAssessment
+    from pathlib import Path
+
+    pfmea_path = args.pfmea or "data/PFMEA_Aviator_Assembly.csv"
+    dfmea_path = args.dfmea or "data/DFMEA_Aviator_Design.csv"
+
+    if not Path(pfmea_path).exists() or not Path(dfmea_path).exists():
+        print(f"Error: FMEA files not found at {pfmea_path} and {dfmea_path}")
+        return
+
+    pfmea = load_pfmea_csv(pfmea_path)
+    dfmea = load_dfmea_csv(dfmea_path)
+    assessment = FMEAAssessment(pfmea, dfmea)
+
+    print(assessment.to_report())
+
+    high_rpn = assessment.high_rpn_items(threshold=args.rpn_threshold)
+    print(f"\nTotal items with RPN >= {args.rpn_threshold}: {len(high_rpn)}")
+
+
+def cmd_fmea_check_twin(args) -> None:
+    """Run digital twin batch sim and show FMEA items triggered by predicted failures."""
+    from rag.fmea.fmea import load_pfmea_csv, load_dfmea_csv, FMEAAssessment
+    from rag.digital_twin.twin import DigitalTwin
+    from pathlib import Path
+
+    pfmea_path = args.pfmea or "data/PFMEA_Aviator_Assembly.csv"
+    dfmea_path = args.dfmea or "data/DFMEA_Aviator_Design.csv"
+
+    if not Path(pfmea_path).exists() or not Path(dfmea_path).exists():
+        print(f"Error: FMEA files not found")
+        return
+
+    pfmea = load_pfmea_csv(pfmea_path)
+    dfmea = load_dfmea_csv(dfmea_path)
+    assessment = FMEAAssessment(pfmea, dfmea)
+    twin = DigitalTwin(fmea_assessment=assessment)
+
+    print(f"Running twin batch simulation ({args.n} cycles) with FMEA assessment…")
+    twin.run_batch_simulation(n=args.n)
+
+    print(f"\nPredicted yield: {twin.yield_rate() * 100:.1f}%")
+    print(f"\nFMEA Assessment:")
+    print(twin.fmea_report())
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="navadmin-rag",
@@ -315,6 +363,44 @@ def build_parser() -> argparse.ArgumentParser:
         help="Enable RAG-powered RCA panel in the dashboard",
     )
     twin_dash_parser.set_defaults(func=cmd_twin_dashboard)
+
+    # fmea-assess
+    fmea_assess_parser = subparsers.add_parser(
+        "fmea-assess",
+        help="Assess PFMEA and DFMEA checklists and print high-risk items",
+    )
+    fmea_assess_parser.add_argument(
+        "--pfmea", type=str, default=None,
+        help="Path to PFMEA CSV (default: data/PFMEA_Aviator_Assembly.csv)",
+    )
+    fmea_assess_parser.add_argument(
+        "--dfmea", type=str, default=None,
+        help="Path to DFMEA CSV (default: data/DFMEA_Aviator_Design.csv)",
+    )
+    fmea_assess_parser.add_argument(
+        "--rpn-threshold", type=int, default=100,
+        help="RPN threshold for high-risk items (default: 100)",
+    )
+    fmea_assess_parser.set_defaults(func=cmd_fmea_assess)
+
+    # fmea-check-twin
+    fmea_check_parser = subparsers.add_parser(
+        "fmea-check-twin",
+        help="Run digital twin batch sim and show FMEA items triggered by predicted failures",
+    )
+    fmea_check_parser.add_argument(
+        "-n", type=int, default=50,
+        help="Number of simulated cycles (default: 50)",
+    )
+    fmea_check_parser.add_argument(
+        "--pfmea", type=str, default=None,
+        help="Path to PFMEA CSV",
+    )
+    fmea_check_parser.add_argument(
+        "--dfmea", type=str, default=None,
+        help="Path to DFMEA CSV",
+    )
+    fmea_check_parser.set_defaults(func=cmd_fmea_check_twin)
 
     return parser
 
