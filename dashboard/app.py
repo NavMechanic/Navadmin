@@ -111,6 +111,7 @@ from dashboard.components.prediction_charts import (
     render_failure_mode_bar,
 )
 from dashboard.components.rag_panel import render_rag_panel
+from dashboard.components.fishbone_panel import render_fishbone_dashboard
 from rag.digital_twin.nodes.fastening_node import FasteningReading
 from rag.digital_twin.nodes.dispensing_node import DispensingReading
 from rag.digital_twin.nodes.press_node import PressReading
@@ -219,6 +220,14 @@ if last:
 
     # RAG panel
     render_rag_panel(twin, snapshot=last)
+
+    st.divider()
+
+    # Fishbone RCA panel
+    render_fishbone_dashboard(
+        triggered_fmea=last.triggered_fmea if hasattr(last, 'triggered_fmea') else None,
+        high_rpn_fmea=last.high_rpn_fmea if hasattr(last, 'high_rpn_fmea') else None,
+    )
 
 else:
     st.info("No predictions yet — use the sidebar controls or enable Live PLC streaming.")

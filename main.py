@@ -294,6 +294,52 @@ def cmd_ipc_check(args) -> None:
             print(f"  §{sec}: {bad_rate:.1f}% Defect+PI rate")
 
 
+def cmd_fishbone_diagram(args) -> None:
+    """Generate and display Mermaid fishbone diagrams for FMEA items."""
+    from rag.fmea.fmea import load_pfmea_csv, load_dfmea_csv, FMEAAssessment
+    from rag.fmea.fishbone import FishboneGenerator
+    from pathlib import Path
+
+    pfmea_path = args.pfmea or "data/PFMEA_Aviator_Assembly.csv"
+    dfmea_path = args.dfmea or "data/DFMEA_Aviator_Design.csv"
+
+    if not Path(pfmea_path).exists() or not Path(dfmea_path).exists():
+        print(f"Error: FMEA files not found at {pfmea_path} and {dfmea_path}")
+        return
+
+    pfmea = load_pfmea_csv(pfmea_path)
+    dfmea = load_dfmea_csv(dfmea_path)
+    assessment = FMEAAssessment(pfmea, dfmea)
+
+    # Select items to diagram
+    if args.item_id:
+        items = [i for i in assessment.all_items if i.item_id == args.item_id]
+        if not items:
+            print(f"Error: FMEA item '{args.item_id}' not found")
+            return
+    else:
+        items = assessment.high_rpn_items(threshold=args.rpn_threshold)
+
+    if not items:
+        print(f"No FMEA items found with RPN >= {args.rpn_threshold}")
+        return
+
+    print(f"Generating fishbone diagrams for {len(items)} item(s):\n")
+    print("=" * 70)
+
+    for item in items:
+        diagram = FishboneGenerator.from_fmea_item(item)
+        print(f"\n{diagram.title}")
+        print(f"Effect: {item.failure_mode}")
+        if hasattr(item, "cause_list"):
+            print(f"Causes: {', '.join(item.cause_list)}")
+        print("\nMermaid code:")
+        print("```mermaid")
+        print(diagram.mermaid_code)
+        print("```")
+        print("=" * 70)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="navadmin-rag",
@@ -467,6 +513,29 @@ def build_parser() -> argparse.ArgumentParser:
         help="Number of simulated cycles (default: 50)",
     )
     ipc_parser.set_defaults(func=cmd_ipc_check)
+
+    # fishbone-diagram
+    fishbone_parser = subparsers.add_parser(
+        "fishbone-diagram",
+        help="Generate Mermaid fishbone (Ishikawa) diagrams for FMEA root cause analysis",
+    )
+    fishbone_parser.add_argument(
+        "--item-id", type=str, default=None,
+        help="Generate diagram for a specific FMEA item ID (e.g. PFMEA-S22-001)",
+    )
+    fishbone_parser.add_argument(
+        "--rpn-threshold", type=int, default=100,
+        help="RPN threshold for high-risk items to diagram (default: 100)",
+    )
+    fishbone_parser.add_argument(
+        "--pfmea", type=str, default=None,
+        help="Path to PFMEA CSV (default: data/PFMEA_Aviator_Assembly.csv)",
+    )
+    fishbone_parser.add_argument(
+        "--dfmea", type=str, default=None,
+        help="Path to DFMEA CSV (default: data/DFMEA_Aviator_Design.csv)",
+    )
+    fishbone_parser.set_defaults(func=cmd_fishbone_diagram)
 
     return parser
 
