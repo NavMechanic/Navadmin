@@ -1,6 +1,7 @@
 """CLI entry point for the Navadmin RAG pipeline."""
 
 import argparse
+import os
 import sys
 
 
@@ -294,6 +295,57 @@ def cmd_ipc_check(args) -> None:
             print(f"  §{sec}: {bad_rate:.1f}% Defect+PI rate")
 
 
+def cmd_ingest_pdf(args) -> None:
+    """Ingest a PDF file or directory with section and table detection."""
+    from rag.pipeline import RAGPipeline
+    from rag.ingestion.pdf_pipeline import PDFPipeline
+
+    pipeline = RAGPipeline()
+    pdf_pipeline = PDFPipeline(pipeline)
+
+    if os.path.isdir(args.path):
+        results = pdf_pipeline.ingest_local_directory(args.path)
+    else:
+        results = [pdf_pipeline.ingest_file(args.path)]
+
+    print(PDFPipeline.format_report(results))
+
+
+def cmd_ingest_pdf_drive(args) -> None:
+    """Sync and ingest PDFs from Google Drive Aviator folders."""
+    from rag.pipeline import RAGPipeline
+    from rag.ingestion.drive_sync import DrivePDFSync
+    from rag.ingestion.pdf_pipeline import PDFPipeline
+
+    pipeline = RAGPipeline()
+    sync = DrivePDFSync(
+        rag_pipeline=pipeline,
+        credentials_path=args.credentials,
+        manifest_path=args.manifest,
+    )
+
+    folders = args.folders.split(",") if args.folders else None
+
+    if args.local_mirror:
+        results = sync.sync_local_mirror(args.local_mirror)
+    elif args.folder_id:
+        results = sync.sync_folder(args.folder_id, folder_name=args.folder_id)
+    else:
+        results = sync.sync_all_aviator(folders=folders)
+
+    print(PDFPipeline.format_report(results))
+    print()
+    print(sync.manifest.status_report())
+
+
+def cmd_pdf_drive_status(args) -> None:
+    """Show sync status of indexed Drive PDFs."""
+    from rag.ingestion.drive_sync import DriveSyncManifest
+
+    manifest = DriveSyncManifest(args.manifest)
+    print(manifest.status_report())
+
+
 def cmd_fishbone_diagram(args) -> None:
     """Generate and display Mermaid fishbone diagrams for FMEA items."""
     from rag.fmea.fmea import load_pfmea_csv, load_dfmea_csv, FMEAAssessment
@@ -513,6 +565,54 @@ def build_parser() -> argparse.ArgumentParser:
         help="Number of simulated cycles (default: 50)",
     )
     ipc_parser.set_defaults(func=cmd_ipc_check)
+
+    # ingest-pdf
+    ingest_pdf_parser = subparsers.add_parser(
+        "ingest-pdf",
+        help="Ingest a PDF file or directory with section and table detection",
+    )
+    ingest_pdf_parser.add_argument(
+        "path", help="Path to a .pdf file or directory containing PDFs"
+    )
+    ingest_pdf_parser.set_defaults(func=cmd_ingest_pdf)
+
+    # ingest-pdf-drive
+    ingest_pdf_drive_parser = subparsers.add_parser(
+        "ingest-pdf-drive",
+        help="Sync and ingest PDFs from Google Drive Aviator folders (incremental)",
+    )
+    ingest_pdf_drive_parser.add_argument(
+        "--credentials", metavar="PATH", default=None,
+        help="Path to Google service-account JSON",
+    )
+    ingest_pdf_drive_parser.add_argument(
+        "--local-mirror", metavar="DIR", default=None,
+        help="Ingest from a local directory mirror instead of live Drive API",
+    )
+    ingest_pdf_drive_parser.add_argument(
+        "--folder-id", metavar="ID", default=None,
+        help="Sync a specific Drive folder ID (overrides Aviator defaults)",
+    )
+    ingest_pdf_drive_parser.add_argument(
+        "--folders", metavar="root,smt,drawings", default=None,
+        help="Comma-separated list of Aviator subfolder names to sync (default: all)",
+    )
+    ingest_pdf_drive_parser.add_argument(
+        "--manifest", metavar="PATH", default="data/.drive_manifest.json",
+        help="Path to the sync manifest JSON (default: data/.drive_manifest.json)",
+    )
+    ingest_pdf_drive_parser.set_defaults(func=cmd_ingest_pdf_drive)
+
+    # pdf-drive-status
+    pdf_status_parser = subparsers.add_parser(
+        "pdf-drive-status",
+        help="Show sync status of PDFs already indexed from Google Drive",
+    )
+    pdf_status_parser.add_argument(
+        "--manifest", metavar="PATH", default="data/.drive_manifest.json",
+        help="Path to the sync manifest JSON (default: data/.drive_manifest.json)",
+    )
+    pdf_status_parser.set_defaults(func=cmd_pdf_drive_status)
 
     # fishbone-diagram
     fishbone_parser = subparsers.add_parser(

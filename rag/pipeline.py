@@ -129,6 +129,63 @@ class RAGPipeline:
         documents = parser.components_to_documents(components)
         return self._chunk_and_index_documents(documents)
 
+    def ingest_pdf(self, source: str) -> int:
+        """Ingest a single PDF or directory of PDFs with section/table-aware extraction.
+
+        Args:
+            source: Path to a .pdf file or directory containing PDFs.
+
+        Returns:
+            Number of chunks stored in the vector index.
+        """
+        from rag.ingestion.pdf_pipeline import PDFPipeline
+
+        pdf_pipeline = PDFPipeline(self)
+        if os.path.isdir(source):
+            results = pdf_pipeline.ingest_local_directory(source)
+        else:
+            results = [pdf_pipeline.ingest_file(source)]
+
+        return sum(r.chunk_count for r in results if r.success)
+
+    def ingest_pdf_drive(
+        self,
+        folder_id: str = None,
+        credentials_path: str = None,
+        local_mirror: str = None,
+        manifest_path: str = "data/.drive_manifest.json",
+        folders: list = None,
+    ) -> list:
+        """Sync and ingest PDFs from Google Drive Aviator folders.
+
+        Supports incremental mode via a JSON manifest file — files already
+        indexed at the same Drive modified_time are skipped.
+
+        Args:
+            folder_id: Specific Drive folder ID (overrides Aviator defaults).
+            credentials_path: Path to service-account JSON.
+            local_mirror: Path to a local directory mirroring Drive (offline mode).
+            manifest_path: Path to the sync manifest JSON file.
+            folders: Subset of Aviator folder names to sync (default: all).
+
+        Returns:
+            List of PDFIngestionResult objects.
+        """
+        from rag.ingestion.drive_sync import DrivePDFSync
+
+        sync = DrivePDFSync(
+            rag_pipeline=self,
+            credentials_path=credentials_path,
+            manifest_path=manifest_path,
+        )
+
+        if local_mirror:
+            return sync.sync_local_mirror(local_mirror)
+        elif folder_id:
+            return sync.sync_folder(folder_id)
+        else:
+            return sync.sync_all_aviator(folders=folders)
+
     # ------------------------------------------------------------------
     # Query
     # ------------------------------------------------------------------
