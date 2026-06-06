@@ -1,0 +1,88 @@
+MATERIAL or METHODS Specification NO. SB18F13386
+TITLE: Battery Pack, SA71, LITHIUM ION (ATL)
+REVISION DATE: 04/23/2026 | ISSUE: B | PAGE: of 21
+
+Revision History:
+- 04/14/2026 Rev A: Initial Release (Jiang xianjun)
+- 04/23/2026 Rev B: Update label inkjet content definition; Add unit to 4.2.12
+
+PURPOSE AND SCOPE
+This document contains specific electrical, mechanical, environmental, packaging, and general Motorola manufacturing and quality requirements for the SA71 battery Lithium-ion polymer battery.
+
+DESCRIPTION
+Lithium-ion battery assembly with typical capacity of 7100mAh and approximately 3.72V. The battery has two B2B connectors. Includes dual-protection circuit. Battery ID: ATLSA71NVT
+
+APPLICABLE DOCUMENTS
+- 12000362018 Post-Printing Guideline for Cellular Batteries
+- 12000362020 Cellular Battery Shipment Requirements
+- 12014300003 EDC, Battery Pack, ESD Test Specification
+- 12M09197A44 Specification, cellular Li-ion battery testing requirements
+- 6089518SE9 ATL 486797 Lithium Ion Cell
+
+ELECTRICAL REQUIREMENTS
+Capacity: Minimum 6890mAh, typical 7100mAh.
+Standard charge (15-35C): CC 18A to 4.19V, then 12.4A to 4.23V, then 10A to 4.4V, CV to 8A, then 8A to 4.53V, CV taper to 345.5mA.
+FFC charge (15-25C): Termination at 4.56V / 1134mA.
+AC Impedance (1000Hz): 60mOhm max.
+ESR: 190mOhm max near 0% SOC.
+Designed to withstand 12.0V / 20.0A input.
+Ships at ≤30% SOC (ICAO/IATA Packaging Instruction 965), voltage 3.610-3.760V.
+Protection circuit draw: ≤100uA normal, ≤50uA sleep.
+Zero Volt Charging: permit when cell ≥1.5V (Southchip) / ≥1.4V (Mitsumi).
+
+Overload Current (Southchip - shall NOT open):
+- 13.3A discharge for 716ms
+- 16.9A discharge for 19.2ms
+- 23.3A discharge for 168us
+- 19.1A charge for 19.2ms
+
+Overload Current (Southchip - shall OPEN):
+- 16.8A discharge within 4680ms
+- 23.2A discharge within 89.6ms
+- 33A discharge within 700us
+- 23A charge within 89.6ms
+
+Short Circuit: Opens discharge path within 700 microseconds.
+Under Voltage Detection: 2.30±0.040V cutoff, resets at 2.50±0.070V (Southchip/Mitsumi).
+Over-Voltage Protection: Opens charge path within 1.33s at 4.650±0.020V, resets at 4.450±0.055V.
+
+GasGauge Design:
+- Chem ID: 34 38 36 37 39 37 00 00
+- FW Version: 1.3.0 M0t6
+- Manufacturer Name: NVT 00000004
+- IC: MPC8011B (U3)
+- CC Gain: 0.9-1.1
+
+Critical 100% Inspection: OCV, discharge OC cutoff, charge OC cutoff, AC impedance, final OCV, over-voltage protection.
+
+MECHANICAL REQUIREMENTS
+Thickness measured with 2kg plate force. Width/length with 300g max force.
+Critical dimensional parameters [*]: CPK≥1.33
+Weight: approximately 83g (Ref.)
+
+SAFETY REQUIREMENTS
+No smoke, sparks, or flame during tests.
+High current charge: 4.56V/20A for 30 minutes.
+High Voltage: 12.0V/1A for 24 hours.
+Rapid Charge: 4.56V/18A to cutoff 345.5mA.
+Hard Short: 0.050 ohm for 24 hours.
+Soft Short: 0.5, 1.0, 2.0, 4.0 ohm for 1 minute each.
+Deep Discharge: 10 ohm for 96 hours.
+
+MATERIAL REQUIREMENTS: All components lead-free and halogen-free.
+
+PACKAGING: Per 12000362020. Ships UN 3480, ICAO/IATA, US DOT 49 CFR 173.185.
+
+STANDARDS: CE, CB IEC62133/IEC62368, UL1642, IEEE 1725, China GB31241-2022, BIS (India), TISI (Thailand), GOST (Russia), BSMI (Taiwan), PSE (Japan), RCM (Australia), KC (South Korea).
+
+WARRANTY: One year from receipt.
+
+BILL OF MATERIAL (key components):
+- Soft-shell cell: 6910mAh, 3.72V (ATL, 486797)
+- IC_Protect: SC5617A37DDFR / SC5617A38DDFR (Southchip, Solution A)
+- NMOS: CJ8209SP-A x4 (JSCJ)
+- IC_Protect (alt): MM4141AF3RS4 / MM4141AF4RS4 (Mitsumi, Solution B)
+- IC_Gauge: MPC8011B (MPC)
+- Sampling resistor: MHTC1206M1W0R002F4 (Walter)
+- Connector: 2166570101 x2 (Molex)
+- NTC: NTCG063JF103F, 10K (TDK)

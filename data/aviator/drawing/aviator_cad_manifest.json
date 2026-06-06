@@ -1,0 +1,121 @@
+[
+  {
+    "name": "Front Housing Assembly",
+    "part_number": "SS58F14684",
+    "material": "Polycarbonate/ABS Alloy (PC-ABS), Stainless Steel Inserts",
+    "description": "Front mid-frame housing with integrated display frame rails and USB-C port cutout",
+    "bbox": {
+      "x": [0.0, 77.0],
+      "y": [0.0, 163.0],
+      "z": [0.0, 4.5]
+    },
+    "mating_features": [
+      "Rear housing snap-fit hooks at 4 perimeter corners",
+      "Display glass adhesive gasket (full perimeter, z=3.8mm)",
+      "Battery connector FPC through-slot at y=80mm",
+      "USB-C port barrel at y=4mm, x=34.5mm, z=0.0mm",
+      "Volume button rail channels x=0.0mm, y=60-90mm"
+    ],
+    "finish": "Textured matte",
+    "color": "Midnight Black"
+  },
+  {
+    "name": "Battery Pack SA71",
+    "part_number": "SA71",
+    "material": "Lithium-Ion pouch cell, Aluminum casing, PVC wrap",
+    "description": "4500 mAh Li-Ion battery with NFC coil integrated and wireless charging receiver pad",
+    "bbox": {
+      "x": [3.0, 74.0],
+      "y": [20.0, 130.0],
+      "z": [4.5, 7.5]
+    },
+    "mating_features": [
+      "FPC connector tab at x=38mm, y=20mm, z=4.5mm (board-to-battery)",
+      "NFC antenna loop perimeter trace at z=7.5mm",
+      "Wireless charge receiver coil centred at x=38.5mm, y=75mm",
+      "Thermal pad contact to rear housing z=7.5mm"
+    ],
+    "capacity_mah": 4500,
+    "charge_voltage_v": 4.45,
+    "turbo_charge_w": 90
+  },
+  {
+    "name": "Rear Wide Camera Module",
+    "part_number": "CAM-WIDE-R200",
+    "material": "Optical glass lens stack, CMOS sensor, Aluminum barrel housing",
+    "description": "200 MP wide-angle rear camera with OIS actuator and AF motor; seats in rear glass island",
+    "bbox": {
+      "x": [10.0, 30.0],
+      "y": [125.0, 155.0],
+      "z": [4.0, 8.0]
+    },
+    "mating_features": [
+      "Camera FPC ribbon to main board at y=120mm, x=20mm",
+      "Lens barrel press-fit into rear glass aperture",
+      "OIS spring contact pads at z=4.0mm base",
+      "Thermal interface pad to rear housing at z=8.0mm"
+    ],
+    "resolution_mp": 200,
+    "aperture": "f/1.7",
+    "ois": true
+  },
+  {
+    "name": "Antenna Switch MXD8539HA",
+    "part_number": "MXD8539HA",
+    "material": "GaAs MMIC die, QFN-16 package, FR4 PCB substrate",
+    "description": "5G NR Sub-6 GHz and LTE antenna switch module; routes TX/RX between main and diversity antennas",
+    "bbox": {
+      "x": [55.0, 70.0],
+      "y": [10.0, 25.0],
+      "z": [4.5, 5.5]
+    },
+    "mating_features": [
+      "RF coaxial cable ANT_CW port solder pad at x=58mm, y=12mm",
+      "RF coaxial cable ANT_DIV port solder pad at x=67mm, y=12mm",
+      "LGA pads to PCB at z=4.5mm",
+      "Ground vias array at perimeter"
+    ],
+    "frequency_bands": ["LTE B1", "LTE B5", "LTE B28", "NR N77", "NR N78"],
+    "tx_power_limit_dbm": 26.0,
+    "insertion_loss_db": 0.8
+  },
+  {
+    "name": "Earpiece Speaker XHSR121009LY-07-RH",
+    "part_number": "XHSR121009LY-07-RH",
+    "material": "Mylar diaphragm, Neodymium magnet, Stainless steel grille",
+    "description": "Top earpiece speaker for voice calls; dual function as secondary stereo speaker",
+    "bbox": {
+      "x": [22.0, 55.0],
+      "y": [150.0, 163.0],
+      "z": [0.5, 3.5]
+    },
+    "mating_features": [
+      "Rubber gasket seal against front housing acoustic channel",
+      "Spring contact pads to PCB at x=30mm, y=152mm, z=0.5mm",
+      "Grille press-fit into front housing top slot"
+    ],
+    "frequency_response_hz": [200, 20000],
+    "impedance_ohm": 8,
+    "spl_db": 84
+  },
+  {
+    "name": "Top Frame Bracket SA38F14673",
+    "part_number": "SA38F14673",
+    "material": "Stainless Steel 316L, 0.4mm stamped and CNC-trimmed",
+    "description": "Top internal structural bracket anchoring the display assembly, front camera, and earpiece speaker to the mid-frame",
+    "bbox": {
+      "x": [0.0, 77.0],
+      "y": [148.0, 163.0],
+      "z": [0.0, 4.5]
+    },
+    "mating_features": [
+      "M1.2 screws x6 to mid-frame at y=150mm, z=0mm",
+      "Display FPC clamp clip at x=38mm, y=155mm",
+      "Front camera press-fit barrel receptacle at x=24mm, y=158mm",
+      "Earpiece speaker foam gasket contact at y=152-163mm",
+      "Grounding strap solder tab at x=76mm, y=163mm"
+    ],
+    "thickness_mm": 0.4,
+    "yield_strength_mpa": 520
+  }
+]

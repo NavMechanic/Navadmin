@@ -1,0 +1,84 @@
+MOTOROLA MOBILITY LLC - FRONT HOUSING ASSEMBLY DRAWING
+Product: CELESTIQ (Product ID: 0XB9)
+Drawing Number: SS58F14684 Rev A
+Designed by: Lynn Lin | Approved by: Ethan Hou
+MP Release: 21-04-2026
+
+PRODUCT VARIANTS (Table 1):
+- SS58F14684: Dark Shadow, Al 6013-T6+PBT 40%GF, EVERWIN, Active
+- SS58F14686: Bright White, Al 6013-T6+PBT 40%GF, EVERWIN, Active
+- SS58F14688: Magenta Purple, Al 6013-T6+PBT 40%GF, EVERWIN, NO USE
+- SM88F21634: Ice Melt (Premium), Al 6013-T6+PBT 40%GF, EVERWIN, Active
+- SM88F21636: Aqua Gray (Premium), Al 6013-T6+PBT 40%GF, EVERWIN, Active
+- SM88F21638: Dark Shadow (Premium), Al 6013-T6+PBT 40%GF, EVERWIN, Active
+- SM88F21639: Bright White (Premium), Al 6013-T6+PBT 40%GF, EVERWIN, Active
+
+ASSEMBLY BOM (Table 2):
+Item 1: FRONT_HOUSING_DIECASTING / Yahao (x1)
+Item 2: FRONT_HOUSING / Everwin (color-specific P/N)
+Item 3: DIECUT_LCD_GASKET_0803, SD78F14245, FRD (x10)
+Item 4: DIECUT_P_SENSOR_GASKET, SD78F14257, FRD (x1)
+Item 5: DIECUT_VC_PSA, SD78F14255, FRD (x1)
+Item 6: DIECUT_FOD_GAS, SD78F14246, FRD (x1)
+Item 7: DIECUT_P_SENSOR_PSA, SD78F14248, FRD (x1)
+Item 8: DIECUT_FRT_CAM_PSA, SD78F14247, FRD (x1)
+Item 9: DIECUT_RECEIVER_PSA, SD78F14256, FRD (x1)
+Item 10: DIECUT_SHIELD_GASKET, SD78F14249, FRD (x4)
+Item 11: DIECUT_CABLE_ADH, SD78F14250, FRD (x1)
+Item 12: DIECUT_SIM_CON_GASKET, SD78F14259, FRD (x2)
+Item 13: DIECUT_MOTOR_ADH, SD78F14252, FRD (x1)
+Item 14: DIECUT_FOD_ADH, SD78F14251, FRD (x1)
+Item 15: Diecut_thermal_gasket, SD78F28582, FRD (x1)
+Item 16: DIECUT_SPK_FPC_PSA, SD78F14254, FRD (x1)
+Item 17: DIECUT_SPK_HOLE_GASKET, SD78F14253, FRD (x1)
+Item 18: DIECUT_AL_GASKET_0802, SD78F14258, FRD (x1)
+Item 19: SIMTRAY_TPU_VELAR - SMO8E02781 (SLK) or SMO8E95387 (JEM) (x1)
+Item 20: ASSY_ANT_FEED_1 / Everwin (x2)
+Item 21: ASSY_ANT_FEED_2 / Everwin (x2)
+Item 22: 8S Code label (laser) / Everwin (x1)
+
+ENVIRONMENTAL REQUIREMENTS:
+- Storage Temperature: -40°C to +85°C
+- Operating Temperature: -20°C to +70°C
+- Storage Humidity: 10% RH to 80% RH
+
+DIMENSIONS/TOLERANCES:
+- Linear tolerance: X.X ±0.3mm, X.XX ±0.13mm, Angular ±1.0°, Hole Dia ±0.1mm
+- Overall width: 77.42 +0.20/-0mm
+- Flatness: +0.07/-0.25mm, max total deformation 0.32mm
+- Receiver pocket flatness ≤0.05mm
+- MIC die-cut pocket flatness ≤0.03mm
+- Main lens pocket gap: 0.05 < gap < 0.18mm
+- Inlay pocket gap: 0.05 < gap < 0.18mm
+- AI key FPC slot: 1.46+0.03/-0.05mm
+- Side key FPC slot: 1.46+0.03/-0.05mm
+
+ANTENNA FEED SYSTEM:
+ANT0: LTE MAIN, 600-960MHz, 2300-2700MHz
+ANT1: NR MAIN, 600-960MHz, 1400-2700MHz, 3300-4200MHz
+ANT2: MHB ANT, 1400-2700MHz
+ANT3: WIFI 2.4G/5G, 2400-2500MHz, 5000-7250MHz
+ANT4: UHB ANT, 3300-4200MHz
+ANT5: GPS/MB/WIFI 5G, 1150-1200MHz, 1700-2200MHz, 5000-7250MHz
+ANT6: WIFI 2.4G/UHB/5G, 2400-2500MHz, 3300-4200MHz, 5000-7250MHz
+ANT7: GPS/UHB, 1545-1615MHz, 3300-4200MHz
+ANT8: MHB/UHB, 1400-2700MHz, 3300-4200MHz
+
+Feed Resistance: All paths ≤0.5 ohms from base point (except specified open circuits)
+Feed material: Al5052 or Copper C5210-EH T=0.2mm / Copper C5210-EH or SUS304-1/2H T=0.1mm
+Gold plating: 1.25-3.0um Ni + 0.10-0.15um Gold; NSS 8 hours test required
+Feed force: ≥1.5kg.f, no lift/fallout
+
+QUALITY REQUIREMENTS:
+- CPK: Cp>2.0, Cpk>1.5 for all process control dimensions
+- Surface class: Cosmetic Class B (per MBG-S-PQM-061)
+- IP68 tested: 100% pass required; MIC1/MIC2/side key/USB/SIM tray critical
+- 8S barcode label by laser etching
+
+KEY ASSEMBLY NOTES:
+- All diecut parts must not climb side walls
+- FRT_CAM_PSA must not deform/wrap
+- SPK/MIC gaskets must align to holes, not conceal holes (100% check by microscope)
+- FOD_ADH may mask FOD hole max 0.05mm
+- Black coating required at receiver, FOD, P-sensor areas (all colors)
+- Black coating must pass C10/E01 cross-cut adhesion test

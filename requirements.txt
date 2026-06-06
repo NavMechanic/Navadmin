@@ -1,0 +1,17 @@
+anthropic>=0.25.0
+sentence-transformers>=2.7.0
+qdrant-client>=1.9.0
+pypdf>=4.0.0
+python-docx>=1.1.0
+rank-bm25>=0.2.2
+numpy>=1.26.0
+tiktoken>=0.7.0
+# Google Drive connector (optional — required for live Drive API access)
+google-api-python-client>=2.100.0
+google-auth-httplib2>=0.2.0
+google-auth-oauthlib>=1.1.0
+# Phase 2 — Digital Twin Platform
+streamlit>=1.35.0
+plotly>=5.22.0
+# MQTT broker (optional — required for live PLC streaming)
+paho-mqtt>=2.0.0

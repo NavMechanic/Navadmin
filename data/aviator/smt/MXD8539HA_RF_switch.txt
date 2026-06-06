@@ -1,0 +1,75 @@
+COMPONENT DATASHEET: MXD8539HA
+Manufacturer: Maxscend Microelectronics Company, Ltd.
+Part Number: MXD8539HA Rev1.0
+Part Code: SC98E90567
+Sourced by: Maxscend Microelectronics
+
+DESCRIPTION:
+3P3T (Three-Pole Three-Throw) CMOS SOI RF Switch with MIPI control interface.
+Operating frequency: 0.4 to 5.8 GHz.
+Applications: Simultaneous voice and LTE systems, antenna switching, multi-band operation.
+
+PACKAGE: LGA-16, 2.0mm x 2.0mm x 0.55mm, MSL1
+
+PIN CONFIGURATION (16-pin LGA):
+Pin 1: USID (RFFE Slave ID Select)
+Pin 2: RF2; Pin 3: GND; Pin 4: RF4; Pin 5: GND
+Pin 6: RF6; Pin 7: GND; Pin 8: RF5; Pin 9: GND
+Pin 10: RF3; Pin 11: GND; Pin 12: RF1
+Pin 13: NC; Pin 14: VIO (Supply); Pin 15: SDATA; Pin 16: SCLK
+Ground Paddle: GND
+
+RF SWITCH MODES (Register_0 for RF1/RF3, Register_1 for RF5):
+RF1-RF2: D[2:0]=001; RF1-RF4: D[2:0]=010; RF1-RF6: D[2:0]=011
+RF3-RF2: D[5:3]=001; RF3-RF4: D[5:3]=010; RF3-RF6: D[5:3]=011
+RF5-RF2: D[2:0]=001; RF5-RF4: D[2:0]=010; RF5-RF6: D[2:0]=011
+
+KEY ELECTRICAL SPECIFICATIONS:
+Supply Voltage (VIO): 1.65V-1.95V (typ 1.8V)
+Supply Current (IIO): 50μA max
+
+INSERTION LOSS:
+0.4-1.0GHz: 0.37dB typ, 0.43dB max
+1.0-2.0GHz: 0.43dB typ, 0.55dB max
+2.0-2.7GHz: 0.50dB typ, 0.65dB max
+3.0-3.8GHz: 0.68dB typ, 1.00dB max
+3.8-5.8GHz: 1.05dB typ, 1.50dB max
+
+ISOLATION:
+0.4-1.0GHz: 50dB typ, 35dB min
+1.0-2.0GHz: 46dB typ, 30dB min
+2.0-2.7GHz: 44dB typ, 28dB min
+3.0-3.8GHz: 40dB typ, 26dB min
+3.8-5.8GHz: 35dB typ, 23dB min
+
+P0.1dB: 39dBm (0.4-3.8GHz), 38dBm (4.0-5.8GHz)
+RF Switching Time (TSW): 1.5μs
+Wake Up Time (TWP): 15μs
+Turn On Time (TON): 15μs
+
+ABSOLUTE MAXIMUM RATINGS:
+VIO max: 2.5V
+Max RF Input Power: 38.5dBm (0.4-3.8GHz), 39.5dBm (4.0-5.8GHz)
+Operating Temperature: -40°C to 90°C
+Storage Temperature: -55°C to 150°C
+ESD HBM: 1000V; ESD CDM: 500V
+
+MIPI RFFE Interface: RFFE V2.1 compatible
+Registers: 0x00 (Register_0), 0x01 (Register_1), 0x1C (PM_TRIG), 0x1D (PRODUCT_ID=0x75), 0x1E (MANUFACTURER_ID=0x81)
+USID: GND→0x6, VIO→0x9, Float→0x7
+
+POWER SEQUENCES:
+Power On: Apply VIO → Apply RFFE bus → Apply RF signal
+Power Off: Remove RF → Remove RFFE bus → Remove VIO
+Wait TON (15μs) after VIO on before applying RF
+TVIO_RST ≥10μs before power-up after reset
+
+REFLOW PROFILE (Lead-Free):
+Preheat: 150-200°C, 60-180s
+Ramp-up to TP: 3°C/s max
+TL (217°C): 60-150s
+Peak TP: 260°C
+Time at peak: 20-40s
+Ramp-down: 6°C/s max
+
+COMPLIANCE: RoHS, REACH, Halogen-free compliant
