@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏭 Aviator Digital Twin Dashboard</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+                'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+                sans-serif;
+            background: #0e1117;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #1f77b4 0%, #0e1117 100%);
+            padding: 20px;
+            border-bottom: 1px solid #30363d;
+        }
+
+        header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        header p {
+            color: #8b949e;
+            font-size: 14px;
+        }
+
+        .container {
+            display: flex;
+            min-height: calc(100vh - 80px);
+        }
+
+        sidebar {
+            width: 300px;
+            background: #161b22;
+            border-right: 1px solid #30363d;
+            padding: 20px;
+            overflow-y: auto;
+            max-height: calc(100vh - 80px);
+        }
+
+        sidebar h2 {
+            font-size: 16px;
+            margin: 15px 0 10px 0;
+            color: #58a6ff;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        sidebar .status-badge {
+            display: inline-block;
+            background: #238636;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-bottom: 15px;
+        }
+
+        sidebar .status-badge.offline {
+            background: #da3633;
+        }
+
+        .slider-group {
+            margin: 15px 0;
+        }
+
+        .slider-group label {
+            display: block;
+            font-size: 12px;
+            margin-bottom: 5px;
+            color: #c9d1d9;
+        }
+
+        .slider-group input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #30363d;
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+
+        .slider-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #1f77b4;
+            cursor: pointer;
+        }
+
+        .slider-group input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #1f77b4;
+            cursor: pointer;
+            border: none;
+        }
+
+        .slider-value {
+            font-size: 13px;
+            color: #79c0ff;
+            margin-top: 3px;
+        }
+
+        .button-group {
+            display: grid;
+            gap: 8px;
+            margin: 20px 0;
+        }
+
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        button.primary {
+            background: #1f77b4;
+            color: white;
+        }
+
+        button.primary:hover {
+            background: #2e88d0;
+        }
+
+        button.secondary {
+            background: #238636;
+            color: white;
+        }
+
+        button.secondary:hover {
+            background: #2ea043;
+        }
+
+        .stats-box {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 12px;
+            margin: 10px 0;
+            font-size: 13px;
+        }
+
+        .stats-box strong {
+            color: #79c0ff;
+        }
+
+        main {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            max-height: calc(100vh - 80px);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 20px;
+            transition: border-color 0.3s;
+        }
+
+        .card:hover {
+            border-color: #58a6ff;
+        }
+
+        .card h3 {
+            font-size: 14px;
+            margin-bottom: 15px;
+            color: #79c0ff;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #21262d;
+        }
+
+        .metric:last-child {
+            border-bottom: none;
+        }
+
+        .metric-label {
+            color: #8b949e;
+            font-size: 12px;
+        }
+
+        .metric-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: #79c0ff;
+        }
+
+        .metric-value.pass {
+            color: #00d084;
+        }
+
+        .metric-value.fail {
+            color: #ff4b4b;
+        }
+
+        .metric-value.warning {
+            color: #fdb913;
+        }
+
+        .gauge {
+            position: relative;
+            width: 100%;
+            height: 200px;
+            margin-bottom: 15px;
+        }
+
+        .node-card {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .node-header {
+            font-size: 14px;
+            font-weight: 600;
+            color: #79c0ff;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .test-result {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: auto;
+        }
+
+        .test-result.pass {
+            background: #238636;
+            color: white;
+        }
+
+        .test-result.fail {
+            background: #da3633;
+            color: white;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            margin-bottom: 15px;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .pareto-bar {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            font-size: 13px;
+        }
+
+        .pareto-label {
+            width: 250px;
+            color: #c9d1d9;
+        }
+
+        .pareto-count {
+            width: 40px;
+            text-align: right;
+            color: #79c0ff;
+            font-weight: 600;
+        }
+
+        .pareto-bar-visual {
+            flex: 1;
+            height: 20px;
+            background: linear-gradient(90deg, #1f77b4, #238636);
+            border-radius: 3px;
+            margin: 0 10px;
+        }
+
+        .pareto-pct {
+            width: 50px;
+            text-align: right;
+            color: #8b949e;
+            font-size: 12px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge.target {
+            background: #238636;
+            color: white;
+        }
+
+        .badge.acceptable {
+            background: #1f77b4;
+            color: white;
+        }
+
+        .badge.pi {
+            background: #fdb913;
+            color: #000;
+        }
+
+        .badge.defect {
+            background: #da3633;
+            color: white;
+        }
+
+        .ipc-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            margin: 5px 0;
+            background: #161b22;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .ipc-criterion {
+            flex: 1;
+        }
+
+        .ipc-value {
+            flex: 0 0 100px;
+            text-align: right;
+            color: #79c0ff;
+        }
+
+        .toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+            font-size: 13px;
+        }
+
+        .toggle-switch {
+            width: 40px;
+            height: 20px;
+            background: #30363d;
+            border-radius: 10px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .toggle-switch.active {
+            background: #238636;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: left 0.3s;
+        }
+
+        .toggle-switch.active::after {
+            left: 22px;
+        }
+
+        .divider {
+            height: 1px;
+            background: #21262d;
+            margin: 15px 0;
+        }
+
+        @media (max-width: 1200px) {
+            .grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+
+            sidebar {
+                width: 100%;
+                max-height: auto;
+                border-right: none;
+                border-bottom: 1px solid #30363d;
+            }
+
+            main {
+                max-height: none;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #30363d;
+            border-top-color: #1f77b4;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🏭 Aviator Digital Twin — Live Assembly Simulation</h1>
+        <p>4M Process Variables → Predicted Functional Test Outcomes</p>
+    </header>
+
+    <div class="container">
+        <sidebar>
+            <h2>System Status</h2>
+            <div class="status-badge">🟢 RAG: Online</div>
+
+            <div class="divider"></div>
+
+            <h2>Simulation Controls</h2>
+            <div class="toggle">
+                <span>Live PLC Streaming</span>
+                <div class="toggle-switch" onclick="this.classList.toggle('active')"></div>
+            </div>
+
+            <div class="slider-group">
+                <label>Refresh Interval</label>
+                <input type="range" min="1" max="10" value="3" id="refreshSlider">
+                <div class="slider-value" id="refreshValue">3s</div>
+            </div>
+
+            <div class="divider"></div>
+
+            <h2>Manual Inputs — Node A</h2>
+            <div class="slider-group">
+                <label>Torque (Nm)</label>
+                <input type="range" min="0.15" max="0.85" step="0.05" value="0.45" id="torqueSlider">
+                <div class="slider-value" id="torqueValue">0.45 Nm</div>
+            </div>
+
+            <div class="slider-group">
+                <label>Depth (mm)</label>
+                <input type="range" min="2.5" max="4.0" step="0.1" value="3.2" id="depthSlider">
+                <div class="slider-value" id="depthValue">3.2 mm</div>
+            </div>
+
+            <div class="divider"></div>
+
+            <h2>Manual Inputs — Node B</h2>
+            <div class="slider-group">
+                <label>TIM Mass (mg)</label>
+                <input type="range" min="200" max="400" step="10" value="250" id="timSlider">
+                <div class="slider-value" id="timValue">250 mg</div>
+            </div>
+
+            <div class="slider-group">
+                <label>Humidity (%RH)</label>
+                <input type="range" min="20" max="90" step="5" value="45" id="humiditySlider">
+                <div class="slider-value" id="humidityValue">45 %RH</div>
+            </div>
+
+            <div class="divider"></div>
+
+            <h2>Manual Inputs — Node C</h2>
+            <div class="slider-group">
+                <label>Press Force (N)</label>
+                <input type="range" min="980" max="1820" step="20" value="1400" id="forceSlider">
+                <div class="slider-value" id="forceValue">1400 N</div>
+            </div>
+
+            <div class="slider-group">
+                <label>Frame Offset (mm)</label>
+                <input type="range" min="-0.2" max="0.2" step="0.05" value="0.0" id="offsetSlider">
+                <div class="slider-value" id="offsetValue">0.0 mm</div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="button-group">
+                <button class="primary" onclick="runPrediction()">▶ Manual Prediction</button>
+                <button class="secondary" onclick="runBatchSimulation()">⚡ Batch Simulation (50)</button>
+            </div>
+
+            <div class="divider"></div>
+
+            <h2>Batch Results</h2>
+            <div class="stats-box">
+                <div style="margin-bottom: 8px;">
+                    <strong>Total: 50 cycles</strong>
+                </div>
+                <div style="margin-bottom: 4px;">
+                    <span style="color: #00d084;">✓ PASS: 36</span>
+                </div>
+                <div>
+                    <span style="color: #ff4b4b;">✗ FAIL: 14</span>
+                </div>
+            </div>
+
+            <div class="stats-box">
+                <div style="font-size: 16px; font-weight: 600; color: #79c0ff;">
+                    72.0%
+                </div>
+                <div style="color: #8b949e;">Yield Rate</div>
+            </div>
+        </sidebar>
+
+        <main>
+            <!-- Row 1: Risk Gauge + Metrics -->
+            <div class="grid">
+                <div class="card">
+                    <h3>📊 Risk Assessment</h3>
+                    <div id="riskGauge" class="gauge"></div>
+                    <div class="metric">
+                        <span class="metric-label">Overall Risk</span>
+                        <span class="metric-value pass">✓ PASS</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Risk Score</span>
+                        <span class="metric-value">0.0%</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>📋 Snapshot Info</h3>
+                    <div class="metric">
+                        <span class="metric-label">Snapshot ID</span>
+                        <span class="metric-value" style="font-size: 12px;">SNAP_2026</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Timestamp</span>
+                        <span class="metric-value" style="font-size: 12px;">2026-06-07 20:06</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Batch Cycles</span>
+                        <span class="metric-value">50</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Yield</span>
+                        <span class="metric-value pass">72.0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 2: Node Status Cards -->
+            <div class="grid full-width">
+                <div class="card">
+                    <div class="node-header">
+                        📡 Node A: Fastening
+                        <span class="test-result pass">PASS</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Contact Resistance</span>
+                        <span class="metric-value">0.3022 mΩ</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">RF Mismatch Risk</span>
+                        <span class="metric-value">0.0%</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Confidence</span>
+                        <span class="metric-value">85%</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="node-header">
+                        🌡️ Node B: Dispensing
+                        <span class="test-result pass">PASS</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Junction Temp</span>
+                        <span class="metric-value">77.8°C</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Thermal Margin</span>
+                        <span class="metric-value pass">7.2°C</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Confidence</span>
+                        <span class="metric-value">80%</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="node-header">
+                        🔧 Node C: Press
+                        <span class="test-result pass">PASS</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Gap Clearance</span>
+                        <span class="metric-value">0.089 mm</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Air Pocket Risk</span>
+                        <span class="metric-value">4.7%</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Confidence</span>
+                        <span class="metric-value">70%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 3: Risk Trend Chart -->
+            <div class="card full-width">
+                <h3>📈 Risk Trend Chart</h3>
+                <div id="riskTrendChart" class="chart-container"></div>
+            </div>
+
+            <!-- Row 4: Node Distributions -->
+            <div class="grid full-width">
+                <div class="card">
+                    <h3>Resistance Distribution</h3>
+                    <div id="resistanceChart" class="chart-container"></div>
+                </div>
+
+                <div class="card">
+                    <h3>Temperature Distribution</h3>
+                    <div id="temperatureChart" class="chart-container"></div>
+                </div>
+            </div>
+
+            <!-- Row 5: Failure Mode Pareto -->
+            <div class="card full-width">
+                <h3>🚨 Failure Mode Pareto</h3>
+                <div class="pareto-bar">
+                    <div class="pareto-label">IP68_VACUUM_LEAK_TEST</div>
+                    <div class="pareto-count">14x</div>
+                    <div class="pareto-bar-visual" style="width: 93.3%;"></div>
+                    <div class="pareto-pct">93.3%</div>
+                </div>
+                <div class="pareto-bar">
+                    <div class="pareto-label">PAT2_THERMAL_THROTTLE</div>
+                    <div class="pareto-count">1x</div>
+                    <div class="pareto-bar-visual" style="width: 6.7%;"></div>
+                    <div class="pareto-pct">6.7%</div>
+                </div>
+            </div>
+
+            <!-- Row 6: IPC-A-610G Compliance -->
+            <div class="card full-width">
+                <h3>🔲 IPC-A-610G Class 2 Compliance</h3>
+
+                <div style="margin: 15px 0;">
+                    <strong style="color: #79c0ff;">Fastening Stage (Node A)</strong>
+                    <div class="ipc-row">
+                        <span class="ipc-criterion">Contact Resistance</span>
+                        <span class="badge target">TARGET</span>
+                        <span class="ipc-value">0.30 mΩ</span>
+                    </div>
+                    <div class="ipc-row">
+                        <span class="ipc-criterion">RF Mismatch Risk</span>
+                        <span class="badge target">TARGET</span>
+                        <span class="ipc-value">0.0%</span>
+                    </div>
+                </div>
+
+                <div style="margin: 15px 0;">
+                    <strong style="color: #79c0ff;">Dispensing Stage (Node B)</strong>
+                    <div class="ipc-row">
+                        <span class="ipc-criterion">Thermal Margin</span>
+                        <span class="badge acceptable">ACCEPTABLE</span>
+                        <span class="ipc-value">7.2°C</span>
+                    </div>
+                    <div class="ipc-row">
+                        <span class="ipc-criterion">TIM Coverage</span>
+                        <span class="badge target">TARGET</span>
+                        <span class="ipc-value">95%</span>
+                    </div>
+                </div>
+
+                <div style="margin: 15px 0;">
+                    <strong style="color: #79c0ff;">Press Stage (Node C)</strong>
+                    <div class="ipc-row">
+                        <span class="ipc-criterion">Gap Clearance</span>
+                        <span class="badge target">TARGET</span>
+                        <span class="ipc-value">0.089 mm</span>
+                    </div>
+                    <div class="ipc-row">
+                        <span class="ipc-criterion">Warp Proxy</span>
+                        <span class="badge acceptable">ACCEPTABLE</span>
+                        <span class="ipc-value">0.021 mm</span>
+                    </div>
+                    <div class="ipc-row">
+                        <span class="ipc-criterion">IP68 Seal</span>
+                        <span class="badge defect">DEFECT</span>
+                        <span class="ipc-value">Gap &lt; 0.08mm</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 7: RAG Panel -->
+            <div class="card full-width">
+                <h3>🤖 RAG Panel - AI-Powered Root Cause Analysis</h3>
+                <input type="text" placeholder="Ask: What causes RF mismatch?" style="width: 100%; padding: 10px; background: #161b22; border: 1px solid #30363d; border-radius: 6px; color: #c9d1d9; margin-bottom: 15px;">
+
+                <div style="font-size: 12px;">
+                    <strong style="color: #79c0ff;">Retrieved Context:</strong>
+                    <div style="background: #161b22; border-left: 3px solid #1f77b4; padding: 10px; margin: 10px 0; border-radius: 4px;">
+                        <div>▸ <strong>IPC-A-610G §7.2</strong> - Seal gap specifications (page 5)</div>
+                        <div style="color: #8b949e;">Defines nominal gap 0.11mm ± 0.02mm for Class 2</div>
+                    </div>
+                    <div style="background: #161b22; border-left: 3px solid #1f77b4; padding: 10px; margin: 10px 0; border-radius: 4px;">
+                        <div>▸ <strong>SOP-45: Fastening Process</strong> - Contact resistance control (page 12)</div>
+                        <div style="color: #8b949e;">Torque range 0.30-0.60 Nm maintains contact &lt; 0.5 mΩ</div>
+                    </div>
+                    <div style="background: #161b22; border-left: 3px solid #1f77b4; padding: 10px; margin: 10px 0; border-radius: 4px;">
+                        <div>▸ <strong>Assembly Process Documentation</strong> - Vacuum leak mitigation (SOP-45, Appendix A)</div>
+                        <div style="color: #8b949e;">Gap clearance &lt; 0.08mm with warp &gt; 0.02mm triggers vacuum loss</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 8: Fishbone Diagrams -->
+            <div class="card full-width">
+                <h3>🎣 Fishbone RCA Diagrams</h3>
+
+                <div style="background: #161b22; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
+                    <strong style="color: #79c0ff; display: block; margin-bottom: 10px;">Triggered Failure: IP68_VACUUM_LEAK_TEST</strong>
+                    <pre style="color: #8b949e; font-size: 11px; overflow-x: auto;">
+    Materials            Methods              Environment
+         │                 │                       │
+         ├─ Poor seal      ├─ Low gap              ├─ High humidity
+         │  coverage       │  &lt; 0.08mm            │  &gt; 60% RH
+         │                 │                       │
+         └─────────────────┼───────────────────────┘
+                           │
+                        ✗ FAIL: Moisture Ingress
+    </pre>
+                    <div style="color: #8b949e; font-size: 12px;">
+                        <strong>Effect:</strong> IP68 pressure test failure after 100h moisture conditioning<br>
+                        <strong>RPN:</strong> 240 (Severity: 8, Occurrence: 6, Detection: 5)<br>
+                        <strong>Status:</strong> 🔴 Open
+                    </div>
+                </div>
+
+                <div style="background: #161b22; border-radius: 6px; padding: 15px;">
+                    <strong style="color: #79c0ff; display: block; margin-bottom: 10px;">High-Risk: PAT2_THERMAL_THROTTLING</strong>
+                    <pre style="color: #8b949e; font-size: 11px; overflow-x: auto;">
+    Thermal              Materials             Environment
+         │                 │                       │
+         ├─ TIM thin       ├─ Low TIM mass        ├─ High temp
+         │  (200mg)        │  (&lt;220mg)            │  solder area
+         │                 │                       │
+         └─────────────────┼───────────────────────┘
+                           │
+                        ⚠ WARNING: Thermal runaway risk at high power
+    </pre>
+                    <div style="color: #8b949e; font-size: 12px;">
+                        <strong>Effect:</strong> Junction temp &gt; 85°C at 3.3W continuous<br>
+                        <strong>RPN:</strong> 216 (Severity: 9, Occurrence: 6, Detection: 4)<br>
+                        <strong>Status:</strong> 🟡 In Mitigation
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Update slider values
+        document.getElementById('refreshSlider').addEventListener('input', function() {
+            document.getElementById('refreshValue').textContent = this.value + 's';
+        });
+
+        document.getElementById('torqueSlider').addEventListener('input', function() {
+            document.getElementById('torqueValue').textContent = parseFloat(this.value).toFixed(2) + ' Nm';
+        });
+
+        document.getElementById('depthSlider').addEventListener('input', function() {
+            document.getElementById('depthValue').textContent = parseFloat(this.value).toFixed(1) + ' mm';
+        });
+
+        document.getElementById('timSlider').addEventListener('input', function() {
+            document.getElementById('timValue').textContent = this.value + ' mg';
+        });
+
+        document.getElementById('humiditySlider').addEventListener('input', function() {
+            document.getElementById('humidityValue').textContent = this.value + ' %RH';
+        });
+
+        document.getElementById('forceSlider').addEventListener('input', function() {
+            document.getElementById('forceValue').textContent = this.value + ' N';
+        });
+
+        document.getElementById('offsetSlider').addEventListener('input', function() {
+            document.getElementById('offsetValue').textContent = parseFloat(this.value).toFixed(2) + ' mm';
+        });
+
+        // Risk Gauge Chart
+        function drawRiskGauge() {
+            const gauge = document.getElementById('riskGauge');
+
+            const data = [{
+                type: "indicator",
+                mode: "gauge+number+delta",
+                value: 0,
+                title: { text: "Risk Score" },
+                delta: { reference: 50 },
+                gauge: {
+                    axis: { range: [null, 100] },
+                    bar: { color: "#238636" },
+                    steps: [
+                        { range: [0, 33], color: "#238636" },
+                        { range: [33, 66], color: "#fdb913" },
+                        { range: [66, 100], color: "#da3633" }
+                    ],
+                    threshold: {
+                        line: { color: "red", width: 4 },
+                        thickness: 0.75,
+                        value: 90
+                    }
+                }
+            }];
+
+            const layout = {
+                margin: { t: 25, r: 25, l: 25, b: 25 },
+                paper_bgcolor: "#0d1117",
+                plot_bgcolor: "#0d1117",
+                font: { color: "#c9d1d9" },
+                height: 250
+            };
+
+            Plotly.newPlot(gauge, data, layout, { responsive: true });
+        }
+
+        // Risk Trend Chart
+        function drawRiskTrend() {
+            const cycles = Array.from({length: 50}, (_, i) => i + 1);
+            const risks = [40,0,0,0,40,0,0,0,0,0,0,0,0,0,0,40,0,0,0,0,0,0,0,0,0,0,0,0,0,0,40,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+
+            const trace = {
+                x: cycles,
+                y: risks,
+                type: 'scatter',
+                mode: 'lines+markers',
+                line: { color: '#1f77b4', width: 3 },
+                marker: { size: 5 },
+                fill: 'tozeroy',
+                fillcolor: 'rgba(31, 119, 180, 0.2)',
+                hovertemplate: 'Cycle %{x}: %{y:.0f}%<extra></extra>'
+            };
+
+            const layout = {
+                title: '',
+                xaxis: { title: 'Cycle Number', gridcolor: '#21262d', color: '#8b949e' },
+                yaxis: { title: 'Risk Score (%)', gridcolor: '#21262d', color: '#8b949e', range: [0, 100] },
+                plot_bgcolor: '#161b22',
+                paper_bgcolor: '#0d1117',
+                font: { color: '#c9d1d9' },
+                hovermode: 'x unified',
+                margin: { t: 30, r: 20, l: 50, b: 50 }
+            };
+
+            Plotly.newPlot('riskTrendChart', [trace], layout, { responsive: true });
+        }
+
+        // Resistance Distribution
+        function drawResistanceChart() {
+            const resistances = [0.1994, 0.2234, 0.2564, 0.3122, 0.3456, 0.2823, 0.2145, 0.4792, 0.3234, 0.2987, 0.3012, 0.2834, 0.3456, 0.2765, 0.3298, 0.3567, 0.2456, 0.3789, 0.2923, 0.3445, 0.2654, 0.3234, 0.2987, 0.3456, 0.3123, 0.2765, 0.3398, 0.2945, 0.3456, 0.3267, 0.2834, 0.3567, 0.2923, 0.3234, 0.2987, 0.3445, 0.2654, 0.3234, 0.2987, 0.3456, 0.3123, 0.2765, 0.3398, 0.2945, 0.3456, 0.3267, 0.2834, 0.3567, 0.2923, 0.3234];
+
+            const trace = {
+                x: resistances,
+                type: 'histogram',
+                nbinsx: 15,
+                marker: { color: '#1f77b4', line: { color: '#0d1117', width: 1 } },
+                hovertemplate: '%{x:.4f} mΩ: %{y} cycles<extra></extra>'
+            };
+
+            const layout = {
+                title: '',
+                xaxis: { title: 'Contact Resistance (mΩ)', gridcolor: '#21262d' },
+                yaxis: { title: 'Frequency', gridcolor: '#21262d' },
+                plot_bgcolor: '#161b22',
+                paper_bgcolor: '#0d1117',
+                font: { color: '#c9d1d9' },
+                margin: { t: 20, r: 20, l: 50, b: 50 }
+            };
+
+            Plotly.newPlot('resistanceChart', [trace], layout, { responsive: true });
+        }
+
+        // Temperature Distribution
+        function drawTemperatureChart() {
+            const temps = [79.0, 78.3, 77.1, 76.3, 79.9, 77.8, 78.2, 76.5, 79.1, 77.2, 78.9, 76.8, 79.4, 77.5, 78.6, 76.9, 79.2, 77.7, 78.7, 76.4, 79.5, 77.1, 78.8, 76.2, 79.3, 77.9, 78.4, 75.4, 79.8, 77.6, 78.5, 76.7, 79.6, 77.4, 78.9, 76.1, 79.7, 77.3, 78.2, 76.0, 80.2, 77.8, 78.1, 76.6, 79.9, 77.2, 78.0, 76.8, 79.4, 77.5];
+
+            const trace = {
+                x: temps,
+                type: 'histogram',
+                nbinsx: 12,
+                marker: { color: '#238636', line: { color: '#0d1117', width: 1 } },
+                hovertemplate: '%{x:.1f}°C: %{y} cycles<extra></extra>'
+            };
+
+            const layout = {
+                title: '',
+                xaxis: { title: 'Junction Temperature (°C)', gridcolor: '#21262d' },
+                yaxis: { title: 'Frequency', gridcolor: '#21262d' },
+                plot_bgcolor: '#161b22',
+                paper_bgcolor: '#0d1117',
+                font: { color: '#c9d1d9' },
+                margin: { t: 20, r: 20, l: 50, b: 50 }
+            };
+
+            Plotly.newPlot('temperatureChart', [trace], layout, { responsive: true });
+        }
+
+        // Initialize charts
+        drawRiskGauge();
+        drawRiskTrend();
+        drawResistanceChart();
+        drawTemperatureChart();
+
+        // Button handlers
+        function runPrediction() {
+            alert('Running manual prediction with:\n' +
+                  'Torque: ' + document.getElementById('torqueSlider').value + ' Nm\n' +
+                  'Press Force: ' + document.getElementById('forceSlider').value + ' N\n' +
+                  'Humidity: ' + document.getElementById('humiditySlider').value + ' %\n\n' +
+                  '(In production, this would fetch new predictions from the backend)');
+        }
+
+        function runBatchSimulation() {
+            alert('Running batch simulation of 50 cycles...\n\n' +
+                  'Expected yield: 70-75%\n' +
+                  'Primary failure: IP68_VACUUM_LEAK_TEST\n\n' +
+                  '(In production, this would stream live progress)');
+        }
+    </script>
+</body>
+</html>
