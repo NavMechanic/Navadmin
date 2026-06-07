@@ -42,6 +42,12 @@ venv.bak/
 .env.local
 credentials.json
 google-credentials.json
+service_account.json
 data/chroma_db/
 data/qdrant_db/
+data/.drive_manifest.json
+.qdrant_db/
 *.log
+
+# Streamlit secrets (keep the .example, ignore the real one)
+.streamlit/secrets.toml
