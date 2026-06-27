@@ -106,8 +106,17 @@ def _print_run(run) -> None:
 def cmd_run(args) -> None:
     from athena.orchestrator import AthenaOrchestrator
 
+    rag_pipeline = None
+    if args.with_rag:
+        try:
+            from rag.pipeline import RAGPipeline
+            rag_pipeline = RAGPipeline()
+            print("RAG pipeline loaded for RCA context.")
+        except Exception as exc:
+            print(f"Warning: Could not load RAG pipeline: {exc}", file=sys.stderr)
+
     print("Starting Project Athena orchestration loop …")
-    orch = AthenaOrchestrator()
+    orch = AthenaOrchestrator(rag_pipeline=rag_pipeline)
     run = orch.run(deal_id=args.deal_id)
     _print_run(run)
 
@@ -121,9 +130,20 @@ def cmd_run(args) -> None:
 
 def cmd_serve(args) -> None:
     import uvicorn
+    from athena.api import create_app
 
+    rag_pipeline = None
+    if args.with_rag:
+        try:
+            from rag.pipeline import RAGPipeline
+            rag_pipeline = RAGPipeline()
+            print("RAG pipeline loaded for RCA context.", file=sys.stderr)
+        except Exception as exc:
+            print(f"Warning: Could not load RAG pipeline: {exc}", file=sys.stderr)
+
+    app_instance = create_app(rag_pipeline=rag_pipeline)
     uvicorn.run(
-        "athena.api:app",
+        app_instance,
         host=args.host,
         port=args.port,
         reload=args.reload,
@@ -141,12 +161,16 @@ def build_parser() -> argparse.ArgumentParser:
     run_p.add_argument("--deal-id", default=None, help="Pecan AI deal ID to forecast")
     run_p.add_argument("--json-out", default=None, metavar="PATH",
                        help="Write full run JSON to this file")
+    run_p.add_argument("--with-rag", action="store_true",
+                       help="Enable RAG pipeline for RCA context on defects")
     run_p.set_defaults(func=cmd_run)
 
     serve_p = sub.add_parser("serve", help="Start the FastAPI REST server")
     serve_p.add_argument("--host", default="0.0.0.0")
     serve_p.add_argument("--port", type=int, default=8080)
     serve_p.add_argument("--reload", action="store_true")
+    serve_p.add_argument("--with-rag", action="store_true",
+                         help="Enable RAG pipeline for RCA context on defects")
     serve_p.set_defaults(func=cmd_serve)
 
     return parser

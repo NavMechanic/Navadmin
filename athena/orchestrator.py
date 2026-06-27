@@ -4,13 +4,15 @@ Project Athena — Core Orchestrator.
 Runs the 5-layer production loop sequentially, collecting results into
 an AthenaRun record. Each layer is isolated; a failure in one layer
 records an error and continues to subsequent layers where possible.
+
+Optionally integrates with RAG for RCA context and knowledge capture.
 """
 
 from __future__ import annotations
 
 import uuid
 from datetime import datetime
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
 from athena.layers.demand import PecanDemandLayer
 from athena.layers.execution import ExecutionLayer
@@ -19,16 +21,23 @@ from athena.layers.simulation import SimulationLayer
 from athena.layers.sourcing import DuroSourcingLayer
 from athena.models import AthenaRun, RunStatus
 
+if TYPE_CHECKING:
+    from rag.pipeline import RAGPipeline
+
 
 class AthenaOrchestrator:
-    """Coordinates all five Athena layers into a single atomic production run."""
+    """
+    Coordinates all five Athena layers into a single atomic production run.
+    Optionally integrates with RAG pipeline for RCA and knowledge capture.
+    """
 
-    def __init__(self) -> None:
+    def __init__(self, rag_pipeline: Optional[RAGPipeline] = None) -> None:
         self._demand = PecanDemandLayer()
         self._sourcing = DuroSourcingLayer()
         self._simulation = SimulationLayer()
         self._execution = ExecutionLayer()
-        self._quality = QualityRevenueLayer()
+        self._quality = QualityRevenueLayer(rag_pipeline=rag_pipeline)
+        self._rag = rag_pipeline
 
     # ------------------------------------------------------------------
     # Public entry point
@@ -105,6 +114,16 @@ class AthenaOrchestrator:
             run.status = RunStatus.PARTIAL
             run.completed_at = datetime.utcnow()
             return run
+
+        # ---- Ingest run results into RAG (optional) ---------------------
+        if self._rag:
+            try:
+                from athena.rag_integration import AthenaRAGBridge
+                bridge = AthenaRAGBridge(rag_pipeline=self._rag)
+                chunks = bridge.ingest_athena_run(run)
+                # Silently log in a production system; don't block on ingestion.
+            except Exception as exc:
+                run.errors.append(f"[rag-ingest] {exc}")
 
         # ---- Finalise ---------------------------------------------------
         run.status = RunStatus.PARTIAL if run.errors else RunStatus.SUCCESS
