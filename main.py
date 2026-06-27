@@ -346,6 +346,71 @@ def cmd_pdf_drive_status(args) -> None:
     print(manifest.status_report())
 
 
+def cmd_athena_run(args) -> None:
+    """Execute Project Athena orchestration loop with optional RAG integration."""
+    from athena.orchestrator import AthenaOrchestrator
+
+    rag = None
+    try:
+        from rag.pipeline import RAGPipeline
+        print("Loading RAG pipeline …")
+        rag = RAGPipeline()
+        print("  ✓ RAG pipeline ready for RCA context")
+    except Exception as exc:
+        print(f"⚠  RAG pipeline unavailable ({type(exc).__name__}): running Athena without RCA context")
+
+    print("Starting Project Athena orchestrator …")
+    orchestrator = AthenaOrchestrator(rag_pipeline=rag)
+
+    print("Starting end-to-end hardware production loop …\n")
+    run = orchestrator.run(deal_id=args.deal_id)
+
+    # Pretty-print the run
+    sep = "=" * 70
+    print(f"\n{sep}")
+    print(f"  PROJECT ATHENA RUN  {run.run_id}")
+    print(f"  Status : {run.status.value.upper()}")
+    print(f"  Elapsed: {(run.completed_at - run.started_at).total_seconds():.1f}s")
+    print(sep)
+
+    if run.demand:
+        d = run.demand
+        print(f"\n[1] DEMAND  {d.signal.deal_id}  {d.recommended_build_qty}× units")
+
+    if run.sourcing:
+        s = run.sourcing
+        print(f"[2] SOURCING  {len(s.bom.lines)} parts  {s.shortage_count} shortages  risk={s.sourcing_risk}")
+
+    if run.simulation:
+        pv = run.simulation.physical_validation
+        print(f"[3] SIMULATION  physical={'PASS' if pv.passed else 'FAIL'}  "
+              f"stress={pv.max_stress_mpa}MPa  thermal={pv.thermal_delta_c}°C")
+
+    if run.execution:
+        ex = run.execution
+        print(f"[4] EXECUTION  ${ex.total_cost_usd:,.0f}  {ex.lead_time_days}d lead")
+
+    if run.quality:
+        q = run.quality
+        print(f"[5] QUALITY  yield={q.yield_rate*100:.1f}%  "
+              f"raas=${q.total_raas_monthly_usd:,.0f}/mo  yass=${q.total_yass_annual_usd:,.0f}/yr")
+
+    if run.errors:
+        print(f"\nWarnings ({len(run.errors)}):")
+        for e in run.errors:
+            print(f"  ⚠ {e}")
+
+    print(f"\n{sep}\n")
+
+    if args.json_out:
+        import json
+        with open(args.json_out, "w") as f:
+            json.dump(run.model_dump(mode="json"), f, indent=2, default=str)
+        print(f"Full run data written to {args.json_out}\n")
+
+    sys.exit(0 if run.status.value in ("success", "partial") else 1)
+
+
 def cmd_fishbone_diagram(args) -> None:
     """Generate and display Mermaid fishbone diagrams for FMEA items."""
     from rag.fmea.fmea import load_pfmea_csv, load_dfmea_csv, FMEAAssessment
@@ -613,6 +678,22 @@ def build_parser() -> argparse.ArgumentParser:
         help="Path to the sync manifest JSON (default: data/.drive_manifest.json)",
     )
     pdf_status_parser.set_defaults(func=cmd_pdf_drive_status)
+
+    # fishbone-diagram
+    # athena-run
+    athena_parser = subparsers.add_parser(
+        "athena-run",
+        help="Execute Project Athena end-to-end production orchestration with RAG integration",
+    )
+    athena_parser.add_argument(
+        "--deal-id", type=str, default=None,
+        help="Pecan AI deal ID to forecast (optional; mock if unset)",
+    )
+    athena_parser.add_argument(
+        "--json-out", type=str, default=None, metavar="PATH",
+        help="Write full run JSON to this file",
+    )
+    athena_parser.set_defaults(func=cmd_athena_run)
 
     # fishbone-diagram
     fishbone_parser = subparsers.add_parser(
