@@ -56,6 +56,12 @@ class AthenaConfig:
     YASS_BASE_ANNUAL_USD: float = float(os.getenv("YASS_BASE_ANNUAL_USD", "1200.0"))
     REVENUE_QUALITY_MULTIPLIER: float = float(os.getenv("REVENUE_QUALITY_MULTIPLIER", "1.5"))
 
+    # Generative Design (Fusion 360)
+    FUSION_TOKEN: str = os.getenv("FUSION_TOKEN", "")
+
+    # Automated Testing (Pluma)
+    PLUMA_TOKEN: str = os.getenv("PLUMA_TOKEN", "")
+
     # Orchestrator
     ATHENA_DRY_RUN: bool = os.getenv("ATHENA_DRY_RUN", "true").lower() in ("1", "true", "yes")
     HTTP_TIMEOUT_S: float = float(os.getenv("ATHENA_HTTP_TIMEOUT_S", "30.0"))
