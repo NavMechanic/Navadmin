@@ -1,0 +1,25 @@
+# Athena Node 2 — runtime dependencies.
+
+fastapi==0.141.1
+uvicorn[standard]==0.46.0
+pydantic==2.13.3
+pydantic-settings==2.14.0
+python-multipart==0.0.20
+
+# Async ORM + migrations. asyncpg is the PostgreSQL driver; aiosqlite is the
+# no-server fallback the test suite and the laptop quick-start use.
+SQLAlchemy[asyncio]==2.0.52
+asyncpg==0.31.0
+aiosqlite==0.22.1
+alembic==1.19.1
+greenlet==3.4.0
+
+# RBAC
+PyJWT==2.12.1
+
+# Compliance Vault client
+httpx==0.28.1
+
+# tests
+pytest==9.1.1
+pytest-asyncio==1.4.0
