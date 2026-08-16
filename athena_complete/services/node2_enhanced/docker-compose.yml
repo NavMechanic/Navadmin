@@ -1,0 +1,79 @@
+# Athena Node 2 — local stack.
+#
+#   docker compose up                 # postgres + migrate + seed + service
+#   docker compose run --rm migrate   # migrations only
+#   docker compose run --rm seed      # reload the seed
+#
+# `migrate` and `seed` are one-shot jobs rather than steps inside the service's
+# entrypoint. Running migrations from every replica of a scaled service is a
+# race; running them once, explicitly, is not.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: athena-node2-db
+    environment:
+      POSTGRES_USER: athena
+      POSTGRES_PASSWORD: athena
+      POSTGRES_DB: athena_plm
+    ports:
+      - "5432:5432"
+    volumes:
+      - node2-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U athena -d athena_plm"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  migrate:
+    build: .
+    image: athena/node2:1.0.0
+    container_name: athena-node2-migrate
+    command: ["python", "-m", "alembic", "upgrade", "head"]
+    environment: &env
+      ATHENA_DATABASE_URL: postgresql+asyncpg://athena:athena@postgres:5432/athena_plm
+      ATHENA_ENVIRONMENT: dev
+      ATHENA_LOG_LEVEL: INFO
+      # Change both of these before anything but a laptop.
+      ATHENA_JWT_SECRET: change-me-athena-node2-dev-secret-0123456789
+      ATHENA_CAD_VAULT_WEBHOOK_SECRET: change-me-cad-vault-dev-secret
+      # Leave blank for replay mode; set to verify certificates for real.
+      ATHENA_COMPLIANCE_VAULT_BASE_URL: ""
+      ATHENA_COMPLIANCE_VAULT_API_KEY: ""
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  seed:
+    build: .
+    image: athena/node2:1.0.0
+    container_name: athena-node2-seed
+    command: ["python", "scripts/seed.py"]
+    environment: *env
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: "no"
+
+  node2:
+    build: .
+    image: athena/node2:1.0.0
+    container_name: athena-node2
+    ports:
+      - "8002:8002"
+    environment: *env
+    depends_on:
+      seed:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8002/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 25s
+    restart: unless-stopped
+
+volumes:
+  node2-pgdata:
