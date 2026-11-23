@@ -41,6 +41,14 @@ class Settings:
     step_lease_seconds: int = 300
     retry_backoff_seconds: float = 0.0
     vendor_outbox_dir: str = str(BASE_DIR / "var" / "vendor_outbox")
+    vendor_inbox_dir: str = str(BASE_DIR / "var" / "vendor_inbox")
+    seed_atlas: bool = True
+    atlas_seed_path: str = str(BASE_DIR / "data" / "reference" / "ATHENA_Global_Specialized_Vendor_Atlas_2026.xlsx")
+    atlas_max_bytes: int = 10_000_000
+    vendor_dd_min_score: float = 3.5
+    webhook_tolerance_seconds: int = 300
+    vendor_callback_max_bytes: int = 5_000_000
+    vendor_job_max_attempts: int = 5
 
     def route_for(self, task: str) -> dict:
         route = dict(DEFAULT_ROUTE)
@@ -82,4 +90,10 @@ def load_settings() -> Settings:
         step_lease_seconds=int(os.getenv("PILOT_STEP_LEASE_SECONDS", defaults.step_lease_seconds)),
         retry_backoff_seconds=float(os.getenv("PILOT_RETRY_BACKOFF_SECONDS", defaults.retry_backoff_seconds)),
         vendor_outbox_dir=os.getenv("PILOT_VENDOR_OUTBOX", defaults.vendor_outbox_dir),
+        vendor_inbox_dir=os.getenv("PILOT_VENDOR_INBOX", defaults.vendor_inbox_dir),
+        seed_atlas=_env_bool("PILOT_SEED_ATLAS", defaults.seed_atlas),
+        atlas_seed_path=os.getenv("PILOT_ATLAS_SEED_PATH", defaults.atlas_seed_path),
+        vendor_dd_min_score=float(os.getenv("PILOT_VENDOR_DD_MIN_SCORE", defaults.vendor_dd_min_score)),
+        webhook_tolerance_seconds=int(os.getenv("PILOT_WEBHOOK_TOLERANCE_SECONDS", defaults.webhook_tolerance_seconds)),
+        vendor_job_max_attempts=int(os.getenv("PILOT_VENDOR_JOB_MAX_ATTEMPTS", defaults.vendor_job_max_attempts)),
     ).validate()

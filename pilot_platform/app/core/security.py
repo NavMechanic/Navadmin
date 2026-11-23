@@ -103,12 +103,20 @@ def require_roles(*roles: str):
     return dependency
 
 
+AUTH_DEPENDENCIES: set = {current_principal}
+
+
+def register_auth_dependency(fn) -> None:
+    """Register a non-JWT authenticator (e.g. HMAC-signed vendor callbacks) as valid route auth."""
+    AUTH_DEPENDENCIES.add(fn)
+
+
 def route_requires_auth(route) -> bool:
-    """True if `current_principal` appears anywhere in the route's dependency tree."""
+    """True if a registered authenticator appears anywhere in the route's dependency tree."""
     stack = list(getattr(route, "dependant", None).dependencies) if getattr(route, "dependant", None) else []
     while stack:
         dep = stack.pop()
-        if dep.call is current_principal:
+        if dep.call in AUTH_DEPENDENCIES:
             return True
         stack.extend(dep.dependencies)
     return False

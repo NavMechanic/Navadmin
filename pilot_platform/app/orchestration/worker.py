@@ -35,6 +35,12 @@ def run_once(sessionmaker, settings) -> int:
             except Exception:  # keep the worker alive; the run keeps its state for the next pass
                 db.rollback()
                 log.exception("advance failed for run %s", run_id)
+        try:
+            from ..atlas.jobs import dispatch_due
+            advanced += dispatch_due(db, settings)  # vendor jobs waiting on rate-limit backoff
+        except Exception:
+            db.rollback()
+            log.exception("vendor job dispatch failed")
     return advanced
 
 

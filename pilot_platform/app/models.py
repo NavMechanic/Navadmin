@@ -232,7 +232,117 @@ class Vendor(Base):
     data_terms_accepted: Mapped[bool] = mapped_column(Boolean, default=False)
     status: Mapped[str] = mapped_column(String(20), default="candidate")
     scorecard: Mapped[dict] = mapped_column(JSON, default=dict)
+    atlas_vendor_id: Mapped[Optional[int]] = mapped_column(ForeignKey("atlas_vendors.id"), nullable=True, index=True)
+    connector_id: Mapped[Optional[str]] = mapped_column(String(16), nullable=True)
     created_at: Mapped[datetime] = mapped_column(default=utcnow)
+
+
+# --- Vendor atlas (candidate discovery database) -------------------------------
+
+class AtlasImport(Base):
+    __tablename__ = "atlas_imports"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(ForeignKey("tenants.id"), index=True)
+    filename: Mapped[str] = mapped_column(String(300))
+    sha256: Mapped[str] = mapped_column(String(64), index=True)
+    size_bytes: Mapped[int] = mapped_column(Integer)
+    source_label: Mapped[str] = mapped_column(String(300), default="")
+    status: Mapped[str] = mapped_column(String(20))  # applied | rejected
+    stats: Mapped[dict] = mapped_column(JSON, default=dict)
+    errors: Mapped[list] = mapped_column(JSON, default=list)
+    imported_by: Mapped[str] = mapped_column(String(120))
+    created_at: Mapped[datetime] = mapped_column(default=utcnow)
+
+
+class AtlasVendor(Base):
+    """One atlas row. Source columns are replaced on re-import; outreach state is ATHENA-managed and kept."""
+    __tablename__ = "atlas_vendors"
+    __table_args__ = (UniqueConstraint("tenant_id", "atlas_id"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(ForeignKey("tenants.id"), index=True)
+    atlas_id: Mapped[str] = mapped_column(String(16))
+    name: Mapped[str] = mapped_column(String(300), index=True)
+    parent_entity: Mapped[str] = mapped_column(String(300), default="")
+    lifecycle_segment: Mapped[str] = mapped_column(String(120), index=True)
+    nodes: Mapped[list] = mapped_column(JSON, default=list)
+    selection: Mapped[str] = mapped_column(String(20), index=True)  # Research | Pilot
+    research_category: Mapped[str] = mapped_column(String(80), default="")
+    ai_evidence: Mapped[str] = mapped_column(String(200), default="")
+    price_evidence: Mapped[str] = mapped_column(String(80), default="")
+    source: Mapped[dict] = mapped_column(JSON, default=dict)  # all atlas columns, verbatim
+    content_hash: Mapped[str] = mapped_column(String(64))
+    source_row: Mapped[int] = mapped_column(Integer)
+    import_id: Mapped[int] = mapped_column(ForeignKey("atlas_imports.id"))
+    in_latest_import: Mapped[bool] = mapped_column(Boolean, default=True)
+    outreach_status: Mapped[str] = mapped_column(String(20), default="Uncontacted")
+    outreach_notes: Mapped[list] = mapped_column(JSON, default=list)
+    updated_at: Mapped[datetime] = mapped_column(default=utcnow, onupdate=utcnow)
+
+
+class VendorConnector(Base):
+    """Reference connector (Vendor Connector Registry) plus this tenant's activation state."""
+    __tablename__ = "vendor_connectors"
+    __table_args__ = (UniqueConstraint("tenant_id", "connector_id"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(ForeignKey("tenants.id"), index=True)
+    connector_id: Mapped[str] = mapped_column(String(16))
+    reference: Mapped[dict] = mapped_column(JSON)  # the registry row + crosswalk, verbatim
+    state: Mapped[str] = mapped_column(String(24), default="reference")  # reference|entitlement_verified|active|suspended
+    entitlement_evidence: Mapped[list] = mapped_column(JSON, default=list)
+    webhook_secret: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    changed_by: Mapped[Optional[str]] = mapped_column(String(120), nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(default=utcnow, onupdate=utcnow)
+
+
+class DueDiligence(Base):
+    __tablename__ = "vendor_due_diligence"
+    __table_args__ = (UniqueConstraint("tenant_id", "atlas_vendor_id"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(ForeignKey("tenants.id"), index=True)
+    atlas_vendor_id: Mapped[int] = mapped_column(ForeignKey("atlas_vendors.id"))
+    assessments: Mapped[dict] = mapped_column(JSON, default=dict)  # criterion key -> assessment
+    decision: Mapped[str] = mapped_column(String(20), default="open")  # open | qualified | rejected
+    decided_by: Mapped[Optional[str]] = mapped_column(String(120), nullable=True)
+    decision_notes: Mapped[str] = mapped_column(Text, default="")
+    updated_at: Mapped[datetime] = mapped_column(default=utcnow, onupdate=utcnow)
+
+
+class VendorJob(Base):
+    __tablename__ = "vendor_jobs"
+    __table_args__ = (UniqueConstraint("tenant_id", "idempotency_key"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(ForeignKey("tenants.id"), index=True)
+    connector_id: Mapped[str] = mapped_column(String(16), index=True)
+    vendor_id: Mapped[Optional[int]] = mapped_column(ForeignKey("vendors.id"), nullable=True)
+    idempotency_key: Mapped[str] = mapped_column(String(100))
+    status: Mapped[str] = mapped_column(String(24), index=True)
+    work_package: Mapped[dict] = mapped_column(JSON)
+    input_revision_ids: Mapped[list] = mapped_column(JSON, default=list)
+    budget_reserved: Mapped[str] = mapped_column(String(40), default="0")
+    currency: Mapped[str] = mapped_column(String(3), default="USD")
+    attempts: Mapped[int] = mapped_column(Integer, default=0)
+    next_attempt_at: Mapped[Optional[datetime]] = mapped_column(nullable=True)
+    dispatch: Mapped[dict] = mapped_column(JSON, default=dict)
+    events: Mapped[list] = mapped_column(JSON, default=list)       # received callback event ids
+    charges: Mapped[list] = mapped_column(JSON, default=list)
+    exceptions: Mapped[list] = mapped_column(JSON, default=list)
+    result_files: Mapped[list] = mapped_column(JSON, default=list)
+    result_revision_id: Mapped[Optional[int]] = mapped_column(ForeignKey("artifact_revisions.id"), nullable=True)
+    blocked_reason: Mapped[str] = mapped_column(Text, default="")
+    reviewed_by: Mapped[Optional[str]] = mapped_column(String(120), nullable=True)
+    created_by: Mapped[str] = mapped_column(String(120))
+    created_at: Mapped[datetime] = mapped_column(default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(default=utcnow, onupdate=utcnow)
+
+
+class WebhookNonce(Base):
+    __tablename__ = "webhook_nonces"
+    __table_args__ = (UniqueConstraint("tenant_id", "connector_id", "nonce"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(String(64))
+    connector_id: Mapped[str] = mapped_column(String(16))
+    nonce: Mapped[str] = mapped_column(String(100))
+    received_at: Mapped[datetime] = mapped_column(default=utcnow)
 
 
 # --- N6 commercial bids -------------------------------------------------------

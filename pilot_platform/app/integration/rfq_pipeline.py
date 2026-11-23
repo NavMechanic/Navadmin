@@ -18,6 +18,8 @@ from ..nodes import n2_product, n3_design, n4_quality, n5_sourcing, n7_finance
 from ..orchestration.engine import PermanentStepError, StepContext, StepDef, WorkflowDef, handler, register_workflow
 from ..thread import service as thread
 
+CONSENT_SCOPES = ("INTERNAL_ONLY", "VENDOR_ALLOWED")
+
 
 def _key(ctx: StepContext) -> str:
     key = ctx.input.get("rfq_key")
@@ -34,8 +36,12 @@ def _out(ctx: StepContext, step: str, field: str):
 def ingest(ctx: StepContext) -> dict:
     if not str(ctx.input.get("rfq_text", "")).strip():
         raise PermanentStepError("rfq_text is required")
+    consent = ctx.input.get("consent_scope", "INTERNAL_ONLY")  # DF-026; safe default
+    if consent not in CONSENT_SCOPES:
+        raise PermanentStepError(f"consent_scope must be one of {CONSENT_SCOPES}")
     rev = thread.create_revision(ctx.db, ctx.tenant_id, ctx.actor, "RFQ", _key(ctx),
-                                 {"customer": ctx.input.get("customer"), "raw_text": ctx.input["rfq_text"], "stage": "received"},
+                                 {"customer": ctx.input.get("customer"), "raw_text": ctx.input["rfq_text"], "stage": "received",
+                                  "consent_scope": consent},
                                  note="RFQ received")
     return {"rfq_revision_id": rev.id}
 

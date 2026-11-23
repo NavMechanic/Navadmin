@@ -1,0 +1,132 @@
+[
+ {
+  "key": "legal_identity",
+  "criterion": "Legal and product identity",
+  "evidence_requested": "Official vendor legal name / current product / geography",
+  "pass_requirement": "Entity active, product licensable",
+  "evidence_owner": "ATHENA",
+  "assessor_roles": [
+   "vendor_lead"
+  ],
+  "weight_pct": 10,
+  "risk_if_failed": "Vendor is a directory entry, not qualified",
+  "knockout": true
+ },
+ {
+  "key": "commercial_rights",
+  "criterion": "Commercial rights and sublicensing",
+  "evidence_requested": "Order form, permitted outputs, downstream customer rights",
+  "pass_requirement": "Commercial/client output rights explicit",
+  "evidence_owner": "ATHENA",
+  "assessor_roles": [
+   "vendor_lead"
+  ],
+  "weight_pct": 15,
+  "risk_if_failed": "Unauthorized reuse/resale",
+  "knockout": true
+ },
+ {
+  "key": "api_exports",
+  "criterion": "API / exports / connectors",
+  "evidence_requested": "OpenAPI docs, SDK, CSV/STEP/Gerber exports, webhooks",
+  "pass_requirement": "Versioned accessible API or clean manual handoff",
+  "evidence_owner": "Engineering",
+  "assessor_roles": [
+   "engineer"
+  ],
+  "weight_pct": 10,
+  "risk_if_failed": "Human handoffs undermine orchestration",
+  "knockout": false
+ },
+ {
+  "key": "input_confidentiality",
+  "criterion": "Model input confidentiality",
+  "evidence_requested": "DPA, no-training option, retention windows, data residency",
+  "pass_requirement": "Customer IP not reused without authorization",
+  "evidence_owner": "Security",
+  "assessor_roles": [
+   "qa"
+  ],
+  "weight_pct": 15,
+  "risk_if_failed": "Customer data/IP exposure",
+  "knockout": true
+ },
+ {
+  "key": "price_predictability",
+  "criterion": "Unit price predictability",
+  "evidence_requested": "Formal quotation, overages, seat minimum, trial-to-paid fees",
+  "pass_requirement": "All-in project allocation and monthly cap",
+  "evidence_owner": "Finance",
+  "assessor_roles": [
+   "finance"
+  ],
+  "weight_pct": 15,
+  "risk_if_failed": "Gross margin instability",
+  "knockout": false
+ },
+ {
+  "key": "deliverable_acceptance",
+  "criterion": "Technical deliverable acceptance",
+  "evidence_requested": "Reference sample, verification trace, test outcomes",
+  "pass_requirement": "Reproducible artifact and objective QC",
+  "evidence_owner": "Technical Lead",
+  "assessor_roles": [
+   "engineer"
+  ],
+  "weight_pct": 15,
+  "risk_if_failed": "Unverifiable AI output",
+  "knockout": false
+ },
+ {
+  "key": "availability_sla",
+  "criterion": "Availability and service level",
+  "evidence_requested": "Support SLA, incident response, uptime, exit plan",
+  "pass_requirement": "Backup vendor or manual fallback",
+  "evidence_owner": "Program Lead",
+  "assessor_roles": [
+   "programme_manager"
+  ],
+  "weight_pct": 5,
+  "risk_if_failed": "Supplier lock-in or delivery slip",
+  "knockout": false
+ },
+ {
+  "key": "procurement_tax",
+  "criterion": "India procurement / taxes",
+  "evidence_requested": "INR/USD, GST, withholding, invoicing",
+  "pass_requirement": "No unbudgeted tax or FX risk",
+  "evidence_owner": "Finance",
+  "assessor_roles": [
+   "finance"
+  ],
+  "weight_pct": 5,
+  "risk_if_failed": "Unbudgeted landed cost",
+  "knockout": false
+ },
+ {
+  "key": "system_compatibility",
+  "criterion": "ERP/PLM/MES compatibility",
+  "evidence_requested": "Supported formats, ECAD MCAD stack, SCM APIs",
+  "pass_requirement": "Revision-safe data exchange",
+  "evidence_owner": "Engineering",
+  "assessor_roles": [
+   "engineer"
+  ],
+  "weight_pct": 5,
+  "risk_if_failed": "Design thread inconsistency",
+  "knockout": false
+ },
+ {
+  "key": "security_audit",
+  "criterion": "Security and audit trace",
+  "evidence_requested": "RBAC, audit logs, SSO, backups, export rights",
+  "pass_requirement": "Traceable authorized actions",
+  "evidence_owner": "Security",
+  "assessor_roles": [
+   "qa"
+  ],
+  "weight_pct": 5,
+  "risk_if_failed": "No evidence for customer/auditor",
+  "knockout": false
+ }
+]

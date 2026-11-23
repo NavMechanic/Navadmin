@@ -57,6 +57,10 @@ def qualify(db: Session, principal: Principal, vendor_id: int) -> Vendor:
         missing.append("endpoint")
     if v.mode == "file_handoff" and not v.handoff_format:
         missing.append("handoff_format")
+    if v.atlas_vendor_id is not None:
+        from ..atlas.service import is_qualified
+        if not is_qualified(db, principal.tenant_id, v.atlas_vendor_id):
+            missing.append("atlas_due_diligence")
     if missing:
         raise ValidationFailed("vendor cannot be qualified", missing=missing)
     v.status = "qualified"

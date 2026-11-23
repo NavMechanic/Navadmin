@@ -13,7 +13,8 @@ RFQ_TEXT = GOLD[0]["text"]
 
 
 def make_settings(tmp_path, **overrides) -> Settings:
-    base = dict(database_url="sqlite://", password_iterations=1000, vendor_outbox_dir=str(tmp_path / "outbox"))
+    base = dict(database_url="sqlite://", password_iterations=1000, vendor_outbox_dir=str(tmp_path / "outbox"),
+                vendor_inbox_dir=str(tmp_path / "inbox"), seed_atlas=False)
     base.update(overrides)
     return Settings(**base)
 

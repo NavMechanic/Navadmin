@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
@@ -15,7 +16,7 @@ from .config import Settings, load_settings
 from .core.errors import DomainError
 from .core.security import hash_password
 from .db import Base, make_engine, make_sessionmaker
-from .models import ImmutableRowError, Programme, Tenant, User
+from .models import AtlasVendor, ImmutableRowError, Programme, Tenant, User
 
 log = logging.getLogger("pilot_platform")
 
@@ -43,6 +44,13 @@ def seed_demo(app: FastAPI) -> None:
         if db.scalars(select(Programme).where(Programme.tenant_id == DEMO_TENANT)).first() is None:
             from .programme.service import load_default_plan
             load_default_plan(db, DEMO_TENANT, "seed")
+        from .atlas.connectors import seed_connectors
+        seed_connectors(db, DEMO_TENANT)
+        atlas_file = Path(settings.atlas_seed_path)
+        if settings.seed_atlas and atlas_file.is_file() and \
+                db.scalars(select(AtlasVendor.id).where(AtlasVendor.tenant_id == DEMO_TENANT).limit(1)).first() is None:
+            from .atlas.importer import import_atlas
+            import_atlas(db, DEMO_TENANT, "seed", atlas_file.read_bytes(), atlas_file.name, settings)
         db.commit()
     log.warning("Demo users seeded with known passwords ('<username>-demo'). Never enable PILOT_SEED_DEMO in production.")
 
@@ -66,9 +74,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     # importing these registers workflow definitions/handlers
     from .integration import rfq_pipeline  # noqa: F401
     from .orchestration import selftest  # noqa: F401
-    from .api import auth_admin, programme, thread_ai, workflows_nodes
+    from .api import atlas, auth_admin, programme, thread_ai, workflows_nodes
 
-    for module in (auth_admin, programme, thread_ai, workflows_nodes):
+    for module in (auth_admin, programme, thread_ai, workflows_nodes, atlas):
         app.include_router(module.router)
 
     @app.get("/health", tags=["health"])

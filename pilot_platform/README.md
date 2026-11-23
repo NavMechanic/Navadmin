@@ -21,7 +21,7 @@ coverage, and gate U ("one RFQ spans nodes with lineage") walks an issued quote'
 cd pilot_platform
 python3 -m venv .venv && . .venv/bin/activate
 pip install -r requirements-dev.txt
-pytest -q                                  # 75 tests
+pytest -q                                  # 92 tests
 uvicorn app.main:app --reload              # http://127.0.0.1:8000/docs
 ```
 
@@ -46,7 +46,7 @@ With Docker (Postgres, API and worker): `docker compose up --build`.
 | I | Orchestration | Resumes failures; approvals enforced | **auto**: engine self-test (isolated DB) | `orchestration/engine.py` |
 | J | N1 Market | No unsupported TAM→SAM conversion | **auto**: every SAM entry has a named account + cited evidence | `nodes/n1_market.py` |
 | K | N2 Product | Critical requirements traceable to tests | **auto**: PRD ↔ TEST traceability | `nodes/n2_product.py` |
-| L | Vendor layer | At least 2 usable vendor handoffs | **auto**: ≥ 2 qualified vendors | `vendors/service.py` |
+| L | Vendor layer | At least 2 usable vendor handoffs | **auto**: ≥ 2 qualified vendors (atlas-linked ones need current due diligence) | `vendors/`, `atlas/` |
 | M | N3 Design | Simulation assumptions + engineer review | **auto**: latest SIM review passed | `nodes/n3_design.py` |
 | N | N4 Quality | Safety-critical gaps block release | **auto**: no uncovered critical reqs / unmitigated S≥9 | `nodes/n4_quality.py` |
 | O | N5 Sourcing | 2 comparable valid bids where attainable | **auto**: ≥ 2 comparable bids or written justification | `nodes/n5_sourcing.py` |
@@ -54,7 +54,7 @@ With Docker (Postgres, API and worker): `docker compose up --build`.
 | Q | N7 Finance | Deterministic calculations, no LLM math | **auto**: latest costing re-derives to the same hash | `nodes/n7_finance.py` |
 | R | N8 Lifecycle | No synthetic data presented as actual | **auto**: replay events all flagged synthetic | `nodes/n8_lifecycle.py` |
 | S | Cross-cutting QA | Critical policy and isolation tests pass | **auto**: security harness | `ai/evals.py` |
-| T | Vendor QA | Accepted or rejected with evidence | **auto**: every decided vendor has an evidenced scorecard | `vendors/service.py` |
+| T | Vendor QA | Accepted or rejected with evidence | **auto**: evidenced scorecards + every vendor result reviewed, no open job exceptions | `vendors/`, `atlas/jobs.py` |
 | U | Integration | One RFQ spans nodes with lineage | **auto**: issued QUOTE lineage ⊇ RFQ, PRD, SIM, TEST, BOM | `integration/rfq_pipeline.py` |
 | V | Verification | Critical scenarios and abuse tests pass | evidence + **auto** security harness | `programme/` |
 | W–Z | Pilot → Decision | (customer deliverables, acceptance, P&L, go/no-go) | evidence | `programme/` |
@@ -142,6 +142,63 @@ retrying. See `tests/conftest.py::pipeline_input` for a complete input payload.
 * **Nodes (`nodes/`)**: pure-function cores, which the API, the pipeline and the gate checks all reuse. N7 uses
   `Decimal` throughout, and every costing carries a reproducibility hash.
 
+## Vendor atlas integration
+
+This section implements the vendor parts of the reference workbook *ATHENA N1–N8 Data IO & Vendor Ingestion
+Architecture* using the data in *ATHENA Global Specialized Vendor Atlas 2026*.
+
+| Reference element | Implementation |
+|---|---|
+| Atlas VENDOR MASTER (1,163 records) | `POST /atlas/imports` (raw .xlsx body). The demo seed loads `data/reference/…Atlas_2026.xlsx` |
+| Atlas CATEGORY ANALYTICS | `GET /atlas/facets` reproduces the sheet exactly for all 31 segments (tested) |
+| Atlas VENDOR DUE DILIGENCE (10 criteria, weights = 100%) | `PUT /atlas/vendors/{id}/due-diligence/{criterion}`, `POST …/due-diligence/decision` |
+| Vendor Connector Registry (CON-001…047) | `GET /vendor-connectors`, with each connector cross-walked to atlas IDs |
+| Ingestion Methods (ING-01…16) | Each connector lists its routes; the file routes (ING-06/08/10/14) can do a manual handoff |
+| Proposed APIs A08 / A09 / A10 | `POST /vendor-connectors/{id}/run`, `POST /vendor-callbacks/{tenant}/{id}`, `GET /vendor-jobs/{id}` |
+| Gate G4 (supplier) | Connector activation needs verified entitlement, a linked atlas record that passed due diligence, and a qualified engagement vendor |
+| DF-026 `consent_scope` / test T35 | A job is `BLOCKED_PERMISSION` unless every RFQ in its input lineage is `VENDOR_ALLOWED` |
+| Tests T10 / T27 / T32 / T33 | Licence hold · rate-limit retry with no double charge · charge-without-artifact exception · checksum quarantine |
+
+**Atlas records are candidates, not partners.** Every record starts as the atlas states it: API "Not assessed",
+rights "Requires review", outreach "Uncontacted". Price text is stored verbatim, and no number is ever derived
+from it. Only the 10 records classed "Published numerical entry price" are flagged as having a numeric public
+entry point, and even that is not a quotation.
+
+**From candidate to working connector:**
+
+```
+atlas record ──due diligence (10 weighted criteria, knock-outs)──▶ qualified
+     └─promote──▶ engagement vendor ──qualify──▶ bound to connector
+connector: reference ──entitlement evidence──▶ entitlement_verified ──activate (G4)──▶ active (+ webhook secret, shown once)
+job:  run ──consent? licence?──▶ AWAITING_VENDOR ──signed result, checksums OK──▶ RESULT_RECEIVED ──human review──▶ ACCEPTED
+                └─ BLOCKED_PERMISSION / HELD_LICENSE (POST /vendor-jobs/{id}/retry once cleared)     └─ QUARANTINED
+```
+
+* **Due diligence.** Each criterion is scored 0–5 by the role that owns its evidence: vendor lead, engineer, QA
+  (security), finance or programme manager. Every assessment needs evidence references. To qualify, a vendor needs
+  all 10 criteria assessed, the three knock-outs passed (legal identity, commercial rights, model-input
+  confidentiality), and a weighted score ≥ `PILOT_VENDOR_DD_MIN_SCORE` (default 3.5 / 5). Any new assessment
+  reopens a decided record, so a later failing finding revokes qualification. Gate L stops counting that vendor,
+  and its jobs go to `HELD_LICENSE`.
+* **Vendor callbacks.** Each callback carries `X-Athena-Timestamp`, `X-Athena-Nonce` and
+  `X-Athena-Signature: sha256=HMAC(secret, "{ts}.{nonce}." + body)`. Callbacks outside a ±300 s window are rejected,
+  a replayed nonce gets 409, and a duplicate `event_id` is ignored. Result files arrive base64-encoded with their
+  declared SHA-256. A mismatch quarantines the result, and nothing goes downstream.
+* **Results enter the digital thread.** Each result becomes a revision whose kind comes from the connector's
+  canonical schema (e.g. `supplier_quote.v1` → BOM, `design_package.v1` → SIM). It is derived from the job's input
+  revisions, so lineage reaches back to the RFQ. It starts in `REVIEW` state, and someone other than the job's
+  creator must accept or reject it.
+* **Dispatch.** Connectors have no programmatic adapters yet (Nexar GraphQL, Altium, Flux MCP and so on). Jobs go
+  out as file-handoff manifests, using each connector's documented fallback from the registry. Register a real
+  adapter with `@register_adapter("CON-027")` in `app/atlas/jobs.py`.
+* **Gates.** Gate T adds `vendor_results_decided`: no result left unreviewed and no open job exception.
+
+The connector → atlas crosswalk is in `app/atlas/data/connectors.json`. It holds 27 exact name matches,
+14 curated matches (each with a reason, e.g. "Altium 365" → `AT-0312 Altium`), and 6 providers that are not in the
+atlas (HubSpot, Salesforce, DocuSign, AWS IoT Core, the GeM portal, and the internal cost engine). Those 6 cannot be
+activated until a record is added. To regenerate the reference JSON:
+`python -I scripts/extract_reference.py ARCHITECTURE.xlsx ATLAS.xlsx app/atlas/data`.
+
 ## Configuration
 
 Settings come from environment variables; see `.env.example` (export them, e.g. `set -a; . ./.env; set +a`).
@@ -163,5 +220,12 @@ Key settings: `DATABASE_URL`, `PILOT_ENV`, `PILOT_JWT_SECRET`, `PILOT_SEED_DEMO`
   are an extension point that refuses to fake a call; the file-handoff adapter works.
 * **Concurrency is single-worker.** The budget reservation and the workflow worker assume one writer. On Postgres,
   add row locking (`SELECT … FOR UPDATE SKIP LOCKED`) before scaling out.
+* **Vendor integration limits.**
+  * Webhook secrets are stored in the database; move them to a secrets manager for production.
+  * Vendor result files must be sent inline (≤ 5 MB). Object-storage import (ING-14) is not built.
+  * No programmatic vendor adapters exist yet (see above).
+  * The due-diligence threshold (3.5) and the choice of the three knock-out criteria are defaults I chose; the
+    atlas gives weights but no pass mark.
+  * The 14 curated crosswalk matches should be confirmed by someone who knows the vendors.
 * **Durations are illustrative**, as the source states ("revise after pilot scoping"). Update `seed_plan.json`, or
   `POST /programmes` with a revised plan.

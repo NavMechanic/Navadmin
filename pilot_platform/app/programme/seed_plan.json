@@ -1,6 +1,6 @@
 {
   "name": "Pilot Programme",
-  "source": "Pilot CPM Network – Gates, Layers & Logic (HTML)",
+  "source": "Pilot CPM Network \u2013 Gates, Layers & Logic (HTML)",
   "activities": [
     {
       "code": "A",
@@ -531,7 +531,8 @@
       "gate_criteria": "Accepted or rejected with evidence",
       "gate_spec": {
         "automated": [
-          "vendor_scorecards"
+          "vendor_scorecards",
+          "vendor_results_decided"
         ]
       },
       "planned_start_week": 15,

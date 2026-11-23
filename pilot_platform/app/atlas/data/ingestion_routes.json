@@ -1,0 +1,279 @@
+[
+ {
+  "route_id": "ING-01",
+  "mechanism": "REST GET (pull)",
+  "trigger": "Scheduled/analyst",
+  "data_types": "JSON",
+  "auth": "OAuth2/API key scoped to project",
+  "prechecks": "HTTPS/TLS; per-vendor rate-limit",
+  "normalization": "Normalize keys and units; retain request ID",
+  "acceptance": "JSON schema; stale data/MPN checks",
+  "provenance": "Raw response in object store + canonical row",
+  "failure_policy": "429 retry/backoff; 4xx quarantine",
+  "nodes": [
+   "N1",
+   "N5",
+   "N8"
+  ],
+  "caution": "No credentials in browser; honor vendor ToS"
+ },
+ {
+  "route_id": "ING-02",
+  "mechanism": "GraphQL query/mutation",
+  "trigger": "Scheduled/on demand",
+  "data_types": "GraphQL/JSON",
+  "auth": "Token and documented scopes",
+  "prechecks": "Query allowlist, depth/complexity cap",
+  "normalization": "Map nested part/design records",
+  "acceptance": "Type, pricing tier, provenance",
+  "provenance": "Original query/response hash",
+  "failure_policy": "GraphQL errors partial → quarantine",
+  "nodes": [
+   "N3",
+   "N5"
+  ],
+  "caution": "Official Altium/Nexar routes; never assume writes allowed"
+ },
+ {
+  "route_id": "ING-03",
+  "mechanism": "Webhook push",
+  "trigger": "Event received",
+  "data_types": "JSON / CloudEvents",
+  "auth": "HMAC signature, mTLS where supported",
+  "prechecks": "Replay nonce, timestamp window",
+  "normalization": "Idempotency key + event schema",
+  "acceptance": "Signature and version verification",
+  "provenance": "Immutable webhook payload",
+  "failure_policy": "Dead-letter queue; manual replay",
+  "nodes": [
+   "N6",
+   "N8"
+  ],
+  "caution": "Do not trust unsigned vendor callbacks"
+ },
+ {
+  "route_id": "ING-04",
+  "mechanism": "MCP tool call",
+  "trigger": "Approved orchestration task",
+  "data_types": "MCP structured tool response",
+  "auth": "Project-scoped key + tool approval",
+  "prechecks": "Allowlisted tools, no arbitrary tool calls",
+  "normalization": "Translate MCP object→artifact schema",
+  "acceptance": "Human approval for edit/write operations",
+  "provenance": "Tool call log + full result",
+  "failure_policy": "Escalate if tool unavailable",
+  "nodes": [
+   "N2",
+   "N3",
+   "N5"
+  ],
+  "caution": "MCP server exposed by provider does not imply all enterprise rights"
+ },
+ {
+  "route_id": "ING-05",
+  "mechanism": "Local CLI / SDK",
+  "trigger": "Signed engineering work order",
+  "data_types": "Native CAD, XML, JSON, CSV",
+  "auth": "Host service account/sandbox",
+  "prechecks": "Command allowlist, resource limits",
+  "normalization": "Parse native exports + checks reports",
+  "acceptance": "Tool version, ERC/DRC, simulation assertions",
+  "provenance": "Native file + log + hash",
+  "failure_policy": "Report nonzero exit and retry safely",
+  "nodes": [
+   "N3",
+   "N4"
+  ],
+  "caution": "CLI tool cannot itself certify design"
+ },
+ {
+  "route_id": "ING-06",
+  "mechanism": "SFTP batch",
+  "trigger": "Daily/milestone",
+  "data_types": "CSV/XLSX/XML/PDF",
+  "auth": "SSH keys + host allowlist",
+  "prechecks": "Encrypted channel and malware scan",
+  "normalization": "Schema registry mapping + delimiter/locale",
+  "acceptance": "Date/currency/unit parse, duplicate detection",
+  "provenance": "Signed file manifest+checksum",
+  "failure_policy": "Quarantine bad file, send error report",
+  "nodes": [
+   "N5",
+   "N8"
+  ],
+  "caution": "Access segregated by supplier / tenant"
+ },
+ {
+  "route_id": "ING-07",
+  "mechanism": "Customer upload portal",
+  "trigger": "Customer submits RFQ",
+  "data_types": "PDF,DOCX,CSV,XLSX,STEP",
+  "auth": "Authenticated customer RBAC",
+  "prechecks": "Virus scan, size limits, MIME sniffing",
+  "normalization": "OCR only if true scanned content and approved",
+  "acceptance": "Field completeness, confidential labels",
+  "provenance": "Original read-only file + parsed text",
+  "failure_policy": "Customer clarification task",
+  "nodes": [
+   "N1",
+   "N2",
+   "N3",
+   "N6"
+  ],
+  "caution": "Never expose original customer IP to unauthorized vendors"
+ },
+ {
+  "route_id": "ING-08",
+  "mechanism": "Vendor portal/manual download",
+  "trigger": "Human certified download",
+  "data_types": "PDF/XLSX/STEP/Gerber",
+  "auth": "Vendor login; consent",
+  "prechecks": "Human attest source and entitlement",
+  "normalization": "Parse + map with provenance flags",
+  "acceptance": "Manual reviewer and quote expiry",
+  "provenance": "Attested acquisition record",
+  "failure_policy": "Manual reconciliation and exception",
+  "nodes": [
+   "N3",
+   "N5",
+   "N6"
+  ],
+  "caution": "No scraping, bypassing access controls or violating vendor terms"
+ },
+ {
+  "route_id": "ING-09",
+  "mechanism": "Email-to-RFQ inbox",
+  "trigger": "Authorized procurement mailbox",
+  "data_types": "EML + attachments",
+  "auth": "Mailbox delegated OAuth/service access",
+  "prechecks": "Approved senders, anti-malware",
+  "normalization": "Extract line items, sender and revision",
+  "acceptance": "Compare with signed supplier quote",
+  "provenance": "Original EML + attachments + audit",
+  "failure_policy": "Hold on suspicious sender/DMARC",
+  "nodes": [
+   "N5",
+   "N6"
+  ],
+  "caution": "Email is not authenticated contract acceptance"
+ },
+ {
+  "route_id": "ING-10",
+  "mechanism": "Partner CSV/XLSX template",
+  "trigger": "Partner uploads batch",
+  "data_types": "CSV/XLSX",
+  "auth": "Signed file + partner account",
+  "prechecks": "Validated template header",
+  "normalization": "Normalize MPN, currency, MOQ, lead times",
+  "acceptance": "Line completeness, quote validity",
+  "provenance": "Canonical supplier_quote rows",
+  "failure_policy": "Reject and send row-level feedback",
+  "nodes": [
+   "N5",
+   "N7"
+  ],
+  "caution": "Avoid auto-award based on unverified prices"
+ },
+ {
+  "route_id": "ING-11",
+  "mechanism": "OPC UA gateway",
+  "trigger": "Machine event",
+  "data_types": "OPC UA→JSON/Parquet",
+  "auth": "Plant VPN/certificates",
+  "prechecks": "Read-only OT segment; no uncontrolled control commands",
+  "normalization": "Time zone, unit, equipment ID mapping",
+  "acceptance": "Sample period/quality flags",
+  "provenance": "Raw machine event with asset map",
+  "failure_policy": "Store-and-forward if disconnected",
+  "nodes": [
+   "N8"
+  ],
+  "caution": "Never expose plant control network directly to LLM"
+ },
+ {
+  "route_id": "ING-12",
+  "mechanism": "MQTT over TLS",
+  "trigger": "Device event",
+  "data_types": "JSON/CBOR",
+  "auth": "Device X.509 identity",
+  "prechecks": "Topic ACL and replay protection",
+  "normalization": "Validate schema and UTC timestamps",
+  "acceptance": "Sensor calibration/quality flags",
+  "provenance": "Event stream + raw payload",
+  "failure_policy": "Backpressure, DLQ, per-device throttling",
+  "nodes": [
+   "N8"
+  ],
+  "caution": "Production brokers need alerting and access reviews"
+ },
+ {
+  "route_id": "ING-13",
+  "mechanism": "Lab SCPI / VISA",
+  "trigger": "Authorized test sequence",
+  "data_types": "SCPI numeric, binary waveforms",
+  "auth": "Local authorized instrument client",
+  "prechecks": "Instrument/firmware ID and calibration",
+  "normalization": "Convert logs to SI units and timestamped tests",
+  "acceptance": "Bounds, instrument self-test, uncertainty",
+  "provenance": "Binary waveform + CSV + test manifest",
+  "failure_policy": "Abort test on interlock or unsafe state",
+  "nodes": [
+   "N4",
+   "N8"
+  ],
+  "caution": "Trained operators and electrical safety"
+ },
+ {
+  "route_id": "ING-14",
+  "mechanism": "Object storage file import",
+  "trigger": "Job completed/file emitted",
+  "data_types": "STEP,Gerber,ODB,CSV,JSON",
+  "auth": "Presigned URL or service identity",
+  "prechecks": "Encryption, content hash, ACL",
+  "normalization": "Extract metadata; never blindly execute files",
+  "acceptance": "File manifest and version consistency",
+  "provenance": "Immutable original + linked artifact",
+  "failure_policy": "Checksum mismatch quarantined",
+  "nodes": [
+   "N3",
+   "N4",
+   "N5",
+   "N8"
+  ],
+  "caution": "Rev-controlled source and output"
+ },
+ {
+  "route_id": "ING-15",
+  "mechanism": "ERP/CRM export",
+  "trigger": "Commercial/project milestone",
+  "data_types": "CSV/JSON",
+  "auth": "Approved system connector",
+  "prechecks": "Read-only/least privilege first",
+  "normalization": "Map customer, cost centers and status codes",
+  "acceptance": "Tax, currency and accounting period rules",
+  "provenance": "Source ledger pointer and snapshot",
+  "failure_policy": "Manual finance reconciliation",
+  "nodes": [
+   "N6",
+   "N7"
+  ],
+  "caution": "No direct posting without finance signoff"
+ },
+ {
+  "route_id": "ING-16",
+  "mechanism": "Signed PDF / e-sign document",
+  "trigger": "Contract milestone",
+  "data_types": "PDF/A and signed envelope metadata",
+  "auth": "Legal authorized user",
+  "prechecks": "Verify signature chain/identity",
+  "normalization": "Extract SOW, obligations and payment terms",
+  "acceptance": "Legal approval + signed version",
+  "provenance": "Contract artifact and signer identity",
+  "failure_policy": "Reject unsigned or expired doc",
+  "nodes": [
+   "N6",
+   "N7"
+  ],
+  "caution": "No model-generated signature"
+ }
+]

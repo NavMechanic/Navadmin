@@ -11,7 +11,7 @@ from ..ai import evals
 from ..ai.extraction import extract_rfq
 from ..contracts.rfq import REQUIRED
 from ..core.security import PUBLIC_PATHS, route_requires_auth
-from ..models import Artifact, ArtifactRevision, Bid, TelemetryEvent, Tenant, Vendor
+from ..models import Artifact, ArtifactRevision, Bid, TelemetryEvent, Tenant, Vendor, VendorJob
 from ..nodes import n1_market, n2_product, n7_finance, n8_lifecycle
 from ..orchestration.selftest import run_selftest
 from ..thread import service as thread
@@ -141,8 +141,21 @@ def security_harness(ctx: CheckContext) -> CheckResult:
 
 
 def vendors_qualified(ctx: CheckContext) -> CheckResult:
+    from ..atlas.service import is_qualified
     q = ctx.db.scalars(select(Vendor).where(Vendor.tenant_id == ctx.tenant_id, Vendor.status == "qualified")).all()
-    return CheckResult("", len(q) >= 2, {"qualified": [v.name for v in q]})
+    # an atlas-linked vendor counts only while its due diligence is still qualified (re-assessment revokes)
+    usable = [v for v in q if v.atlas_vendor_id is None or is_qualified(ctx.db, ctx.tenant_id, v.atlas_vendor_id)]
+    return CheckResult("", len(usable) >= 2, {"qualified": [v.name for v in usable],
+                                              "due_diligence_lapsed": [v.name for v in q if v not in usable]})
+
+
+def vendor_results_decided(ctx: CheckContext) -> CheckResult:
+    from ..atlas.jobs import RECEIVED
+    jobs = ctx.db.scalars(select(VendorJob).where(VendorJob.tenant_id == ctx.tenant_id)).all()
+    awaiting = [j.id for j in jobs if j.status == RECEIVED]
+    open_exc = {j.id: [e["code"] for e in j.exceptions if e["open"]] for j in jobs if any(e["open"] for e in j.exceptions)}
+    return CheckResult("", not awaiting and not open_exc, {"jobs": len(jobs), "awaiting_review": awaiting,
+                                                           "open_exceptions": open_exc})
 
 
 def vendor_scorecards(ctx: CheckContext) -> CheckResult:
@@ -175,4 +188,5 @@ CHECKS = {
     "bid_awarded_by_human": bid_awarded_by_human, "finance_deterministic": finance_deterministic,
     "telemetry_synthetic_labelled": telemetry_synthetic_labelled, "security_harness": security_harness,
     "vendor_scorecards": vendor_scorecards, "rfq_end_to_end_lineage": rfq_end_to_end_lineage,
+    "vendor_results_decided": vendor_results_decided,
 }
