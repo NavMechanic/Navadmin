@@ -122,10 +122,10 @@ defect category.
     # Ingest Athena run as RAG knowledge
     # ------------------------------------------------------------------
 
-    def ingest_athena_run(self, run: AthenaRun) -> int:
+    def ingest_athena_run(self, run: AthenaRun, submission=None) -> int:
         """
         Convert an Athena run into knowledge documents and ingest into RAG.
-        Returns chunk count.
+        Returns chunk count. ``submission`` is the run summary's ArtifactSubmission (DQ gateway).
         """
         if not self.rag:
             return 0
@@ -135,9 +135,9 @@ defect category.
         # Build a rich narrative doc from the run
         doc_text = self._athena_run_to_text(run)
         doc = Document(
-            source=f"athena-run:{run.run_id}",
-            text=doc_text,
+            content=doc_text,
             metadata={
+                "source": f"athena-run:{run.run_id}",
                 "run_id": run.run_id,
                 "status": run.status.value,
                 "timestamp": run.started_at.isoformat(),
@@ -147,7 +147,9 @@ defect category.
             },
         )
 
-        return self.rag._chunk_and_index_documents([doc])
+        # Gated like every other ingest: without a Canonical I-O Manifest for the run summary
+        # the DQ gateway raises DQGateRejected and nothing is indexed (caller logs it).
+        return self.rag._chunk_and_index_documents([doc], submission)
 
     # ------------------------------------------------------------------
     # Failure prediction based on Athena + FMEA + Digital Twin

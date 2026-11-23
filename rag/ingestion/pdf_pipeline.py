@@ -237,8 +237,10 @@ class PDFPipeline:
         )
     """
 
-    def __init__(self, rag_pipeline) -> None:
+    def __init__(self, rag_pipeline, submission_for=None) -> None:
         self._rag = rag_pipeline
+        # filename/path -> ArtifactSubmission; without one the DQ gateway rejects the file
+        self._submission_for = submission_for or getattr(rag_pipeline, "dq_submission_for", None)
         self._extractor = PDFExtractor()
 
     # ------------------------------------------------------------------
@@ -322,7 +324,19 @@ class PDFPipeline:
                 }
                 documents.append(Document(content=page.text, metadata=meta))
 
-        chunk_count = self._rag._chunk_and_index_documents(documents)
+        from rag.dq_gateway import DQGateRejected
+
+        raw = Path(path).read_bytes()
+        try:
+            chunk_count = self._rag._chunk_and_index_documents(
+                documents, self._submission_for(path) if self._submission_for else None,
+                source_kind="pdf", content=raw, file_bytes={filename: raw},
+            )
+        except DQGateRejected as exc:
+            return PDFIngestionResult(
+                filename=filename, doc_type=doc_type, page_count=len(pages), section_count=len(sections),
+                chunk_count=0, has_tables=has_tables, error=str(exc),
+            )
 
         return PDFIngestionResult(
             filename=filename,
@@ -421,7 +435,21 @@ class PDFPipeline:
                     "category": "pdf_drive",
                 },
             )
-            chunk_count = self._rag._chunk_and_index_documents([doc])
+            # download_as_text yields text, not the file's bytes, so output_file_sha256 cannot
+            # be verified: the gateway quarantines it (DQ05). Download bytes to ingest from Drive.
+            from rag.dq_gateway import DQGateRejected
+
+            try:
+                chunk_count = self._rag._chunk_and_index_documents(
+                    [doc], self._submission_for(file_info.title) if self._submission_for else None,
+                    source_kind="pdf", content=None,
+                )
+            except DQGateRejected as exc:
+                results.append(PDFIngestionResult(
+                    filename=file_info.title, doc_type=doc_type, page_count=0, section_count=0,
+                    chunk_count=0, has_tables=False, error=str(exc),
+                ))
+                continue
             result = PDFIngestionResult(
                 filename=file_info.title,
                 doc_type=doc_type,

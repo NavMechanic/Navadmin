@@ -45,3 +45,7 @@ google-credentials.json
 data/chroma_db/
 data/qdrant_db/
 *.log
+
+# ATHENA DQ gateway registry (runtime state)
+data/.dq_registry.json
+data/.dq_registry.tmp
