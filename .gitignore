@@ -49,3 +49,7 @@ data/qdrant_db/
 # ATHENA DQ gateway registry (runtime state)
 data/.dq_registry.json
 data/.dq_registry.tmp
+
+# ATHENA data lake (fetched datasets, live caches, ledgers, exports) — never committed
+data_lake/*
+!data_lake/README.md

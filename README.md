@@ -15,3 +15,15 @@ streamlit run dashboard/app.py                # "DQ Control Tower" tab
 ATHENA_DQ_TOKENS='{"<token>": {"tenant_id": "demo", "actor_id": "demo.engineer"}}' ATHENA_DQ_DEMO=1 \
   uvicorn api.gateway_router:create_app_from_env --factory
 ```
+
+## ATHENA data acquisition pipeline
+
+`data_pipeline/` fetches, verifies and formats the 75 N0–N8 sources (SRC-001..SRC-075). It uses
+isolated `data_lake/` partitions, immutable provenance manifests, and 12 hard promotion controls. See
+[docs/DATA_PIPELINE.md](docs/DATA_PIPELINE.md). The source catalog is a reconstruction pending steward
+verification.
+
+```bash
+python -m data_pipeline.cli --nodes N0..N8 --priority P0 --mode all --action plan
+python -m pytest tests/test_dq_adversarial.py      # DQ-001..DQ-054
+```

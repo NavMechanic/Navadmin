@@ -1,0 +1,1451 @@
+# ATHENA N0–N8 pre-training / grounding / evaluation source registry (SRC-001..SRC-075)
+#
+# STATUS: RECONSTRUCTED. The reference workbook
+#   ATHENA_N0_N8_Pretraining_Data_Sources_and_Quality_Gateway_2026.xlsx
+# was not available when this file was written. Entries marked PROMPT_SPECIFIED have their ID and
+# guardrail fixed by the build specification; their URLs/licenses and every RECONSTRUCTED entry are
+# best-effort and must be verified by the data steward (set catalog_status: VERIFIED once checked).
+#
+# The hard guardrails are NOT configurable here: data_pipeline/policy_gates.py hard-codes the
+# non-commercial block (SRC-038/039), drop-zone-only sources, API-key live lookups and domain-boundary
+# tags, and the loader refuses a catalog that contradicts them. Credentials are referenced as env vars
+# only — never write a key into this file.
+#
+# intended_use → partition:  TRAIN-CANDIDATE → train_candidates   RAG/REFERENCE, LIVE-LOOKUP → rag_reference
+#                            EVAL/BENCHMARK → eval_benchmarks (NC/unasserted → eval_noncommercial)
+#                            PRIVATE-GROUND-TRUTH → private_ground_truth
+version: 2026.1-reconstructed
+sources:
+
+# ============================ N0 — data governance & schema foundations ============================
+- source_id: SRC-001
+  name: JSON Schema 2020-12 meta-schemas
+  node_id: N0
+  intended_use: TRAIN-CANDIDATE
+  priority: P0
+  access: http_archive
+  official_url: https://json-schema.org/draft/2020-12/schema
+  license_spdx_id: AFL-3.0
+  license_url: https://json-schema.org/
+  commercial_training_allowed: true
+  training_allowed: true
+  data_steward: steward.n0-governance
+  version_tag: draft-2020-12
+  origin_type: PUBLIC_OPEN
+  formatter: slm_jsonl
+  record_kind: json_schema
+  expected_mime: [application/json]
+  http:
+    files:
+      - {url: "https://json-schema.org/draft/2020-12/schema", name: schema.json, expected_mime: [application/json]}
+      - {url: "https://json-schema.org/draft/2020-12/meta/validation", name: meta-validation.json, expected_mime: [application/json]}
+      - {url: "https://json-schema.org/draft/2020-12/meta/applicator", name: meta-applicator.json, expected_mime: [application/json]}
+
+- source_id: SRC-002
+  name: W3C PROV-O ontology
+  node_id: N0
+  intended_use: RAG/REFERENCE
+  priority: P1
+  access: http_archive
+  official_url: https://www.w3.org/TR/prov-o/
+  license_spdx_id: W3C-20150513
+  license_url: https://www.w3.org/copyright/software-license-2015/
+  data_steward: steward.n0-governance
+  version_tag: REC-2013-04-30
+  origin_type: PUBLIC_OPEN
+  formatter: rag_chunks
+  expected_mime: [text/turtle, text/plain]
+  http:
+    files:
+      - {url: "https://www.w3.org/ns/prov-o.ttl", name: prov-o.ttl, expected_mime: [text/turtle, text/plain]}
+
+- source_id: SRC-003
+  name: SPDX License List data
+  node_id: N0
+  intended_use: RAG/REFERENCE
+  priority: P0
+  access: http_archive
+  official_url: https://spdx.org/licenses/
+  license_spdx_id: CC-BY-3.0
+  license_url: https://creativecommons.org/licenses/by/3.0/legalcode.txt
+  data_steward: steward.n0-governance
+  version_tag: v3.25.0
+  origin_type: PUBLIC_OPEN
+  formatter: rag_chunks
+  record_kind: spdx_license
+  expected_mime: [application/json]
+  http:
+    files:
+      - {url: "https://raw.githubusercontent.com/spdx/license-list-data/v3.25.0/json/licenses.json", name: licenses.json, expected_mime: [application/json]}
+
+- source_id: SRC-004
+  name: CycloneDX specification
+  node_id: N0
+  intended_use: RAG/REFERENCE
+  priority: P1
+  access: git
+  official_url: https://github.com/CycloneDX/specification
+  license_spdx_id: Apache-2.0
+  data_steward: steward.n0-governance
+  version_tag: "1.6"
+  origin_type: PUBLIC_OPEN
+  formatter: rag_chunks
+  git: {repo: "https://github.com/CycloneDX/specification", ref: "1.6", mode: clone, sparse_paths: [schema, docs]}
+
+- source_id: SRC-005
+  name: NIST SP 330 — The International System of Units (SI)
+  node_id: N0
+  intended_use: TRAIN-CANDIDATE
+  priority: P0
+  access: http_archive
+  official_url: https://www.nist.gov/pml/special-publication-330
+  license_spdx_id: LicenseRef-PD-USGov
+  license_url: https://www.nist.gov/oism/copyrights
+  commercial_training_allowed: true
+  training_allowed: true
+  data_steward: steward.n0-governance
+  version_tag: SP330-2019
+  origin_type: PUBLIC_OPEN
+  formatter: slm_jsonl
+  record_kind: pdf_text
+  expected_mime: [application/pdf]
+  http:
+    files:
+      - {url: "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.330-2019.pdf", name: NIST.SP.330-2019.pdf, expected_mime: [application/pdf]}
+
+- source_id: SRC-006
+  name: NIST AI Risk Management Framework 1.0 (NIST AI 100-1)
+  node_id: N0
+  intended_use: RAG/REFERENCE
+  priority: P1
+  access: http_archive
+  official_url: https://www.nist.gov/itl/ai-risk-management-framework
+  license_spdx_id: LicenseRef-PD-USGov
+  license_url: https://www.nist.gov/oism/copyrights
+  data_steward: steward.n0-governance
+  version_tag: AI-100-1
+  origin_type: PUBLIC_OPEN
+  formatter: rag_chunks
+  record_kind: pdf_text
+  expected_mime: [application/pdf]
+  http:
+    files:
+      - {url: "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-1.pdf", name: NIST.AI.100-1.pdf, expected_mime: [application/pdf]}
+
+- source_id: SRC-007
+  name: ATHENA data-steward decision vault
+  node_id: N0
+  intended_use: PRIVATE-GROUND-TRUTH
+  priority: P0
+  access: vault
+  official_url: internal://athena/n0/data-steward-decisions
+  license_spdx_id: LicenseRef-ATHENA-Internal
+  license_text: "ATHENA internal confidential data. Governed by the ATHENA data-steward policy. No external redistribution."
+  data_steward: steward.n0-governance
+  version_tag: v1
+  origin_type: PRIVATE_GROUND_TRUTH
+  formatter: none
+  vault: {vault_name: data-steward-decisions, schema_model: StewardDecisionRecord}
+
+# ============================ N1 — market intelligence ============================
+- source_id: SRC-008
+  name: OpenAlex works (scholarly & technology signals)
+  node_id: N1
+  intended_use: TRAIN-CANDIDATE
+  priority: P1
+  access: api
+  official_url: https://openalex.org/
+  license_spdx_id: CC0-1.0
+  license_url: https://docs.openalex.org/additional-help/faq
+  commercial_training_allowed: true
+  training_allowed: true
+  data_steward: steward.n1-market
+  version_tag: api-snapshot
+  origin_type: LIVE_API
+  formatter: slm_jsonl
+  record_kind: openalex_work
+  expected_mime: [application/json]
+  rate_limit_per_s: 5
+  api:
+    base_url: https://api.openalex.org/works
+    auth: {type: query, param: api_key, env: OPENALEX_API_KEY, optional: true}
+    params: {search: "printed circuit board assembly", per-page: 25}
+    records_path: results
+    pagination: {type: page, param: page, start: 1, max_pages: 2}
+
+- source_id: SRC-009
+  name: GDELT 2.0 event database (latest update)
+  node_id: N1
+  intended_use: RAG/REFERENCE
+  priority: P2
+  access: http_archive
+  official_url: https://www.gdeltproject.org/
+  license_spdx_id: LicenseRef-GDELT-Terms
+  license_url: https://www.gdeltproject.org/about.html#termsofuse
+  data_steward: steward.n1-market
+  version_tag: v2-latest
+  origin_type: PUBLIC_OPEN
+  formatter: rag_chunks
+  expected_mime: [text/plain]
+  http:
+    files:
+      - {url: "https://data.gdeltproject.org/gdeltv2/lastupdate.txt", name: lastupdate.txt, expected_mime: [text/plain]}
+
+- source_id: SRC-010
+  name: TED — Tenders Electronic Daily notices (EU)
+  node_id: N1
+  intended_use: TRAIN-CANDIDATE
+  priority: P1
+  access: api
+  official_url: https://ted.europa.eu/
+  license_spdx_id: CC-BY-4.0
+  license_url: https://creativecommons.org/licenses/by/4.0/legalcode.txt
+  commercial_training_allowed: true
+  training_allowed: true
+  data_steward: steward.n1-market
+  version_tag: api-v3-snapshot
+  origin_type: LIVE_API
+  formatter: slm_jsonl
+  record_kind: ted_notice
+  expected_mime: [application/json]
+  api:
+    base_url: https://api.ted.europa.eu/v3/notices/search
+    method: POST
+    body: {query: "classification-cpv IN (31710000 32000000) SORT BY publication-number DESC", fields: [publication-number, notice-title, buyer-name, buyer-country, notice-type, publication-date, classification-cpv, deadline-receipt-tender-date-lot], limit: 25, page: 1}
+    records_path: notices
+    pagination: {type: page, param: page, start: 1, max_pages: 2}
+
+- source_id: SRC-011
+  name: UN Comtrade — HS 85 electronics trade flows
+  node_id: N1
+  intended_use: LIVE-LOOKUP
+  priority: P0
+  access: api
+  official_url: https://comtradeplus.un.org/
+  license_spdx_id: LicenseRef-UN-Comtrade-Terms
+  license_url: https://uncomtrade.org/docs/
+  data_steward: steward.n1-market
+  version_tag: v1-live
+  origin_type: LIVE_API
+  formatter: rag_chunks
+  catalog_status: PROMPT_SPECIFIED
+  expected_mime: [application/json]
+  api:
+    base_url: https://comtradeapi.un.org/data/v1/get/C/A/HS
+    auth: {type: header, header: Ocp-Apim-Subscription-Key, env: COMTRADE_API_KEY}
+    params: {reporterCode: "699", period: "2024", cmdCode: "8534", flowCode: "M"}
+    records_path: data
+    ttl_seconds: 604800
+
+- source_id: SRC-012
+  name: USAspending.gov federal awards
+  node_id: N1
+  intended_use: TRAIN-CANDIDATE
+  priority: P2
+  access: api
+  official_url: https://www.usaspending.gov/
+  license_spdx_id: LicenseRef-PD-USGov
+  license_url: https://www.usaspending.gov/about
+  commercial_training_allowed: true
+  training_allowed: true
+  data_steward: steward.n1-market
+  version_tag: api-v2-snapshot
+  origin_type: LIVE_API
+  formatter: slm_jsonl
+  record_kind: usaspending_award
+  expected_mime: [application/json]
+  api:
+    base_url: https://api.usaspending.gov/api/v2/search/spending_by_award/
+    method: POST
+    body: {filters: {keywords: ["printed circuit"], award_type_codes: [A, B, C, D], time_period: [{start_date: "2024-01-01", end_date: "2024-12-31"}]}, fields: [Award ID, Recipient Name, Award Amount, Description, Awarding Agency, Start Date], limit: 25, page: 1}
+    records_path: results
+    pagination: {type: page, param: page, start: 1, max_pages: 2}
+
+- source_id: SRC-013
+  name: India CPPP — Central Public Procurement Portal (manual intake)
+  node_id: N1
+  intended_use: RAG/REFERENCE
+  priority: P1
+  access: drop_zone
+  official_url: https://eprocure.gov.in/cppp/
+  license_spdx_id: LicenseRef-GoI-CPPP-Terms
+  license_url: https://eprocure.gov.in/cppp/
+  data_steward: steward.n1-market
+  version_tag: manual
+  origin_type: PUBLIC_OPEN
+  formatter: rag_chunks
+  catalog_status: PROMPT_SPECIFIED
+  notes: "Portal terms prohibit automated harvesting; stewards export notices manually into the drop zone."
+  drop_zone: {accepted_extensions: [.pdf, .html, .xlsx, .csv, .json]}
+
+- source_id: SRC-014
+  name: SAM.gov contract opportunities
+  node_id: N1
+  intended_use: LIVE-LOOKUP
+  priority: P1
+  access: api
+  official_url: https://sam.gov/
+  license_spdx_id: LicenseRef-SAM-gov-Terms
+  license_url: https://open.gsa.gov/api/get-opportunities-public-api/
+  data_steward: steward.n1-market
+  version_tag: v2-live
+  origin_type: LIVE_API
+  formatter: rag_chunks
+  catalog_status: PROMPT_SPECIFIED
+  expected_mime: [application/json]
+  api:
+    base_url: https://api.sam.gov/opportunities/v2/search
+    auth: {type: query, param: api_key, env: SAM_GOV_API_KEY}
+    params: {limit: 25, postedFrom: "01/01/2026", postedTo: "12/31/2026", ncode: "334412"}
+    records_path: opportunitiesData
+    ttl_seconds: 86400
+
+- source_id: SRC-015
+  name: ATHENA RFQ win/loss history vault
+  node_id: N1
+  intended_use: PRIVATE-GROUND-TRUTH
+  priority: P0
+  access: vault
+  official_url: internal://athena/n1/rfq-win-loss-history
+  license_spdx_id: LicenseRef-ATHENA-Internal
+  license_text: "ATHENA internal confidential data. Governed by the ATHENA data-steward policy. No external redistribution."
+  data_steward: steward.n1-market
+  version_tag: v1
+  origin_type: PRIVATE_GROUND_TRUTH
+  formatter: none
+  vault: {vault_name: rfq-win-loss-history, schema_model: RfqWinLossRecord}
+
+# ============================ N2 — product definition & requirements ============================
+- source_id: SRC-016
+  name: NASA Systems Engineering Handbook (SP-2016-6105 Rev 2)
+  node_id: N2
+  intended_use: TRAIN-CANDIDATE
+  priority: P0
+  access: http_archive
+  official_url: https://www.nasa.gov/reference/systems-engineering-handbook/
+  license_spdx_id: LicenseRef-PD-USGov
+  license_url: https://www.nasa.gov/nasa-brand-center/images-and-media/
+  commercial_training_allowed: true
+  training_allowed: true
+  data_steward: steward.n2-product
+  version_tag: SP-2016-6105-Rev2
+  origin_type: PUBLIC_OPEN
+  formatter: slm_jsonl
+  record_kind: pdf_text
+  expected_mime: [application/pdf]
+  http:
+    files:
+      - {url: "https://www.nasa.gov/wp-content/uploads/2018/09/nasa_systems_engineering_handbook_0.pdf", name: nasa_se_handbook.pdf, expected_mime: [application/pdf]}
+
+- source_id: SRC-017
+  name: PURE — public requirements documents dataset
+  node_id: N2
+  intended_use: TRAIN-CANDIDATE
+  priority: P1
+  access: http_archive
+  official_url: https://zenodo.org/records/1414117
+  license_spdx_id: CC-BY-4.0
+  license_url: https://zenodo.org/records/1414117
+  commercial_training_allowed: true
+  training_allowed: true
+  data_steward: steward.n2-product
+  version_tag: zenodo-1414117
+  origin_type: PUBLIC_OPEN
+  formatter: slm_jsonl
+  record_kind: requirements_labeled
+  expected_mime: [application/zip]
+  http:
+    files:
+      - {url: "https://zenodo.org/records/1414117/files/requirements-xml.zip", name: pure-requirements.zip, extract: zip, expected_mime: [application/zip]}
+
+- source_id: SRC-018
+  name: PROMISE NFR requirements classification benchmark
+  node_id: N2
+  intended_use: EVAL/BENCHMARK
+  priority: P1
+  access: http_archive
+  official_url: https://zenodo.org/records/268542
+  license_spdx_id: CC-BY-4.0
+  license_url: https://zenodo.org/records/268542
+  data_steward: steward.n2-product
+  version_tag: zenodo-268542
+  origin_type: PUBLIC_OPEN
+  formatter: slm_jsonl
+  record_kind: requirements_labeled
+  expected_mime: [application/x-tar]
+  http:
+    files:
+      - {url: "https://zenodo.org/records/268542/files/nfr.tar", name: nfr.tar, extract: tar, expected_mime: [application/x-tar]}
+
+- source_id: SRC-019
+  name: EUR-Lex — RoHS Directive 2011/65/EU (consolidated)
+  node_id: N2
+  intended_use: RAG/REFERENCE
+  priority: P0
+  access: http_archive
+  official_url: https://eur-lex.europa.eu/eli/dir/2011/65/oj
+  license_spdx_id: CC-BY-4.0
+  license_url: https://creativecommons.org/licenses/by/4.0/legalcode.txt
+  data_steward: steward.n2-product
+  version_tag: CELEX-32011L0065
+  origin_type: PUBLIC_OPEN
+  formatter: rag_chunks
+  expected_mime: [text/html]
+  http:
+    files:
+      - {url: "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32011L0065", name: rohs-2011-65-eu.html, expected_mime: [text/html]}
+
+- source_id: SRC-020
+  name: ECHA REACH SVHC Candidate List
+  node_id: N2
+  intended_use: RAG/REFERENCE
+  priority: P1
+  access: http_archive
+  official_url: https://echa.europa.eu/candidate-list-table
+  license_spdx_id: LicenseRef-ECHA-Legal-Notice
+  license_url: https://echa.europa.eu/legal-notice
+  data_steward: steward.n2-product
+  version_tag: candidate-list-latest
+  origin_type: PUBLIC_OPEN
+  formatter: rag_chunks
+  expected_mime: [text/html]
+  http:
+    files:
+      - {url: "https://echa.europa.eu/candidate-list-table", name: svhc-candidate-list.html, expected_mime: [text/html]}
+
+- source_id: SRC-021
+  name: eCFR 47 CFR Part 15 — radio frequency devices
+  node_id: N2
+  intended_use: RAG/REFERENCE
+  priority: P1
+  access: api
+  official_url: https://www.ecfr.gov/current/title-47/chapter-I/subchapter-A/part-15
+  license_spdx_id: LicenseRef-PD-USGov
+  license_url: https://www.ecfr.gov/reader-aids/using-ecfr/ecfr-content-and-data
+  data_steward: steward.n2-product
+  version_tag: api-versioner-v1
+  origin_type: LIVE_API
+  formatter: rag_chunks
+  expected_mime: [application/xml, text/xml]
+  api:
+    base_url: https://www.ecfr.gov/api/versioner/v1/full/2026-01-01/title-47.xml
+    params: {part: "15"}
+
+- source_id: SRC-022
+  name: ATHENA approved PRD baselines vault
+  node_id: N2
+  intended_use: PRIVATE-GROUND-TRUTH
+  priority: P0
+  access: vault
+  official_url: internal://athena/n2/approved-prd-baselines
+  license_spdx_id: LicenseRef-ATHENA-Internal
+  license_text: "ATHENA internal confidential data. Governed by the ATHENA data-steward policy. No external redistribution."
+  data_steward: steward.n2-product
+  version_tag: v1
+  origin_type: PRIVATE_GROUND_TRUTH
+  formatter: none
+  vault: {vault_name: approved-prd-baselines, schema_model: PrdRequirementRecord}
+
+# ============================ N3 — design & engineering (EDA / CAE / physics) ============================
+- source_id: SRC-023
+  name: KiCad symbol libraries
+  node_id: N3
+  intended_use: TRAIN-CANDIDATE
+  priority: P0
+  access: git
+  official_url: https://gitlab.com/kicad/libraries/kicad-symbols
+  license_spdx_id: CC-BY-SA-4.0 WITH KiCad-libraries-exception
+  license_url: https://www.kicad.org/libraries/license/
+  commercial_training_allowed: false
+  training_allowed: true
+  data_steward: steward.n3-design
+  version_tag: "8.0.6"
+  origin_type: PUBLIC_OPEN
+  formatter: eda_physics
+  notes: "Share-alike: needs legal review before commercial training (not on the automatic license list)."
+  git: {repo: "https://gitlab.com/kicad/libraries/kicad-symbols.git", ref: "8.0.6", mode: clone}
+
+- source_id: SRC-024
+  name: KiCad footprint libraries
+  node_id: N3
+  intended_use: TRAIN-CANDIDATE
+  priority: P0
+  access: git
+  official_url: https://gitlab.com/kicad/libraries/kicad-footprints
+  license_spdx_id: CC-BY-SA-4.0 WITH KiCad-libraries-exception
+  license_url: https://www.kicad.org/libraries/license/
+  commercial_training_allowed: false
+  training_allowed: true
+  data_steward: steward.n3-design
+  version_tag: "8.0.6"
+  origin_type: PUBLIC_OPEN
+  formatter: eda_physics
+  git: {repo: "https://gitlab.com/kicad/libraries/kicad-footprints.git", ref: "8.0.6", mode: clone}
+
+- source_id: SRC-025
+  name: KiCad 3D packages (STEP)
+  node_id: N3
+  intended_use: TRAIN-CANDIDATE
+  priority: P2
+  access: git
+  official_url: https://gitlab.com/kicad/libraries/kicad-packages3D
+  license_spdx_id: CC-BY-SA-4.0 WITH KiCad-libraries-exception
+  license_url: https://www.kicad.org/libraries/license/
+  commercial_training_allowed: false
+  training_allowed: true
+  data_steward: steward.n3-design
+  version_tag: "8.0.6"
+  origin_type: PUBLIC_OPEN
+  formatter: eda_physics
+  notes: "Very large repository; sparse checkout of packages commonly used on ATHENA boards."
+  git: {repo: "https://gitlab.com/kicad/libraries/kicad-packages3D.git", ref: "8.0.6", mode: clone,
+        sparse_paths: [Package_SO.3dshapes, Package_QFP.3dshapes, Package_DFN_QFN.3dshapes]}
+
+- source_id: SRC-026
+  name: OpenROAD (RTL-to-GDS flow, test designs)
+  node_id: N3
+  intended_use: TRAIN-CANDIDATE
+  priority: P1
+  access: git
+  official_url: https://github.com/The-OpenROAD-Project/OpenROAD
+  license_spdx_id: BSD-3-Clause
+  commercial_training_allowed: true
+  training_allowed: true
+  data_steward: steward.n3-design
+  version_tag: v2.0
+  origin_type: PUBLIC_OPEN
+  formatter: eda_physics
+  git: {repo: "https://github.com/The-OpenROAD-Project/OpenROAD", ref: v2.0, mode: clone, sparse_paths: [test, docs]}
+
+- source_id: SRC-027
+  name: IEC / UL / BIS IS safety & EMC standards (licensed copies, manual intake)
+  node_id: N3
+  intended_use: RAG/REFERENCE
+  priority: P0
+  access: drop_zone
+  official_url: https://webstore.iec.ch/
+  license_spdx_id: LicenseRef-Paid-Standard-Single-User
+  data_steward: steward.n3-design
+  version_tag: manual
+  origin_type: PUBLIC_OPEN
+  formatter: rag_chunks
+  catalog_status: PROMPT_SPECIFIED
+  notes: "Paid, copyrighted standards (IEC 62368-1, UL 62368-1, IS 13252). Purchased copies only; never scraped, never trained."
+  drop_zone: {accepted_extensions: [.pdf]}
+
+- source_id: SRC-028
+  name: CircuitNet (EDA congestion / DRC / IR-drop prediction)
+  node_id: N3
+  intended_use: TRAIN-CANDIDATE
+  priority: P1
+  access: git
+  official_url: https://github.com/circuitnet/CircuitNet
+  license_spdx_id: BSD-3-Clause
+  commercial_training_allowed: true
+  training_allowed: true
+  data_steward: steward.n3-design
+  version_tag: main
+  origin_type: PUBLIC_OPEN
+  formatter: eda_physics
+  notes: "Repository carries the feature-extraction code; the dataset shards are distributed separately and are placed with the repo snapshot."
+  git: {repo: "https://github.com/circuitnet/CircuitNet", ref: main, mode: clone}
+
+- source_id: SRC-029
+  name: PDEBench (scientific ML benchmark — physics fields)
+  node_id: N3
+  intended_use: TRAIN-CANDIDATE
+  priority: P2
+  access: git
+  official_url: https://github.com/pdebench/PDEBench
+  license_spdx_id: CC-BY-4.0
+  license_url: https://darus.uni-stuttgart.de/dataset.xhtml?persistentId=doi:10.18419/darus-2986
+  commercial_training_allowed: true
+  training_allowed: true
+  data_steward: steward.n3-design
+  version_tag: main
+  origin_type: PUBLIC_OPEN
+  formatter: eda_physics
+  git: {repo: "https://github.com/pdebench/PDEBench", ref: main, mode: clone}
+
+- source_id: SRC-030
+  name: Fusion 360 Gallery dataset (CAD reconstruction / segmentation)
+  node_id: N3
+  intended_use: EVAL/BENCHMARK
+  priority: P2
+  access: git
+  official_url: https://github.com/AutodeskAILab/Fusion360GalleryDataset
+  license_spdx_id: LicenseRef-Autodesk-Fusion360-Gallery
+  license_url: https://raw.githubusercontent.com/AutodeskAILab/Fusion360GalleryDataset/master/LICENSE.md
+  noncommercial: true
+  data_steward: steward.n3-design
+  version_tag: master
+  origin_type: PUBLIC_OPEN
+  formatter: eda_physics
+  notes: "Dataset license is research-oriented; treated as non-commercial until the steward verifies it."
+  git: {repo: "https://github.com/AutodeskAILab/Fusion360GalleryDataset", ref: master, mode: clone}
+
+- source_id: SRC-031
+  name: NIST AM-Bench additive manufacturing benchmarks
+  node_id: N3
+  intended_use: EVAL/BENCHMARK
+  priority: P2
+  access: http_archive
+  official_url: https://www.nist.gov/ambench
+  license_spdx_id: LicenseRef-PD-USGov
+  license_url: https://www.nist.gov/oism/copyrights
+  data_steward: steward.n3-design
+  version_tag: AMB2022
+  origin_type: PUBLIC_OPEN
+  formatter: eda_physics
+  expected_mime: [text/html]
+  http:
+    files:
+      - {url: "https://www.nist.gov/ambench/benchmark-test-data", name: ambench-data-index.html, expected_mime: [text/html]}
+
+- source_id: SRC-032
+  name: SkyWater SKY130 open PDK
+  node_id: N3
+  intended_use: TRAIN-CANDIDATE
+  priority: P2
+  access: git
+  official_url: https://github.com/google/skywater-pdk
+  license_spdx_id: Apache-2.0
+  commercial_training_allowed: true
+  training_allowed: true
+  data_steward: steward.n3-design
+  version_tag: main
+  origin_type: PUBLIC_OPEN
+  formatter: eda_physics
+  git: {repo: "https://github.com/google/skywater-pdk", ref: main, mode: clone, sparse_paths: [docs]}
+
+- source_id: SRC-033
+  name: ATHENA released design packages vault
+  node_id: N3
+  intended_use: PRIVATE-GROUND-TRUTH
+  priority: P0
+  access: vault
+  official_url: internal://athena/n3/released-design-packages
+  license_spdx_id: LicenseRef-ATHENA-Internal
+  license_text: "ATHENA internal confidential data. Governed by the ATHENA data-steward policy. No external redistribution."
+  data_steward: steward.n3-design
+  version_tag: v1
+  origin_type: PRIVATE_GROUND_TRUTH
+  formatter: none
+  vault: {vault_name: released-design-packages, schema_model: DesignPackageRecord}
+
+- source_id: SRC-034
+  name: ATHENA DRC/ERC waiver log vault
+  node_id: N3
+  intended_use: PRIVATE-GROUND-TRUTH
+  priority: P1
+  access: vault
+  official_url: internal://athena/n3/drc-erc-waiver-log
+  license_spdx_id: LicenseRef-ATHENA-Internal
+  license_text: "ATHENA internal confidential data. Governed by the ATHENA data-steward policy. No external redistribution."
+  data_steward: steward.n3-design
+  version_tag: v1
+  origin_type: PRIVATE_GROUND_TRUTH
+  formatter: none
+  vault: {vault_name: drc-erc-waiver-log, schema_model: DesignWaiverRecord}
+
+- source_id: SRC-035
+  name: EPFL combinational logic benchmark suite
+  node_id: N3
+  intended_use: EVAL/BENCHMARK
+  priority: P2
+  access: git
+  official_url: https://github.com/lsils/benchmarks
+  license_spdx_id: MIT
+  data_steward: steward.n3-design
+  version_tag: master
+  origin_type: PUBLIC_OPEN
+  formatter: eda_physics
+  git: {repo: "https://github.com/lsils/benchmarks", ref: master, mode: clone}
+
+# ============================ N4 — verification, validation & inspection ============================
+- source_id: SRC-036
+  name: DeepPCB defect detection dataset
+  node_id: N4
+  intended_use: TRAIN-CANDIDATE
+  priority: P0
+  access: git
+  official_url: https://github.com/tangsanli5201/DeepPCB
+  license_spdx_id: MIT
+  commercial_training_allowed: true
+  training_allowed: true
+  data_steward: steward.n4-quality
+  version_tag: master
+  origin_type: PUBLIC_OPEN
+  formatter: vision_yolo
+  record_kind: deeppcb
+  git: {repo: "https://github.com/tangsanli5201/DeepPCB", ref: master, mode: clone}
+
+- source_id: SRC-037
+  name: PKU-Market-PCB defect dataset
+  node_id: N4
+  intended_use: EVAL/BENCHMARK
+  priority: P2
+  access: http_archive
+  official_url: https://robotics.pkusz.edu.cn/resources/dataset/
+  license_spdx_id: NOASSERTION
+  data_steward: steward.n4-quality
+  version_tag: v1
+  origin_type: PUBLIC_OPEN
+  formatter: vision_yolo
+  record_kind: voc
+  notes: "No license asserted by the publisher: quarantined as non-commercial evaluation data."
+  license_text: "No license asserted by the publisher. Treated as all-rights-reserved research data; evaluation only."
+  expected_mime: [text/html]
+  http:
+    files:
+      - {url: "https://robotics.pkusz.edu.cn/resources/dataset/", name: dataset-page.html, expected_mime: [text/html]}
+
+- source_id: SRC-038
+  name: MVTec AD (anomaly detection)
+  node_id: N4
+  intended_use: EVAL/BENCHMARK
+  priority: P1
+  access: drop_zone
+  official_url: https://www.mvtec.com/company/research/datasets/mvtec-ad
+  license_spdx_id: CC-BY-NC-SA-4.0
+  license_url: https://creativecommons.org/licenses/by-nc-sa/4.0/
+  noncommercial: true
+  commercial_training_allowed: false
+  data_steward: steward.n4-quality
+  version_tag: "1.0"
+  origin_type: PUBLIC_OPEN
+  formatter: vision_yolo
+  record_kind: mvtec
+  catalog_status: PROMPT_SPECIFIED
+  notes: "Download requires accepting the license on the MVTec site, so it is a manual drop-zone intake. Evaluation only."
+  drop_zone: {accepted_extensions: [.tar.xz, .tar, .zip, .xz]}
+
+- source_id: SRC-039
+  name: MVTec AD 2 (anomaly detection)
+  node_id: N4
+  intended_use: EVAL/BENCHMARK
+  priority: P1
+  access: drop_zone
+  official_url: https://www.mvtec.com/company/research/datasets/mvtec-ad-2
+  license_spdx_id: CC-BY-NC-SA-4.0
+  license_url: https://creativecommons.org/licenses/by-nc-sa/4.0/
+  noncommercial: true
+  commercial_training_allowed: false
+  data_steward: steward.n4-quality
+  version_tag: "1.0"
+  origin_type: PUBLIC_OPEN
+  formatter: vision_yolo
+  record_kind: mvtec
+  catalog_status: PROMPT_SPECIFIED
+  drop_zone: {accepted_extensions: [.tar.xz, .tar, .zip, .xz]}
+
+- source_id: SRC-040
+  name: VisA — Visual Anomaly dataset (incl. PCB1–PCB4)
+  node_id: N4
+  intended_use: EVAL/BENCHMARK
+  priority: P2
+  access: http_archive
+  official_url: https://github.com/amazon-science/spot-diff
+  license_spdx_id: CC-BY-4.0
+  license_url: https://creativecommons.org/licenses/by/4.0/legalcode.txt
+  data_steward: steward.n4-quality
+  version_tag: v1
+  origin_type: PUBLIC_OPEN
+  formatter: vision_yolo
+  record_kind: visa
+  expected_mime: [application/x-tar]
+  http:
+    files:
+      - {url: "https://amazon-visual-anomaly.s3.us-west-2.amazonaws.com/VisA_20220922.tar", name: VisA_20220922.tar, extract: tar, expected_mime: [application/x-tar]}
+
+- source_id: SRC-041
+  name: NASA PCoE — IGBT / MOSFET accelerated aging
+  node_id: N4
+  intended_use: EVAL/BENCHMARK
+  priority: P1
+  access: http_archive
+  official_url: https://www.nasa.gov/intelligent-systems-division/discovery-and-systems-health/pcoe/pcoe-data-set-repository/
+  license_spdx_id: LicenseRef-PD-USGov
+  license_url: https://www.usa.gov/government-copyright
+  domain_transfer_warning: BENCHMARK_ONLY_NOT_ELECTRONICS_PROOF
+  data_steward: steward.n4-quality
+  version_tag: pcoe-igbt
+  origin_type: PUBLIC_OPEN
+  formatter: timeseries
+  catalog_status: PROMPT_SPECIFIED
+  expected_mime: [application/zip]
+  http:
+    files:
+      - {url: "https://phm-datasets.s3.amazonaws.com/NASA/9.+IGBT+Accelerated+Aging.zip", name: igbt-accelerated-aging.zip, extract: zip, expected_mime: [application/zip]}
+  timeseries: {index_kind: sequence, sequence_column: sample, group_column: device, value_columns: {vce: V, ic: A, temp_package: degC}}
+
+- source_id: SRC-042
+  name: ATHENA AOI defect label vault
+  node_id: N4
+  intended_use: PRIVATE-GROUND-TRUTH
+  priority: P0
+  access: vault
+  official_url: internal://athena/n4/aoi-defect-labels
+  license_spdx_id: LicenseRef-ATHENA-Internal
+  license_text: "ATHENA internal confidential data. Governed by the ATHENA data-steward policy. No external redistribution."
+  data_steward: steward.n4-quality
+  version_tag: v1
+  origin_type: PRIVATE_GROUND_TRUTH
+  formatter: none
+  vault: {vault_name: aoi-defect-labels, schema_model: AoiDefectLabelRecord}
+
+- source_id: SRC-043
+  name: ATHENA ICT/FCT test-station log vault
+  node_id: N4
+  intended_use: PRIVATE-GROUND-TRUTH
+  priority: P0
+  access: vault
+  official_url: internal://athena/n4/test-station-logs
+  license_spdx_id: LicenseRef-ATHENA-Internal
+  license_text: "ATHENA internal confidential data. Governed by the ATHENA data-steward policy. No external redistribution."
+  data_steward: steward.n4-quality
+  version_tag: v1
+  origin_type: PRIVATE_GROUND_TRUTH
+  formatter: none
+  vault: {vault_name: test-station-logs, schema_model: TestStationRecord}
+
+# ============================ N5 — sourcing & supply ============================
+- source_id: SRC-044
+  name: Open Supply Hub facility data
+  node_id: N5
+  intended_use: RAG/REFERENCE
+  priority: P2
+  access: http_archive
+  official_url: https://opensupplyhub.org/
+  license_spdx_id: CC-BY-SA-4.0
+  license_url: https://info.opensupplyhub.org/terms-of-service
+  data_steward: steward.n5-sourcing
+  version_tag: facilities-latest
+  origin_type: PUBLIC_OPEN
+  formatter: rag_chunks
+  record_kind: open_supply_facility
+  expected_mime: [text/csv, text/plain, application/zip]
+  http:
+    files:
+      - {url: "https://opensupplyhub.org/api/facilities-downloads/", name: facilities.csv, expected_mime: [text/csv, text/plain]}
+
+- source_id: SRC-045
+  name: Nexar (Octopart) part search — live lookup
+  node_id: N5
+  intended_use: LIVE-LOOKUP
+  priority: P0
+  access: api
+  official_url: https://nexar.com/api
+  license_spdx_id: LicenseRef-Nexar-API-Terms
+  license_url: https://nexar.com/terms-of-service
+  data_steward: steward.n5-sourcing
+  version_tag: graphql-live
+  origin_type: LIVE_API
+  formatter: rag_chunks
+  catalog_status: PROMPT_SPECIFIED
+  expected_mime: [application/json]
+  api:
+    base_url: https://api.nexar.com/graphql
+    method: POST
+    auth: {type: oauth2_client_credentials, token_url: "https://identity.nexar.com/connect/token", client_id_env: NEXAR_CLIENT_ID, client_secret_env: NEXAR_CLIENT_SECRET, scope: supply.domain}
+    graphql: "query ($q: String!) { supSearchMpn(q: $q, limit: 5) { results { part { mpn manufacturer { name } sellers { company { name } offers { inventoryLevel prices { quantity price currency } } } } } } }"
+    default_query: {q: NRF52840-QIAA-R}
+    records_path: data.supSearchMpn.results
+    ttl_seconds: 86400
+
+- source_id: SRC-046
+  name: DigiKey Product Information API v4 — live lookup
+  node_id: N5
+  intended_use: LIVE-LOOKUP
+  priority: P0
+  access: api
+  official_url: https://developer.digikey.com/
+  license_spdx_id: LicenseRef-DigiKey-API-Terms
+  license_url: https://developer.digikey.com/terms-and-conditions
+  data_steward: steward.n5-sourcing
+  version_tag: v4-live
+  origin_type: LIVE_API
+  formatter: rag_chunks
+  catalog_status: PROMPT_SPECIFIED
+  expected_mime: [application/json]
+  api:
+    base_url: https://api.digikey.com/products/v4/search/keyword
+    method: POST
+    auth: {type: oauth2_client_credentials, token_url: "https://api.digikey.com/v1/oauth2/token", client_id_env: DIGIKEY_CLIENT_ID, client_secret_env: DIGIKEY_CLIENT_SECRET, extra_headers: {X-DIGIKEY-Client-Id: "env:DIGIKEY_CLIENT_ID"}}
+    body: {Keywords: NRF52840-QIAA-R, Limit: 5}
+    records_path: Products
+    ttl_seconds: 86400
+
+- source_id: SRC-047
+  name: Mouser Search API — live lookup
+  node_id: N5
+  intended_use: LIVE-LOOKUP
+  priority: P1
+  access: api
+  official_url: https://www.mouser.com/api-hub/
+  license_spdx_id: LicenseRef-Mouser-API-Terms
+  license_url: https://www.mouser.com/api-hub/
+  data_steward: steward.n5-sourcing
+  version_tag: v1-live
+  origin_type: LIVE_API
+  formatter: rag_chunks
+  catalog_status: PROMPT_SPECIFIED
+  expected_mime: [application/json]
+  api:
+    base_url: https://api.mouser.com/api/v1/search/partnumber
+    method: POST
+    auth: {type: query, param: apiKey, env: MOUSER_API_KEY}
+    body: {SearchByPartRequest: {mouserPartNumber: NRF52840-QIAA-R}}
+    records_path: SearchResults.Parts
+    ttl_seconds: 86400
+
+- source_id: SRC-048
+  name: OSV.dev open-source vulnerability database (firmware supply chain)
+  node_id: N5
+  intended_use: TRAIN-CANDIDATE
+  priority: P1
+  access: api
+  official_url: https://osv.dev/
+  license_spdx_id: CC-BY-4.0
+  license_url: https://google.github.io/osv.dev/faq/
+  commercial_training_allowed: true
+  training_allowed: true
+  data_steward: steward.n5-sourcing
+  version_tag: api-v1-snapshot
+  origin_type: LIVE_API
+  formatter: slm_jsonl
+  record_kind: osv_vuln
+  expected_mime: [application/json]
+  api:
+    base_url: https://api.osv.dev/v1/query
+    method: POST
+    body: {package: {name: mbedtls, ecosystem: "OSS-Fuzz"}}
+    records_path: vulns
+
+- source_id: SRC-049
+  name: UN Comtrade — component import/export flows (sourcing)
+  node_id: N5
+  intended_use: LIVE-LOOKUP
+  priority: P1
+  access: api
+  official_url: https://comtradeplus.un.org/
+  license_spdx_id: LicenseRef-UN-Comtrade-Terms
+  license_url: https://uncomtrade.org/docs/
+  data_steward: steward.n5-sourcing
+  version_tag: v1-live
+  origin_type: LIVE_API
+  formatter: rag_chunks
+  catalog_status: PROMPT_SPECIFIED
+  expected_mime: [application/json]
+  api:
+    base_url: https://comtradeapi.un.org/data/v1/get/C/M/HS
+    auth: {type: header, header: Ocp-Apim-Subscription-Key, env: COMTRADE_API_KEY}
+    params: {reporterCode: "699", period: "202601", cmdCode: "8542", flowCode: "M"}
+    records_path: data
+    ttl_seconds: 604800
+
+- source_id: SRC-050
+  name: TI / ST / Infineon component datasheets (manual intake)
+  node_id: N5
+  intended_use: RAG/REFERENCE
+  priority: P0
+  access: drop_zone
+  official_url: https://www.ti.com/
+  license_spdx_id: LicenseRef-Vendor-Datasheet-Copyright
+  data_steward: steward.n5-sourcing
+  version_tag: manual
+  origin_type: PUBLIC_OPEN
+  formatter: rag_chunks
+  catalog_status: PROMPT_SPECIFIED
+  notes: "Copyrighted vendor datasheets: downloaded individually by engineers, never crawled, never trained on."
+  drop_zone: {accepted_extensions: [.pdf]}
+
+- source_id: SRC-051
+  name: ATHENA supplier quote history vault
+  node_id: N5
+  intended_use: PRIVATE-GROUND-TRUTH
+  priority: P0
+  access: vault
+  official_url: internal://athena/n5/supplier-quote-history
+  license_spdx_id: LicenseRef-ATHENA-Internal
+  license_text: "ATHENA internal confidential data. Governed by the ATHENA data-steward policy. No external redistribution."
+  data_steward: steward.n5-sourcing
+  version_tag: v1
+  origin_type: PRIVATE_GROUND_TRUTH
+  formatter: none
+  vault: {vault_name: supplier-quote-history, schema_model: SupplierQuoteRecord}
+
+- source_id: SRC-052
+  name: ATHENA AVL & ECO register vault
+  node_id: N5
+  intended_use: PRIVATE-GROUND-TRUTH
+  priority: P1
+  access: vault
+  official_url: internal://athena/n5/avl-eco-register
+  license_spdx_id: LicenseRef-ATHENA-Internal
+  license_text: "ATHENA internal confidential data. Governed by the ATHENA data-steward policy. No external redistribution."
+  data_steward: steward.n5-sourcing
+  version_tag: v1
+  origin_type: PRIVATE_GROUND_TRUTH
+  formatter: none
+  vault: {vault_name: avl-eco-register, schema_model: AvlEcoRecord}
+
+# ============================ N6 — commercial, tenders & bids ============================
+- source_id: SRC-053
+  name: Open Contracting Data Standard — releases (data registry)
+  node_id: N6
+  intended_use: TRAIN-CANDIDATE
+  priority: P1
+  access: api
+  official_url: https://standard.open-contracting.org/
+  license_spdx_id: Apache-2.0
+  license_url: https://raw.githubusercontent.com/open-contracting/standard/1.1/LICENSE
+  commercial_training_allowed: true
+  training_allowed: true
+  data_steward: steward.n6-commercial
+  version_tag: "1.1"
+  origin_type: LIVE_API
+  formatter: slm_jsonl
+  record_kind: ocds_release
+  expected_mime: [application/json]
+  api:
+    base_url: https://raw.githubusercontent.com/open-contracting/sample-data/main/fictional-example/1.1/ocds-213czf-000-00001-01-planning.json
+    records_path: releases
+
+- source_id: SRC-054
+  name: SAM.gov contract opportunities (bid pipeline)
+  node_id: N6
+  intended_use: LIVE-LOOKUP
+  priority: P0
+  access: api
+  official_url: https://sam.gov/
+  license_spdx_id: LicenseRef-SAM-gov-Terms
+  license_url: https://open.gsa.gov/api/get-opportunities-public-api/
+  data_steward: steward.n6-commercial
+  version_tag: v2-live
+  origin_type: LIVE_API
+  formatter: rag_chunks
+  catalog_status: PROMPT_SPECIFIED
+  expected_mime: [application/json]
+  api:
+    base_url: https://api.sam.gov/opportunities/v2/search
+    auth: {type: query, param: api_key, env: SAM_GOV_API_KEY}
+    params: {limit: 25, postedFrom: "01/01/2026", postedTo: "12/31/2026", ptype: "o"}
+    records_path: opportunitiesData
+    ttl_seconds: 86400
+
+- source_id: SRC-055
+  name: India CPPP — tender documents for bids (manual intake)
+  node_id: N6
+  intended_use: RAG/REFERENCE
+  priority: P0
+  access: drop_zone
+  official_url: https://eprocure.gov.in/cppp/
+  license_spdx_id: LicenseRef-GoI-CPPP-Terms
+  license_url: https://eprocure.gov.in/cppp/
+  data_steward: steward.n6-commercial
+  version_tag: manual
+  origin_type: PUBLIC_OPEN
+  formatter: rag_chunks
+  catalog_status: PROMPT_SPECIFIED
+  drop_zone: {accepted_extensions: [.pdf, .html, .xlsx, .zip]}
+
+- source_id: SRC-056
+  name: TED — contract award notices (bid benchmarking)
+  node_id: N6
+  intended_use: TRAIN-CANDIDATE
+  priority: P1
+  access: api
+  official_url: https://ted.europa.eu/
+  license_spdx_id: CC-BY-4.0
+  license_url: https://creativecommons.org/licenses/by/4.0/legalcode.txt
+  commercial_training_allowed: true
+  training_allowed: true
+  data_steward: steward.n6-commercial
+  version_tag: api-v3-snapshot
+  origin_type: LIVE_API
+  formatter: slm_jsonl
+  record_kind: ted_notice
+  expected_mime: [application/json]
+  api:
+    base_url: https://api.ted.europa.eu/v3/notices/search
+    method: POST
+    body: {query: "notice-type IN (can-standard) AND classification-cpv IN (31710000) SORT BY publication-number DESC", fields: [publication-number, notice-title, buyer-name, buyer-country, notice-type, publication-date, classification-cpv, winner-name, total-value], limit: 25, page: 1}
+    records_path: notices
+    pagination: {type: page, param: page, start: 1, max_pages: 2}
+
+- source_id: SRC-057
+  name: World Bank procurement notices
+  node_id: N6
+  intended_use: TRAIN-CANDIDATE
+  priority: P2
+  access: api
+  official_url: https://projects.worldbank.org/en/projects-operations/procurement
+  license_spdx_id: CC-BY-4.0
+  license_url: https://www.worldbank.org/en/about/legal/terms-of-use-for-datasets
+  commercial_training_allowed: true
+  training_allowed: true
+  data_steward: steward.n6-commercial
+  version_tag: api-v2-snapshot
+  origin_type: LIVE_API
+  formatter: slm_jsonl
+  record_kind: worldbank_procnotice
+  expected_mime: [application/json]
+  api:
+    base_url: https://search.worldbank.org/api/v2/procnotices
+    params: {format: json, qterm: electronics, rows: 25}
+    records_path: procnotices
+
+- source_id: SRC-058
+  name: ATHENA bid outcomes vault
+  node_id: N6
+  intended_use: PRIVATE-GROUND-TRUTH
+  priority: P0
+  access: vault
+  official_url: internal://athena/n6/bid-outcomes
+  license_spdx_id: LicenseRef-ATHENA-Internal
+  license_text: "ATHENA internal confidential data. Governed by the ATHENA data-steward policy. No external redistribution."
+  data_steward: steward.n6-commercial
+  version_tag: v1
+  origin_type: PRIVATE_GROUND_TRUTH
+  formatter: none
+  vault: {vault_name: bid-outcomes, schema_model: BidOutcomeRecord}
+
+- source_id: SRC-059
+  name: GeM — Government e-Marketplace India (manual intake)
+  node_id: N6
+  intended_use: RAG/REFERENCE
+  priority: P1
+  access: drop_zone
+  official_url: https://gem.gov.in/
+  license_spdx_id: LicenseRef-GeM-Terms
+  license_url: https://gem.gov.in/
+  data_steward: steward.n6-commercial
+  version_tag: manual
+  origin_type: PUBLIC_OPEN
+  formatter: rag_chunks
+  catalog_status: PROMPT_SPECIFIED
+  drop_zone: {accepted_extensions: [.pdf, .html, .xlsx, .csv]}
+
+# ============================ N7 — finance, cost & P&L ============================
+- source_id: SRC-060
+  name: FRED — Federal Reserve Economic Data (rates, PPI) — live lookup
+  node_id: N7
+  intended_use: LIVE-LOOKUP
+  priority: P0
+  access: api
+  official_url: https://fred.stlouisfed.org/
+  license_spdx_id: LicenseRef-FRED-Terms
+  license_url: https://fred.stlouisfed.org/legal/
+  data_steward: steward.n7-finance
+  version_tag: series-live
+  origin_type: LIVE_API
+  formatter: timeseries
+  record_kind: fred_observation
+  catalog_status: PROMPT_SPECIFIED
+  expected_mime: [application/json]
+  api:
+    base_url: https://api.stlouisfed.org/fred/series/observations
+    auth: {type: query, param: api_key, env: FRED_API_KEY}
+    params: {series_id: DGS10, file_type: json, observation_start: "2020-01-01"}
+    records_path: observations
+    ttl_seconds: 86400
+  timeseries: {timestamp_column: date, source_timezone: America/New_York, value_columns: {value: "%"}}
+
+- source_id: SRC-061
+  name: BLS Producer Price Index — electronic components
+  node_id: N7
+  intended_use: TRAIN-CANDIDATE
+  priority: P1
+  access: api
+  official_url: https://www.bls.gov/ppi/
+  license_spdx_id: LicenseRef-PD-USGov
+  license_url: https://www.bls.gov/opub/copyright-information.htm
+  commercial_training_allowed: true
+  training_allowed: true
+  data_steward: steward.n7-finance
+  version_tag: api-v2-snapshot
+  origin_type: LIVE_API
+  formatter: timeseries
+  record_kind: bls_series
+  expected_mime: [application/json]
+  api:
+    base_url: https://api.bls.gov/publicAPI/v2/timeseries/data/
+    method: POST
+    body: {seriesid: [PCU334413334413], startyear: "2020", endyear: "2025"}
+    records_path: Results.series
+  timeseries: {timestamp_column: timestamp, source_timezone: UTC, value_columns: {value: "1"}}
+
+- source_id: SRC-062
+  name: Reserve Bank of India — reference & policy rates (DBIE)
+  node_id: N7
+  intended_use: RAG/REFERENCE
+  priority: P1
+  access: http_archive
+  official_url: https://data.rbi.org.in/
+  license_spdx_id: LicenseRef-RBI-Terms
+  license_url: https://www.rbi.org.in/Scripts/Disclaimer.aspx
+  data_steward: steward.n7-finance
+  version_tag: dbie-latest
+  origin_type: PUBLIC_OPEN
+  formatter: timeseries
+  expected_mime: [text/html]
+  http:
+    files:
+      - {url: "https://www.rbi.org.in/Scripts/ReferenceRateArchive.aspx", name: reference-rate-archive.html, expected_mime: [text/html]}
+  timeseries: {timestamp_column: date, source_timezone: Asia/Kolkata, value_columns: {usd_inr: "1"}}
+
+- source_id: SRC-063
+  name: Open Power System Data — time series (energy load & generation)
+  node_id: N7
+  intended_use: TRAIN-CANDIDATE
+  priority: P2
+  access: http_archive
+  official_url: https://open-power-system-data.org/
+  license_spdx_id: CC-BY-4.0
+  license_url: https://data.open-power-system-data.org/time_series/
+  commercial_training_allowed: true
+  training_allowed: true
+  data_steward: steward.n7-finance
+  version_tag: "2020-10-06"
+  origin_type: PUBLIC_OPEN
+  formatter: timeseries
+  expected_mime: [text/csv, text/plain]
+  http:
+    files:
+      - {url: "https://data.open-power-system-data.org/time_series/2020-10-06/time_series_60min_singleindex.csv", name: time_series_60min_singleindex.csv, expected_mime: [text/csv, text/plain]}
+  timeseries: {timestamp_column: utc_timestamp, value_columns: {DE_load_actual_entsoe_transparency: MW, DE_solar_generation_actual: MW}}
+
+- source_id: SRC-064
+  name: Nexar — part price history for cost models (live lookup)
+  node_id: N7
+  intended_use: LIVE-LOOKUP
+  priority: P1
+  access: api
+  official_url: https://nexar.com/api
+  license_spdx_id: LicenseRef-Nexar-API-Terms
+  license_url: https://nexar.com/terms-of-service
+  data_steward: steward.n7-finance
+  version_tag: graphql-live
+  origin_type: LIVE_API
+  formatter: rag_chunks
+  catalog_status: PROMPT_SPECIFIED
+  expected_mime: [application/json]
+  api:
+    base_url: https://api.nexar.com/graphql
+    method: POST
+    auth: {type: oauth2_client_credentials, token_url: "https://identity.nexar.com/connect/token", client_id_env: NEXAR_CLIENT_ID, client_secret_env: NEXAR_CLIENT_SECRET, scope: supply.domain}
+    graphql: "query ($q: String!) { supSearchMpn(q: $q, limit: 3) { results { part { mpn medianPrice1000 { price currency } } } } }"
+    default_query: {q: NRF52840-QIAA-R}
+    records_path: data.supSearchMpn.results
+    ttl_seconds: 86400
+
+- source_id: SRC-065
+  name: ATHENA project actuals (P&L) vault
+  node_id: N7
+  intended_use: PRIVATE-GROUND-TRUTH
+  priority: P0
+  access: vault
+  official_url: internal://athena/n7/project-actuals-pnl
+  license_spdx_id: LicenseRef-ATHENA-Internal
+  license_text: "ATHENA internal confidential data. Governed by the ATHENA data-steward policy. No external redistribution."
+  data_steward: steward.n7-finance
+  version_tag: v1
+  origin_type: PRIVATE_GROUND_TRUTH
+  formatter: none
+  vault: {vault_name: project-actuals-pnl, schema_model: ProjectActualRecord}
+
+- source_id: SRC-066
+  name: ATHENA cash-flow ledger vault
+  node_id: N7
+  intended_use: PRIVATE-GROUND-TRUTH
+  priority: P1
+  access: vault
+  official_url: internal://athena/n7/cash-flow-ledger
+  license_spdx_id: LicenseRef-ATHENA-Internal
+  license_text: "ATHENA internal confidential data. Governed by the ATHENA data-steward policy. No external redistribution."
+  data_steward: steward.n7-finance
+  version_tag: v1
+  origin_type: PRIVATE_GROUND_TRUTH
+  formatter: none
+  vault: {vault_name: cash-flow-ledger, schema_model: CashFlowRecord}
+
+# ============================ N8 — lifecycle, reliability & field ============================
+- source_id: SRC-067
+  name: NASA PCoE — capacitor electrical stress aging
+  node_id: N8
+  intended_use: EVAL/BENCHMARK
+  priority: P1
+  access: http_archive
+  official_url: https://www.nasa.gov/intelligent-systems-division/discovery-and-systems-health/pcoe/pcoe-data-set-repository/
+  license_spdx_id: LicenseRef-PD-USGov
+  license_url: https://www.usa.gov/government-copyright
+  domain_transfer_warning: BENCHMARK_ONLY_NOT_ELECTRONICS_PROOF
+  data_steward: steward.n8-lifecycle
+  version_tag: pcoe-capacitor
+  origin_type: PUBLIC_OPEN
+  formatter: timeseries
+  catalog_status: PROMPT_SPECIFIED
+  expected_mime: [application/zip]
+  http:
+    files:
+      - {url: "https://phm-datasets.s3.amazonaws.com/NASA/12.+Capacitor+Electrical+Stress.zip", name: capacitor-electrical-stress.zip, extract: zip, expected_mime: [application/zip]}
+  timeseries: {index_kind: sequence, sequence_column: sample, group_column: capacitor, value_columns: {capacitance: uF, esr: ohm}}
+
+- source_id: SRC-068
+  name: NASA C-MAPSS turbofan engine degradation
+  node_id: N8
+  intended_use: EVAL/BENCHMARK
+  priority: P1
+  access: http_archive
+  official_url: https://www.nasa.gov/intelligent-systems-division/discovery-and-systems-health/pcoe/pcoe-data-set-repository/
+  license_spdx_id: LicenseRef-PD-USGov
+  license_url: https://www.usa.gov/government-copyright
+  domain_transfer_warning: BENCHMARK_ONLY_NOT_ELECTRONICS_PROOF
+  data_steward: steward.n8-lifecycle
+  version_tag: cmapss-v1
+  origin_type: PUBLIC_OPEN
+  formatter: timeseries
+  catalog_status: PROMPT_SPECIFIED
+  expected_mime: [application/zip]
+  http:
+    files:
+      - {url: "https://phm-datasets.s3.amazonaws.com/NASA/6.+Turbofan+Engine+Degradation+Simulation+Data+Set.zip", name: cmapss.zip, extract: zip, expected_mime: [application/zip]}
+  timeseries:
+    index_kind: sequence
+    sequence_column: cycle
+    group_column: unit
+    delimiter: whitespace
+    columns: [unit, cycle, op_setting_1, op_setting_2, op_setting_3, T2, T24, T30, T50, P2, P15, P30, Nf, Nc, epr, Ps30, phi, NRf, NRc, BPR, farB, htBleed, Nf_dmd, PCNfR_dmd, W31, W32]
+    value_columns: {T2: degR, T24: degR, T30: degR, T50: degR, P2: psia, P15: psia, P30: psia, Nf: rpm, Nc: rpm, epr: "1", Ps30: psia, NRf: rpm, NRc: rpm, BPR: "1", farB: "1", Nf_dmd: rpm, PCNfR_dmd: rpm, W31: lbm/s, W32: lbm/s}
+
+- source_id: SRC-069
+  name: Paderborn University bearing damage dataset (KAt)
+  node_id: N8
+  intended_use: EVAL/BENCHMARK
+  priority: P2
+  access: http_archive
+  official_url: https://mb.uni-paderborn.de/kat/forschung/kat-datacenter/bearing-datacenter
+  license_spdx_id: LicenseRef-Paderborn-KAt-Terms
+  license_url: https://mb.uni-paderborn.de/kat/forschung/kat-datacenter/bearing-datacenter
+  domain_transfer_warning: BENCHMARK_ONLY_NOT_ELECTRONICS_PROOF
+  data_steward: steward.n8-lifecycle
+  version_tag: kat-bearing-v1
+  origin_type: PUBLIC_OPEN
+  formatter: timeseries
+  catalog_status: PROMPT_SPECIFIED
+  expected_mime: [text/html]
+  http:
+    files:
+      - {url: "https://mb.uni-paderborn.de/kat/forschung/kat-datacenter/bearing-datacenter", name: bearing-datacenter.html, expected_mime: [text/html]}
+  timeseries: {index_kind: sequence, sequence_column: sample, group_column: bearing, value_columns: {vibration: "m/s^2", phase_current_1: A, phase_current_2: A}}
+
+- source_id: SRC-070
+  name: NASA PCoE — Li-ion battery aging
+  node_id: N8
+  intended_use: EVAL/BENCHMARK
+  priority: P1
+  access: http_archive
+  official_url: https://www.nasa.gov/intelligent-systems-division/discovery-and-systems-health/pcoe/pcoe-data-set-repository/
+  license_spdx_id: LicenseRef-PD-USGov
+  license_url: https://www.usa.gov/government-copyright
+  domain_transfer_warning: BENCHMARK_ONLY_NOT_ELECTRONICS_PROOF
+  data_steward: steward.n8-lifecycle
+  version_tag: pcoe-battery
+  origin_type: PUBLIC_OPEN
+  formatter: timeseries
+  catalog_status: PROMPT_SPECIFIED
+  expected_mime: [application/zip]
+  http:
+    files:
+      - {url: "https://phm-datasets.s3.amazonaws.com/NASA/5.+Battery+Data+Set.zip", name: battery-data-set.zip, extract: zip, expected_mime: [application/zip]}
+  timeseries: {index_kind: sequence, sequence_column: cycle, group_column: battery, value_columns: {voltage_measured: V, current_measured: A, temperature_measured: degC, capacity: Ah}}
+
+- source_id: SRC-071
+  name: NHTSA vehicle complaints & recalls (electronics field failures)
+  node_id: N8
+  intended_use: TRAIN-CANDIDATE
+  priority: P2
+  access: api
+  official_url: https://www.nhtsa.gov/nhtsa-datasets-and-apis
+  license_spdx_id: LicenseRef-PD-USGov
+  license_url: https://www.usa.gov/government-copyright
+  commercial_training_allowed: true
+  training_allowed: true
+  data_steward: steward.n8-lifecycle
+  version_tag: api-snapshot
+  origin_type: LIVE_API
+  formatter: slm_jsonl
+  record_kind: nhtsa_complaint
+  expected_mime: [application/json]
+  api:
+    base_url: https://api.nhtsa.gov/complaints/complaintsByVehicle
+    params: {make: tesla, model: "model 3", modelYear: "2021"}
+    records_path: results
+
+- source_id: SRC-072
+  name: NIST NVD CVE API 2.0 (embedded / firmware advisories)
+  node_id: N8
+  intended_use: RAG/REFERENCE
+  priority: P1
+  access: api
+  official_url: https://nvd.nist.gov/developers/vulnerabilities
+  license_spdx_id: LicenseRef-PD-USGov
+  license_url: https://nvd.nist.gov/developers/terms-of-use
+  data_steward: steward.n8-lifecycle
+  version_tag: api-2.0-snapshot
+  origin_type: LIVE_API
+  formatter: rag_chunks
+  record_kind: nvd_cve
+  expected_mime: [application/json]
+  rate_limit_per_s: 0.15
+  api:
+    base_url: https://services.nvd.nist.gov/rest/json/cves/2.0
+    auth: {type: header, header: apiKey, env: NVD_API_KEY, optional: true}
+    params: {keywordSearch: "nRF52840", resultsPerPage: 20}
+    records_path: vulnerabilities
+
+- source_id: SRC-073
+  name: ATHENA field returns (RMA) vault
+  node_id: N8
+  intended_use: PRIVATE-GROUND-TRUTH
+  priority: P0
+  access: vault
+  official_url: internal://athena/n8/field-returns-rma
+  license_spdx_id: LicenseRef-ATHENA-Internal
+  license_text: "ATHENA internal confidential data. Governed by the ATHENA data-steward policy. No external redistribution."
+  data_steward: steward.n8-lifecycle
+  version_tag: v1
+  origin_type: PRIVATE_GROUND_TRUTH
+  formatter: none
+  vault: {vault_name: field-returns-rma, schema_model: FieldReturnRecord}
+
+- source_id: SRC-074
+  name: ATHENA PLC telemetry & genealogy vault
+  node_id: N8
+  intended_use: PRIVATE-GROUND-TRUTH
+  priority: P0
+  access: vault
+  official_url: internal://athena/n8/plc-telemetry-genealogy
+  license_spdx_id: LicenseRef-ATHENA-Internal
+  license_text: "ATHENA internal confidential data. Governed by the ATHENA data-steward policy. No external redistribution."
+  data_steward: steward.n8-lifecycle
+  version_tag: v1
+  origin_type: PRIVATE_GROUND_TRUTH
+  formatter: none
+  vault: {vault_name: plc-telemetry-genealogy, schema_model: PlcTelemetryRecord}
+
+- source_id: SRC-075
+  name: ATHENA warranty claims vault
+  node_id: N8
+  intended_use: PRIVATE-GROUND-TRUTH
+  priority: P1
+  access: vault
+  official_url: internal://athena/n8/warranty-claims
+  license_spdx_id: LicenseRef-ATHENA-Internal
+  license_text: "ATHENA internal confidential data. Governed by the ATHENA data-steward policy. No external redistribution."
+  data_steward: steward.n8-lifecycle
+  version_tag: v1
+  origin_type: PRIVATE_GROUND_TRUTH
+  formatter: none
+  vault: {vault_name: warranty-claims, schema_model: WarrantyClaimRecord}
