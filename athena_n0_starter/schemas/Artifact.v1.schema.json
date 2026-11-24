@@ -1,0 +1,190 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:n0:schema:Artifact.v1",
+  "$defs": {
+    "FileRef": {
+      "additionalProperties": false,
+      "properties": {
+        "uri": {
+          "pattern": "^n0://(quarantine|released)/[A-Za-z0-9._:\\-]+/[0-9a-f]{64}$",
+          "title": "Uri",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "mime": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Mime"
+        },
+        "size_bytes": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Size Bytes"
+        },
+        "blob_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Blob Id"
+        }
+      },
+      "required": [
+        "uri",
+        "sha256"
+      ],
+      "title": "FileRef",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "tenant_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "project_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+      "title": "Project Id",
+      "type": "string"
+    },
+    "artifact_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+      "title": "Artifact Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "Artifact.v1",
+      "default": "Artifact.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "artifact_type": {
+      "enum": [
+        "RFQ",
+        "DATASHEET",
+        "EDA_PACKAGE",
+        "SUPPLIER_QUOTE",
+        "TEST_MEASUREMENT",
+        "MARKET_FEED",
+        "FINANCE_RECORD",
+        "TELEMETRY",
+        "MODEL_OUTPUT"
+      ],
+      "title": "Artifact Type",
+      "type": "string"
+    },
+    "source_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+      "title": "Source Id",
+      "type": "string"
+    },
+    "processing_purpose": {
+      "enum": [
+        "RFQ_ANALYSIS",
+        "PRODUCT_DEFINITION",
+        "DESIGN_ENGINEERING",
+        "VERIFICATION",
+        "SOURCING",
+        "COMMERCIAL",
+        "FINANCE",
+        "LIFECYCLE",
+        "MARKET_INTELLIGENCE",
+        "EVALUATION",
+        "LLM_EXTRACTION",
+        "VENDOR_TRANSMISSION",
+        "MODEL_TRAINING",
+        "PERSONAL_DATA_PROCESSING"
+      ],
+      "title": "Processing Purpose",
+      "type": "string"
+    },
+    "release_stage": {
+      "enum": [
+        "INTAKE",
+        "CONCEPT",
+        "PROTOTYPE",
+        "PILOT",
+        "PRODUCTION"
+      ],
+      "title": "Release Stage",
+      "type": "string"
+    },
+    "revision": {
+      "maxLength": 16,
+      "minLength": 1,
+      "title": "Revision",
+      "type": "string"
+    },
+    "synthetic": {
+      "title": "Synthetic",
+      "type": "boolean"
+    },
+    "source_sha256": {
+      "description": "SHA-256 of the primary file, or of the canonical payload JSON when the artifact has no files",
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Source Sha256",
+      "type": "string"
+    },
+    "file_refs": {
+      "items": {
+        "$ref": "#/$defs/FileRef"
+      },
+      "title": "File Refs",
+      "type": "array"
+    },
+    "payload": {
+      "additionalProperties": true,
+      "title": "Payload",
+      "type": "object"
+    },
+    "source_artifact_ids": {
+      "description": "upstream artifacts this one derives from, as ID@REVISION",
+      "items": {
+        "type": "string"
+      },
+      "title": "Source Artifact Ids",
+      "type": "array"
+    }
+  },
+  "required": [
+    "tenant_id",
+    "project_id",
+    "artifact_id",
+    "artifact_type",
+    "source_id",
+    "processing_purpose",
+    "release_stage",
+    "revision",
+    "synthetic",
+    "source_sha256",
+    "payload"
+  ],
+  "title": "Artifact.v1",
+  "type": "object"
+}

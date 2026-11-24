@@ -1,0 +1,160 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:n0:schema:ReleaseManifest.v1",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "ReleaseManifest.v1",
+      "default": "ReleaseManifest.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "manifest_id": {
+      "title": "Manifest Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "artifact_id": {
+      "title": "Artifact Id",
+      "type": "string"
+    },
+    "revision": {
+      "title": "Revision",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "RELEASABLE",
+        "NOT_RELEASED",
+        "RELEASED"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "source_node": {
+      "enum": [
+        "N0",
+        "N1",
+        "N2",
+        "N3",
+        "N4",
+        "N5",
+        "N6",
+        "N7",
+        "N8"
+      ],
+      "title": "Source Node",
+      "type": "string"
+    },
+    "allowed_destinations": {
+      "items": {
+        "enum": [
+          "N1",
+          "N2",
+          "N3",
+          "N4",
+          "N5",
+          "N6",
+          "N7",
+          "N8"
+        ],
+        "type": "string"
+      },
+      "title": "Allowed Destinations",
+      "type": "array"
+    },
+    "target_nodes": {
+      "items": {
+        "enum": [
+          "N1",
+          "N2",
+          "N3",
+          "N4",
+          "N5",
+          "N6",
+          "N7",
+          "N8"
+        ],
+        "type": "string"
+      },
+      "title": "Target Nodes",
+      "type": "array"
+    },
+    "source_sha256": {
+      "title": "Source Sha256",
+      "type": "string"
+    },
+    "payload_sha256": {
+      "title": "Payload Sha256",
+      "type": "string"
+    },
+    "decision_id": {
+      "title": "Decision Id",
+      "type": "string"
+    },
+    "approval_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Approval Id"
+    },
+    "released_by": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Released By"
+    },
+    "issued_at": {
+      "format": "date-time",
+      "title": "Issued At",
+      "type": "string"
+    },
+    "validator_version": {
+      "title": "Validator Version",
+      "type": "string"
+    },
+    "manifest_sha256": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Manifest Sha256"
+    }
+  },
+  "required": [
+    "manifest_id",
+    "tenant_id",
+    "artifact_id",
+    "revision",
+    "status",
+    "source_node",
+    "allowed_destinations",
+    "source_sha256",
+    "payload_sha256",
+    "decision_id",
+    "issued_at",
+    "validator_version"
+  ],
+  "title": "ReleaseManifest.v1",
+  "type": "object"
+}

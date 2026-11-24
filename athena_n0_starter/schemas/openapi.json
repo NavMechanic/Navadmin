@@ -1,0 +1,3572 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "ATHENA N0 — Data Intelligence, Quality & Governance Gateway",
+    "description": "Policy gate in front of every ATHENA node (N1–N8).\n\n* **PASS is not engineering qualification**: it means N0's deterministic checks for the declared\n  `artifact_type` and `release_stage` passed.\n* **Hard-policy BLOCK is final** for its revision: no LLM output, score, approval or feedback can override it.\n* Every value carries `value_origin` (CUSTOMER | MEASURED | DERIVED | MODEL_EXTRACTED) with evidence.\n* No data reaches an LLM or a vendor unless the SourceRecord.v1 rights and the tenant ACLs allow it.\n* Uploads are quarantined, MIME-sniffed, malware-scanned and SHA-256 addressed before anything reads them.\n",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "ops"
+        ],
+        "summary": "Health",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/rules": {
+      "get": {
+        "tags": [
+          "ops"
+        ],
+        "summary": "Rules Catalog",
+        "operationId": "rules_catalog_v1_rules_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Rules Catalog V1 Rules Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/sources/register": {
+      "post": {
+        "tags": [
+          "sources"
+        ],
+        "summary": "Register Source",
+        "operationId": "register_source_v1_sources_register_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SourceRegisterRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceRecord"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/sources/{tenant_id}/{source_id}": {
+      "get": {
+        "tags": [
+          "sources"
+        ],
+        "summary": "Get Source",
+        "operationId": "get_source_v1_sources__tenant_id___source_id__get",
+        "parameters": [
+          {
+            "name": "tenant_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tenant Id"
+            }
+          },
+          {
+            "name": "source_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Source Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceRecord"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/sources/{tenant_id}/{source_id}/approve": {
+      "post": {
+        "tags": [
+          "sources"
+        ],
+        "summary": "Approve Source",
+        "operationId": "approve_source_v1_sources__tenant_id___source_id__approve_post",
+        "parameters": [
+          {
+            "name": "tenant_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tenant Id"
+            }
+          },
+          {
+            "name": "source_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Source Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SourceApprovalRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceApprovalResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/artifacts/upload": {
+      "post": {
+        "tags": [
+          "artifacts"
+        ],
+        "summary": "Upload",
+        "operationId": "upload_v1_artifacts_upload_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_v1_artifacts_upload_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BlobRecord"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/gateway/evaluate": {
+      "post": {
+        "tags": [
+          "gateway"
+        ],
+        "summary": "Evaluate",
+        "operationId": "evaluate_v1_gateway_evaluate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvaluateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvaluationResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/extraction/run": {
+      "post": {
+        "tags": [
+          "extraction"
+        ],
+        "summary": "Run Extraction",
+        "operationId": "run_extraction_v1_extraction_run_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExtractionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExtractionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/artifacts/{artifact_id}": {
+      "get": {
+        "tags": [
+          "artifacts"
+        ],
+        "summary": "Get Artifact",
+        "operationId": "get_artifact_v1_artifacts__artifact_id__get",
+        "parameters": [
+          {
+            "name": "artifact_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Artifact Id"
+            }
+          },
+          {
+            "name": "revision",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Revision"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArtifactView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/artifacts/{artifact_id}/lineage": {
+      "get": {
+        "tags": [
+          "artifacts"
+        ],
+        "summary": "Lineage",
+        "operationId": "lineage_v1_artifacts__artifact_id__lineage_get",
+        "parameters": [
+          {
+            "name": "artifact_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Artifact Id"
+            }
+          },
+          {
+            "name": "revision",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Revision"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LineageGraph"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/approvals": {
+      "post": {
+        "tags": [
+          "governance"
+        ],
+        "summary": "Approvals",
+        "operationId": "approvals_v1_approvals_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApprovalRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/handoffs/release": {
+      "post": {
+        "tags": [
+          "governance"
+        ],
+        "summary": "Handoff",
+        "operationId": "handoff_v1_handoffs_release_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HandoffReleaseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReleaseManifest"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/gateway/feedback": {
+      "post": {
+        "tags": [
+          "governance"
+        ],
+        "summary": "Feedback",
+        "operationId": "feedback_v1_gateway_feedback_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeedbackRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackRecord"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/vendor/work-packages": {
+      "post": {
+        "tags": [
+          "vendor"
+        ],
+        "summary": "Work Package",
+        "operationId": "work_package_v1_vendor_work_packages_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VendorWorkPackage"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransmissionDecision"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/vendor/results": {
+      "post": {
+        "tags": [
+          "vendor"
+        ],
+        "summary": "Vendor Result",
+        "operationId": "vendor_result_v1_vendor_results_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VendorResult"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VendorResultDecision"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/audit/events": {
+      "get": {
+        "tags": [
+          "audit"
+        ],
+        "summary": "Audit Events",
+        "operationId": "audit_events_v1_audit_events_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 1000,
+              "minimum": 1,
+              "default": 100,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
+                  "title": "Response Audit Events V1 Audit Events Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/audit/verify": {
+      "get": {
+        "tags": [
+          "audit"
+        ],
+        "summary": "Audit Verify",
+        "operationId": "audit_verify_v1_audit_verify_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Audit Verify V1 Audit Verify Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ApprovalEvent": {
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "const": "ApprovalEvent.v1",
+            "title": "Schema Version",
+            "default": "ApprovalEvent.v1"
+          },
+          "approval_id": {
+            "type": "string",
+            "title": "Approval Id"
+          },
+          "tenant_id": {
+            "type": "string",
+            "title": "Tenant Id"
+          },
+          "artifact_id": {
+            "type": "string",
+            "title": "Artifact Id",
+            "description": "artifact id, or source:<source_id> for rights approvals"
+          },
+          "exact_revision": {
+            "type": "string",
+            "title": "Exact Revision"
+          },
+          "approver_id": {
+            "type": "string",
+            "title": "Approver Id"
+          },
+          "approver_role": {
+            "type": "string",
+            "title": "Approver Role"
+          },
+          "decision": {
+            "type": "string",
+            "enum": [
+              "APPROVED",
+              "REJECTED"
+            ],
+            "title": "Decision"
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "SOURCE_RIGHTS",
+              "RELEASE",
+              "REVIEW_RESOLUTION",
+              "FEEDBACK"
+            ],
+            "title": "Scope"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 5,
+            "title": "Reason"
+          },
+          "timestamp_utc": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp Utc"
+          },
+          "prev_hash": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Prev Hash"
+          },
+          "event_hash": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Event Hash"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "approval_id",
+          "tenant_id",
+          "artifact_id",
+          "exact_revision",
+          "approver_id",
+          "approver_role",
+          "decision",
+          "scope",
+          "reason",
+          "timestamp_utc",
+          "prev_hash",
+          "event_hash"
+        ],
+        "title": "ApprovalEvent.v1"
+      },
+      "ApprovalRequest": {
+        "properties": {
+          "artifact_id": {
+            "type": "string",
+            "title": "Artifact Id"
+          },
+          "exact_revision": {
+            "type": "string",
+            "title": "Exact Revision"
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "RELEASE",
+              "REVIEW_RESOLUTION"
+            ],
+            "title": "Scope"
+          },
+          "decision": {
+            "type": "string",
+            "enum": [
+              "APPROVED",
+              "REJECTED"
+            ],
+            "title": "Decision"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 5,
+            "title": "Reason"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "artifact_id",
+          "exact_revision",
+          "scope",
+          "decision",
+          "reason"
+        ],
+        "title": "ApprovalRequest"
+      },
+      "ApprovalResponse": {
+        "properties": {
+          "approval_event": {
+            "$ref": "#/components/schemas/ApprovalEvent"
+          },
+          "resulting_decision": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GatewayDecision"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "approval_event"
+        ],
+        "title": "ApprovalResponse"
+      },
+      "Artifact": {
+        "properties": {
+          "tenant_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+            "title": "Tenant Id"
+          },
+          "project_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+            "title": "Project Id"
+          },
+          "artifact_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+            "title": "Artifact Id"
+          },
+          "schema_version": {
+            "type": "string",
+            "const": "Artifact.v1",
+            "title": "Schema Version",
+            "default": "Artifact.v1"
+          },
+          "artifact_type": {
+            "type": "string",
+            "enum": [
+              "RFQ",
+              "DATASHEET",
+              "EDA_PACKAGE",
+              "SUPPLIER_QUOTE",
+              "TEST_MEASUREMENT",
+              "MARKET_FEED",
+              "FINANCE_RECORD",
+              "TELEMETRY",
+              "MODEL_OUTPUT"
+            ],
+            "title": "Artifact Type"
+          },
+          "source_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+            "title": "Source Id"
+          },
+          "processing_purpose": {
+            "type": "string",
+            "enum": [
+              "RFQ_ANALYSIS",
+              "PRODUCT_DEFINITION",
+              "DESIGN_ENGINEERING",
+              "VERIFICATION",
+              "SOURCING",
+              "COMMERCIAL",
+              "FINANCE",
+              "LIFECYCLE",
+              "MARKET_INTELLIGENCE",
+              "EVALUATION",
+              "LLM_EXTRACTION",
+              "VENDOR_TRANSMISSION",
+              "MODEL_TRAINING",
+              "PERSONAL_DATA_PROCESSING"
+            ],
+            "title": "Processing Purpose"
+          },
+          "release_stage": {
+            "type": "string",
+            "enum": [
+              "INTAKE",
+              "CONCEPT",
+              "PROTOTYPE",
+              "PILOT",
+              "PRODUCTION"
+            ],
+            "title": "Release Stage"
+          },
+          "revision": {
+            "type": "string",
+            "maxLength": 16,
+            "minLength": 1,
+            "title": "Revision"
+          },
+          "synthetic": {
+            "type": "boolean",
+            "title": "Synthetic"
+          },
+          "source_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Source Sha256",
+            "description": "SHA-256 of the primary file, or of the canonical payload JSON when the artifact has no files"
+          },
+          "file_refs": {
+            "items": {
+              "$ref": "#/components/schemas/FileRef"
+            },
+            "type": "array",
+            "title": "File Refs"
+          },
+          "payload": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Payload"
+          },
+          "source_artifact_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Source Artifact Ids",
+            "description": "upstream artifacts this one derives from, as ID@REVISION"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "tenant_id",
+          "project_id",
+          "artifact_id",
+          "artifact_type",
+          "source_id",
+          "processing_purpose",
+          "release_stage",
+          "revision",
+          "synthetic",
+          "source_sha256",
+          "payload"
+        ],
+        "title": "Artifact.v1"
+      },
+      "ArtifactView": {
+        "properties": {
+          "artifact_id": {
+            "type": "string",
+            "title": "Artifact Id"
+          },
+          "revision": {
+            "type": "string",
+            "title": "Revision"
+          },
+          "latest_revision": {
+            "type": "string",
+            "title": "Latest Revision"
+          },
+          "superseded": {
+            "type": "boolean",
+            "title": "Superseded"
+          },
+          "revisions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Revisions"
+          },
+          "canonical_artifact": {
+            "$ref": "#/components/schemas/Artifact"
+          },
+          "decision": {
+            "$ref": "#/components/schemas/GatewayDecision"
+          },
+          "releases": {
+            "items": {
+              "$ref": "#/components/schemas/ReleaseManifest"
+            },
+            "type": "array",
+            "title": "Releases"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "artifact_id",
+          "revision",
+          "latest_revision",
+          "superseded",
+          "revisions",
+          "canonical_artifact",
+          "decision",
+          "releases"
+        ],
+        "title": "ArtifactView"
+      },
+      "AuditEventOut": {
+        "properties": {
+          "event_id": {
+            "type": "string",
+            "title": "Event Id"
+          },
+          "event_type": {
+            "type": "string",
+            "title": "Event Type"
+          },
+          "tenant_id": {
+            "type": "string",
+            "title": "Tenant Id"
+          },
+          "actor_id": {
+            "type": "string",
+            "title": "Actor Id"
+          },
+          "actor_roles": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Actor Roles"
+          },
+          "subject": {
+            "type": "string",
+            "title": "Subject"
+          },
+          "validator_version": {
+            "type": "string",
+            "title": "Validator Version"
+          },
+          "model_runs": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Model Runs"
+          },
+          "stage_timings_ms": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Stage Timings Ms"
+          },
+          "details": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Details"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "prev_hash": {
+            "type": "string",
+            "title": "Prev Hash"
+          },
+          "event_hash": {
+            "type": "string",
+            "title": "Event Hash"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "event_id",
+          "event_type",
+          "tenant_id",
+          "actor_id",
+          "actor_roles",
+          "subject",
+          "validator_version",
+          "model_runs",
+          "stage_timings_ms",
+          "details",
+          "created_at",
+          "prev_hash",
+          "event_hash"
+        ],
+        "title": "AuditEventOut"
+      },
+      "BlobRecord": {
+        "properties": {
+          "blob_id": {
+            "type": "string",
+            "title": "Blob Id"
+          },
+          "tenant_id": {
+            "type": "string",
+            "title": "Tenant Id"
+          },
+          "source_id": {
+            "type": "string",
+            "title": "Source Id"
+          },
+          "sha256": {
+            "type": "string",
+            "title": "Sha256"
+          },
+          "size_bytes": {
+            "type": "integer",
+            "title": "Size Bytes"
+          },
+          "filename": {
+            "type": "string",
+            "title": "Filename"
+          },
+          "declared_mime": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Declared Mime"
+          },
+          "sniffed_mime": {
+            "type": "string",
+            "title": "Sniffed Mime"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "QUARANTINED",
+              "SCAN_PASSED",
+              "REJECTED",
+              "RELEASED"
+            ],
+            "title": "Status"
+          },
+          "scan": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Scan"
+          },
+          "file_ref": {
+            "$ref": "#/components/schemas/FileRef"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "blob_id",
+          "tenant_id",
+          "source_id",
+          "sha256",
+          "size_bytes",
+          "filename",
+          "declared_mime",
+          "sniffed_mime",
+          "status",
+          "scan",
+          "file_ref",
+          "created_at"
+        ],
+        "title": "BlobRecord"
+      },
+      "Body_upload_v1_artifacts_upload_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File"
+          },
+          "tenant_id": {
+            "type": "string",
+            "title": "Tenant Id"
+          },
+          "source_id": {
+            "type": "string",
+            "title": "Source Id"
+          },
+          "sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sha256"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file",
+          "tenant_id",
+          "source_id"
+        ],
+        "title": "Body_upload_v1_artifacts_upload_post"
+      },
+      "Correction": {
+        "properties": {
+          "req_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Req Id"
+          },
+          "field": {
+            "type": "string",
+            "title": "Field"
+          },
+          "corrected_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Corrected Value"
+          },
+          "corrected_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Corrected Unit"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 3,
+            "title": "Reason"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "field",
+          "corrected_value",
+          "reason"
+        ],
+        "title": "Correction"
+      },
+      "Derivation": {
+        "properties": {
+          "formula": {
+            "type": "string",
+            "title": "Formula"
+          },
+          "inputs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Inputs"
+          },
+          "computed_by": {
+            "type": "string",
+            "title": "Computed By",
+            "default": "n0-deterministic"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "formula",
+          "inputs"
+        ],
+        "title": "Derivation"
+      },
+      "EvaluateRequest": {
+        "properties": {
+          "artifact": {
+            "$ref": "#/components/schemas/Artifact"
+          },
+          "origin_node": {
+            "type": "string",
+            "enum": [
+              "N0",
+              "N1",
+              "N2",
+              "N3",
+              "N4",
+              "N5",
+              "N6",
+              "N7",
+              "N8"
+            ],
+            "title": "Origin Node",
+            "default": "N0"
+          },
+          "requested_destinations": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "N1",
+                    "N2",
+                    "N3",
+                    "N4",
+                    "N5",
+                    "N6",
+                    "N7",
+                    "N8"
+                  ]
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requested Destinations"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "artifact"
+        ],
+        "title": "EvaluateRequest"
+      },
+      "EvaluationResult": {
+        "properties": {
+          "canonical_artifact": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Artifact"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/Provenance"
+          },
+          "quality_report": {
+            "$ref": "#/components/schemas/QualityReport"
+          },
+          "rights_decision": {
+            "$ref": "#/components/schemas/RightsDecision"
+          },
+          "decision": {
+            "$ref": "#/components/schemas/GatewayDecision"
+          },
+          "release_manifest": {
+            "$ref": "#/components/schemas/ReleaseManifest"
+          },
+          "audit_event": {
+            "$ref": "#/components/schemas/AuditEventOut"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "canonical_artifact",
+          "provenance",
+          "quality_report",
+          "rights_decision",
+          "decision",
+          "release_manifest",
+          "audit_event"
+        ],
+        "title": "EvaluationResult",
+        "description": "The seven N0 deliverables."
+      },
+      "EvidenceSnippet": {
+        "properties": {
+          "source_ref": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Source Ref",
+            "description": "blob_id, file URI or 'payload'"
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Text"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page"
+          },
+          "char_start": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Char Start"
+          },
+          "char_end": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Char End"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source_ref",
+          "text"
+        ],
+        "title": "EvidenceSnippet"
+      },
+      "ExpectedOutput": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "format": {
+            "type": "string",
+            "title": "Format"
+          },
+          "schema_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Schema Ref"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "format"
+        ],
+        "title": "ExpectedOutput"
+      },
+      "ExtractionRequest": {
+        "properties": {
+          "tenant_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+            "title": "Tenant Id"
+          },
+          "project_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+            "title": "Project Id"
+          },
+          "source_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+            "title": "Source Id"
+          },
+          "blob_id": {
+            "type": "string",
+            "title": "Blob Id"
+          },
+          "target": {
+            "type": "string",
+            "const": "RFQDraft",
+            "title": "Target",
+            "default": "RFQDraft"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "tenant_id",
+          "project_id",
+          "source_id",
+          "blob_id"
+        ],
+        "title": "ExtractionRequest"
+      },
+      "ExtractionResponse": {
+        "properties": {
+          "draft": {
+            "$ref": "#/components/schemas/RFQDraft"
+          },
+          "model_run": {
+            "$ref": "#/components/schemas/ModelRun"
+          },
+          "violated_rules": {
+            "items": {
+              "$ref": "#/components/schemas/RuleViolation"
+            },
+            "type": "array",
+            "title": "Violated Rules"
+          },
+          "missing_fields": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Missing Fields"
+          },
+          "decision_preview": {
+            "type": "string",
+            "enum": [
+              "PASS",
+              "REWORK",
+              "BLOCK",
+              "REVIEW"
+            ],
+            "title": "Decision Preview"
+          },
+          "pii_findings": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Pii Findings"
+          },
+          "parser": {
+            "type": "string",
+            "title": "Parser"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "draft",
+          "model_run",
+          "violated_rules",
+          "missing_fields",
+          "decision_preview",
+          "pii_findings",
+          "parser"
+        ],
+        "title": "ExtractionResponse"
+      },
+      "FeedbackRecord": {
+        "properties": {
+          "feedback_id": {
+            "type": "string",
+            "title": "Feedback Id"
+          },
+          "tenant_id": {
+            "type": "string",
+            "title": "Tenant Id"
+          },
+          "artifact_id": {
+            "type": "string",
+            "title": "Artifact Id"
+          },
+          "revision": {
+            "type": "string",
+            "title": "Revision"
+          },
+          "reviewer_id": {
+            "type": "string",
+            "title": "Reviewer Id"
+          },
+          "corrections": {
+            "items": {
+              "$ref": "#/components/schemas/Correction"
+            },
+            "type": "array",
+            "title": "Corrections"
+          },
+          "override_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Override Reason"
+          },
+          "training_label": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TrainingLabel"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "training_eligible": {
+            "type": "boolean",
+            "title": "Training Eligible"
+          },
+          "approval_event": {
+            "$ref": "#/components/schemas/ApprovalEvent"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "feedback_id",
+          "tenant_id",
+          "artifact_id",
+          "revision",
+          "reviewer_id",
+          "corrections",
+          "override_reason",
+          "training_label",
+          "training_eligible",
+          "approval_event",
+          "created_at"
+        ],
+        "title": "FeedbackRecord"
+      },
+      "FeedbackRequest": {
+        "properties": {
+          "artifact_id": {
+            "type": "string",
+            "title": "Artifact Id"
+          },
+          "revision": {
+            "type": "string",
+            "title": "Revision"
+          },
+          "corrections": {
+            "items": {
+              "$ref": "#/components/schemas/Correction"
+            },
+            "type": "array",
+            "title": "Corrections"
+          },
+          "override_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Override Reason"
+          },
+          "training_label": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TrainingLabel"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "artifact_id",
+          "revision"
+        ],
+        "title": "FeedbackRequest"
+      },
+      "FileRef": {
+        "properties": {
+          "uri": {
+            "type": "string",
+            "pattern": "^n0://(quarantine|released)/[A-Za-z0-9._:\\-]+/[0-9a-f]{64}$",
+            "title": "Uri"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Sha256"
+          },
+          "mime": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mime"
+          },
+          "size_bytes": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Size Bytes"
+          },
+          "blob_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Blob Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "uri",
+          "sha256"
+        ],
+        "title": "FileRef"
+      },
+      "GatewayDecision": {
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "const": "GatewayDecision.v1",
+            "title": "Schema Version",
+            "default": "GatewayDecision.v1"
+          },
+          "decision_id": {
+            "type": "string",
+            "title": "Decision Id"
+          },
+          "tenant_id": {
+            "type": "string",
+            "title": "Tenant Id"
+          },
+          "artifact_id": {
+            "type": "string",
+            "title": "Artifact Id"
+          },
+          "revision": {
+            "type": "string",
+            "title": "Revision"
+          },
+          "decision": {
+            "type": "string",
+            "enum": [
+              "PASS",
+              "REWORK",
+              "BLOCK",
+              "REVIEW"
+            ],
+            "title": "Decision"
+          },
+          "violated_rules": {
+            "items": {
+              "$ref": "#/components/schemas/RuleViolation"
+            },
+            "type": "array",
+            "title": "Violated Rules"
+          },
+          "missing_fields": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Missing Fields"
+          },
+          "rights_decision": {
+            "$ref": "#/components/schemas/RightsDecision"
+          },
+          "explanation": {
+            "type": "string",
+            "title": "Explanation"
+          },
+          "allowed_destinations": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "N1",
+                "N2",
+                "N3",
+                "N4",
+                "N5",
+                "N6",
+                "N7",
+                "N8"
+              ]
+            },
+            "type": "array",
+            "title": "Allowed Destinations"
+          },
+          "validator_version": {
+            "type": "string",
+            "title": "Validator Version"
+          },
+          "quality_score": {
+            "type": "number",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Quality Score",
+            "description": "advisory only; never overrides a hard policy"
+          },
+          "origin_node": {
+            "type": "string",
+            "enum": [
+              "N0",
+              "N1",
+              "N2",
+              "N3",
+              "N4",
+              "N5",
+              "N6",
+              "N7",
+              "N8"
+            ],
+            "title": "Origin Node",
+            "default": "N0"
+          },
+          "decided_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Decided At"
+          },
+          "resolved_by_approval_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolved By Approval Id",
+            "description": "set when a human REVIEW_RESOLUTION approval turned a REVIEW into PASS/REWORK; BLOCK decisions are never resolvable"
+          },
+          "qualification_disclaimer": {
+            "type": "string",
+            "title": "Qualification Disclaimer",
+            "default": "PASS means the artifact satisfied N0's checks for its declared artifact_type and release_stage. It is not engineering qualification or product certification."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "decision_id",
+          "tenant_id",
+          "artifact_id",
+          "revision",
+          "decision",
+          "violated_rules",
+          "missing_fields",
+          "rights_decision",
+          "explanation",
+          "allowed_destinations",
+          "validator_version",
+          "quality_score",
+          "decided_at"
+        ],
+        "title": "GatewayDecision.v1"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HandoffReleaseRequest": {
+        "properties": {
+          "artifact_id": {
+            "type": "string",
+            "title": "Artifact Id"
+          },
+          "revision": {
+            "type": "string",
+            "title": "Revision"
+          },
+          "source_node": {
+            "type": "string",
+            "enum": [
+              "N0",
+              "N1",
+              "N2",
+              "N3",
+              "N4",
+              "N5",
+              "N6",
+              "N7",
+              "N8"
+            ],
+            "title": "Source Node"
+          },
+          "target_nodes": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "N1",
+                "N2",
+                "N3",
+                "N4",
+                "N5",
+                "N6",
+                "N7",
+                "N8"
+              ]
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Target Nodes"
+          },
+          "approval_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approval Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "artifact_id",
+          "revision",
+          "source_node",
+          "target_nodes"
+        ],
+        "title": "HandoffReleaseRequest"
+      },
+      "LineageEdge": {
+        "properties": {
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "target": {
+            "type": "string",
+            "title": "Target"
+          },
+          "relation": {
+            "type": "string",
+            "title": "Relation"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source",
+          "target",
+          "relation"
+        ],
+        "title": "LineageEdge"
+      },
+      "LineageGraph": {
+        "properties": {
+          "artifact_id": {
+            "type": "string",
+            "title": "Artifact Id"
+          },
+          "tenant_id": {
+            "type": "string",
+            "title": "Tenant Id"
+          },
+          "nodes": {
+            "items": {
+              "$ref": "#/components/schemas/LineageNode"
+            },
+            "type": "array",
+            "title": "Nodes"
+          },
+          "edges": {
+            "items": {
+              "$ref": "#/components/schemas/LineageEdge"
+            },
+            "type": "array",
+            "title": "Edges"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "artifact_id",
+          "tenant_id",
+          "nodes",
+          "edges"
+        ],
+        "title": "LineageGraph"
+      },
+      "LineageNode": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "source",
+              "blob",
+              "artifact",
+              "model_run",
+              "decision",
+              "approval",
+              "release",
+              "node",
+              "work_package",
+              "vendor_result"
+            ],
+            "title": "Kind"
+          },
+          "attrs": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Attrs"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "kind"
+        ],
+        "title": "LineageNode"
+      },
+      "ModelRun": {
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "const": "ModelRun.v1",
+            "title": "Schema Version",
+            "default": "ModelRun.v1"
+          },
+          "run_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+            "title": "Run Id"
+          },
+          "tenant_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+            "title": "Tenant Id"
+          },
+          "model_name": {
+            "type": "string",
+            "title": "Model Name"
+          },
+          "model_version": {
+            "type": "string",
+            "title": "Model Version"
+          },
+          "provider": {
+            "type": "string",
+            "title": "Provider"
+          },
+          "prompt_revision": {
+            "type": "string",
+            "title": "Prompt Revision"
+          },
+          "input_hash": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Input Hash"
+          },
+          "output_payload": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Output Payload"
+          },
+          "token_usage": {
+            "$ref": "#/components/schemas/TokenUsage"
+          },
+          "estimated_cost_usd": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Estimated Cost Usd"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "SUCCEEDED",
+              "FAILED",
+              "REFUSED"
+            ],
+            "title": "Status",
+            "default": "SUCCEEDED"
+          },
+          "source_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Id"
+          },
+          "blob_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Blob Id"
+          },
+          "started_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Started At"
+          },
+          "completed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Completed At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "run_id",
+          "tenant_id",
+          "model_name",
+          "model_version",
+          "provider",
+          "prompt_revision",
+          "input_hash",
+          "output_payload",
+          "token_usage",
+          "estimated_cost_usd",
+          "started_at",
+          "completed_at"
+        ],
+        "title": "ModelRun.v1"
+      },
+      "Money": {
+        "properties": {
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Amount"
+          },
+          "currency": {
+            "type": "string",
+            "pattern": "^[A-Z]{3}$",
+            "title": "Currency"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "amount",
+          "currency"
+        ],
+        "title": "Money"
+      },
+      "Provenance": {
+        "properties": {
+          "source_id": {
+            "type": "string",
+            "title": "Source Id"
+          },
+          "source_sha256": {
+            "type": "string",
+            "title": "Source Sha256"
+          },
+          "revision": {
+            "type": "string",
+            "title": "Revision"
+          },
+          "payload_sha256": {
+            "type": "string",
+            "title": "Payload Sha256"
+          },
+          "file_refs": {
+            "items": {
+              "$ref": "#/components/schemas/FileRef"
+            },
+            "type": "array",
+            "title": "File Refs"
+          },
+          "upstream": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Upstream"
+          },
+          "model_run_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Model Run Ids"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source_id",
+          "source_sha256",
+          "revision",
+          "payload_sha256",
+          "file_refs",
+          "upstream",
+          "model_run_ids"
+        ],
+        "title": "Provenance"
+      },
+      "QualityReport": {
+        "properties": {
+          "violated_rules": {
+            "items": {
+              "$ref": "#/components/schemas/RuleViolation"
+            },
+            "type": "array",
+            "title": "Violated Rules"
+          },
+          "error_codes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Error Codes"
+          },
+          "missing_fields": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Missing Fields"
+          },
+          "checks_run": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Checks Run"
+          },
+          "derived_values": {
+            "items": {
+              "$ref": "#/components/schemas/Requirement"
+            },
+            "type": "array",
+            "title": "Derived Values"
+          },
+          "pii_findings": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Pii Findings"
+          },
+          "quality_score": {
+            "type": "number",
+            "title": "Quality Score"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "violated_rules",
+          "error_codes",
+          "missing_fields",
+          "checks_run",
+          "derived_values",
+          "pii_findings",
+          "quality_score"
+        ],
+        "title": "QualityReport"
+      },
+      "RFQDraft": {
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "const": "RFQDraft.v1",
+            "title": "Schema Version",
+            "default": "RFQDraft.v1"
+          },
+          "draft_id": {
+            "type": "string",
+            "title": "Draft Id"
+          },
+          "tenant_id": {
+            "type": "string",
+            "title": "Tenant Id"
+          },
+          "source_id": {
+            "type": "string",
+            "title": "Source Id"
+          },
+          "blob_id": {
+            "type": "string",
+            "title": "Blob Id"
+          },
+          "customer_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Name"
+          },
+          "product_category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Category"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity"
+          },
+          "requirements": {
+            "items": {
+              "$ref": "#/components/schemas/Requirement"
+            },
+            "type": "array",
+            "title": "Requirements"
+          },
+          "missing_fields": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Missing Fields"
+          },
+          "evidence_snippets": {
+            "items": {
+              "$ref": "#/components/schemas/EvidenceSnippet"
+            },
+            "type": "array",
+            "title": "Evidence Snippets"
+          },
+          "model_run_id": {
+            "type": "string",
+            "title": "Model Run Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "draft_id",
+          "tenant_id",
+          "source_id",
+          "blob_id",
+          "customer_name",
+          "product_category",
+          "quantity",
+          "requirements",
+          "missing_fields",
+          "evidence_snippets",
+          "model_run_id"
+        ],
+        "title": "RFQDraft.v1"
+      },
+      "ReleaseManifest": {
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "const": "ReleaseManifest.v1",
+            "title": "Schema Version",
+            "default": "ReleaseManifest.v1"
+          },
+          "manifest_id": {
+            "type": "string",
+            "title": "Manifest Id"
+          },
+          "tenant_id": {
+            "type": "string",
+            "title": "Tenant Id"
+          },
+          "artifact_id": {
+            "type": "string",
+            "title": "Artifact Id"
+          },
+          "revision": {
+            "type": "string",
+            "title": "Revision"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "RELEASABLE",
+              "NOT_RELEASED",
+              "RELEASED"
+            ],
+            "title": "Status"
+          },
+          "source_node": {
+            "type": "string",
+            "enum": [
+              "N0",
+              "N1",
+              "N2",
+              "N3",
+              "N4",
+              "N5",
+              "N6",
+              "N7",
+              "N8"
+            ],
+            "title": "Source Node"
+          },
+          "allowed_destinations": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "N1",
+                "N2",
+                "N3",
+                "N4",
+                "N5",
+                "N6",
+                "N7",
+                "N8"
+              ]
+            },
+            "type": "array",
+            "title": "Allowed Destinations"
+          },
+          "target_nodes": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "N1",
+                "N2",
+                "N3",
+                "N4",
+                "N5",
+                "N6",
+                "N7",
+                "N8"
+              ]
+            },
+            "type": "array",
+            "title": "Target Nodes"
+          },
+          "source_sha256": {
+            "type": "string",
+            "title": "Source Sha256"
+          },
+          "payload_sha256": {
+            "type": "string",
+            "title": "Payload Sha256"
+          },
+          "decision_id": {
+            "type": "string",
+            "title": "Decision Id"
+          },
+          "approval_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approval Id"
+          },
+          "released_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Released By"
+          },
+          "issued_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Issued At"
+          },
+          "validator_version": {
+            "type": "string",
+            "title": "Validator Version"
+          },
+          "manifest_sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Manifest Sha256"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "manifest_id",
+          "tenant_id",
+          "artifact_id",
+          "revision",
+          "status",
+          "source_node",
+          "allowed_destinations",
+          "source_sha256",
+          "payload_sha256",
+          "decision_id",
+          "issued_at",
+          "validator_version"
+        ],
+        "title": "ReleaseManifest.v1"
+      },
+      "Requirement": {
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "const": "Requirement.v1",
+            "title": "Schema Version",
+            "default": "Requirement.v1"
+          },
+          "req_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+            "title": "Req Id"
+          },
+          "parameter": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]{1,79}$",
+            "title": "Parameter",
+            "description": "snake_case with a unit suffix, e.g. output_voltage_v"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "tolerance": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Tolerance"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "operating_conditions": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Operating Conditions"
+          },
+          "value_origin": {
+            "type": "string",
+            "enum": [
+              "CUSTOMER",
+              "MEASURED",
+              "DERIVED",
+              "MODEL_EXTRACTED"
+            ],
+            "title": "Value Origin"
+          },
+          "evidence_snippets": {
+            "items": {
+              "$ref": "#/components/schemas/EvidenceSnippet"
+            },
+            "type": "array",
+            "title": "Evidence Snippets"
+          },
+          "derivation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Derivation"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "si_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Si Value"
+          },
+          "si_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Si Unit"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "req_id",
+          "parameter",
+          "value",
+          "value_origin"
+        ],
+        "title": "Requirement.v1",
+        "description": "One value. ``value_origin`` says who stated it: the customer, a measurement, N0's own\ndeterministic derivation, or a model extraction awaiting human confirmation."
+      },
+      "RightsDecision": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "GRANTED",
+              "DENIED"
+            ],
+            "title": "Status"
+          },
+          "source_id": {
+            "type": "string",
+            "title": "Source Id"
+          },
+          "approval_status": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "PENDING",
+                  "APPROVED",
+                  "REJECTED",
+                  "REVOKED"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approval Status"
+          },
+          "license": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "License"
+          },
+          "processing_purpose": {
+            "type": "string",
+            "title": "Processing Purpose"
+          },
+          "purpose_permitted": {
+            "type": "boolean",
+            "title": "Purpose Permitted"
+          },
+          "llm_processing_allowed": {
+            "type": "boolean",
+            "title": "Llm Processing Allowed"
+          },
+          "vendor_transmission_allowed": {
+            "type": "boolean",
+            "title": "Vendor Transmission Allowed"
+          },
+          "training_allowed": {
+            "type": "boolean",
+            "title": "Training Allowed"
+          },
+          "reasons": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Reasons"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "status",
+          "source_id",
+          "processing_purpose",
+          "purpose_permitted",
+          "llm_processing_allowed",
+          "vendor_transmission_allowed",
+          "training_allowed"
+        ],
+        "title": "RightsDecision"
+      },
+      "RuleViolation": {
+        "properties": {
+          "rule_id": {
+            "type": "string",
+            "title": "Rule Id"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "BLOCK",
+              "REWORK",
+              "REVIEW"
+            ],
+            "title": "Severity"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "stage": {
+            "type": "string",
+            "enum": [
+              "N0.1",
+              "N0.2",
+              "N0.3",
+              "N0.4",
+              "N0.5",
+              "N0.6"
+            ],
+            "title": "Stage"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "field": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Field"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "rule_id",
+          "code",
+          "severity",
+          "category",
+          "stage",
+          "message"
+        ],
+        "title": "RuleViolation"
+      },
+      "SourceApprovalRequest": {
+        "properties": {
+          "decision": {
+            "type": "string",
+            "enum": [
+              "APPROVED",
+              "REJECTED",
+              "REVOKED"
+            ],
+            "title": "Decision",
+            "default": "APPROVED"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 5,
+            "title": "Reason"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "reason"
+        ],
+        "title": "SourceApprovalRequest"
+      },
+      "SourceApprovalResponse": {
+        "properties": {
+          "source": {
+            "$ref": "#/components/schemas/SourceRecord"
+          },
+          "approval_event": {
+            "$ref": "#/components/schemas/ApprovalEvent"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source",
+          "approval_event"
+        ],
+        "title": "SourceApprovalResponse"
+      },
+      "SourceRecord": {
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "const": "SourceRecord.v1",
+            "title": "Schema Version",
+            "default": "SourceRecord.v1"
+          },
+          "source_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+            "title": "Source Id"
+          },
+          "tenant_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+            "title": "Tenant Id"
+          },
+          "publisher": {
+            "type": "string",
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Publisher"
+          },
+          "license": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "License",
+            "description": "SPDX id, LicenseRef-* or customer contract reference"
+          },
+          "permitted_use": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "RFQ_ANALYSIS",
+                "PRODUCT_DEFINITION",
+                "DESIGN_ENGINEERING",
+                "VERIFICATION",
+                "SOURCING",
+                "COMMERCIAL",
+                "FINANCE",
+                "LIFECYCLE",
+                "MARKET_INTELLIGENCE",
+                "EVALUATION",
+                "LLM_EXTRACTION",
+                "VENDOR_TRANSMISSION",
+                "MODEL_TRAINING",
+                "PERSONAL_DATA_PROCESSING"
+              ]
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Permitted Use"
+          },
+          "approval_status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "APPROVED",
+              "REJECTED",
+              "REVOKED"
+            ],
+            "title": "Approval Status",
+            "default": "PENDING"
+          },
+          "approved_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approved By"
+          },
+          "approved_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approved At"
+          },
+          "data_origin": {
+            "type": "string",
+            "enum": [
+              "REAL",
+              "SYNTHETIC",
+              "MIXED"
+            ],
+            "title": "Data Origin",
+            "default": "REAL"
+          },
+          "confidentiality": {
+            "type": "string",
+            "enum": [
+              "PUBLIC",
+              "INTERNAL",
+              "CONFIDENTIAL",
+              "RESTRICTED"
+            ],
+            "title": "Confidentiality",
+            "default": "CONFIDENTIAL"
+          },
+          "allowed_vendor_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Allowed Vendor Ids",
+            "description": "vendors this source may be transmitted to; empty = none"
+          },
+          "valid_until": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid Until"
+          },
+          "registered_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Registered By"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source_id",
+          "tenant_id",
+          "publisher",
+          "license",
+          "permitted_use"
+        ],
+        "title": "SourceRecord.v1",
+        "description": "Rights and permitted use of one data source, per tenant. Nothing flows until APPROVED."
+      },
+      "SourceRegisterRequest": {
+        "properties": {
+          "source_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+            "title": "Source Id"
+          },
+          "tenant_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+            "title": "Tenant Id"
+          },
+          "publisher": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Publisher"
+          },
+          "license": {
+            "type": "string",
+            "minLength": 1,
+            "title": "License"
+          },
+          "permitted_use": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "RFQ_ANALYSIS",
+                "PRODUCT_DEFINITION",
+                "DESIGN_ENGINEERING",
+                "VERIFICATION",
+                "SOURCING",
+                "COMMERCIAL",
+                "FINANCE",
+                "LIFECYCLE",
+                "MARKET_INTELLIGENCE",
+                "EVALUATION",
+                "LLM_EXTRACTION",
+                "VENDOR_TRANSMISSION",
+                "MODEL_TRAINING",
+                "PERSONAL_DATA_PROCESSING"
+              ]
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Permitted Use"
+          },
+          "data_origin": {
+            "type": "string",
+            "enum": [
+              "REAL",
+              "SYNTHETIC",
+              "MIXED"
+            ],
+            "title": "Data Origin",
+            "default": "REAL"
+          },
+          "confidentiality": {
+            "type": "string",
+            "enum": [
+              "PUBLIC",
+              "INTERNAL",
+              "CONFIDENTIAL",
+              "RESTRICTED"
+            ],
+            "title": "Confidentiality",
+            "default": "CONFIDENTIAL"
+          },
+          "allowed_vendor_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Allowed Vendor Ids"
+          },
+          "valid_until": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid Until"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source_id",
+          "tenant_id",
+          "publisher",
+          "license",
+          "permitted_use"
+        ],
+        "title": "SourceRegisterRequest"
+      },
+      "TokenUsage": {
+        "properties": {
+          "input_tokens": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Input Tokens"
+          },
+          "output_tokens": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Output Tokens"
+          },
+          "cache_read_input_tokens": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Cache Read Input Tokens",
+            "default": 0
+          },
+          "cache_creation_input_tokens": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Cache Creation Input Tokens",
+            "default": 0
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "input_tokens",
+          "output_tokens"
+        ],
+        "title": "TokenUsage"
+      },
+      "Tolerance": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "ABS",
+              "PCT"
+            ],
+            "title": "Kind"
+          },
+          "plus": {
+            "type": "number",
+            "title": "Plus"
+          },
+          "minus": {
+            "type": "number",
+            "title": "Minus"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "kind",
+          "plus",
+          "minus"
+        ],
+        "title": "Tolerance"
+      },
+      "TrainingLabel": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Label"
+          },
+          "use_for_training": {
+            "type": "boolean",
+            "title": "Use For Training"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "label",
+          "use_for_training"
+        ],
+        "title": "TrainingLabel"
+      },
+      "TransmissionDecision": {
+        "properties": {
+          "work_package_id": {
+            "type": "string",
+            "title": "Work Package Id"
+          },
+          "authorized": {
+            "type": "boolean",
+            "title": "Authorized"
+          },
+          "violated_rules": {
+            "items": {
+              "$ref": "#/components/schemas/RuleViolation"
+            },
+            "type": "array",
+            "title": "Violated Rules"
+          },
+          "authorized_inputs": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Authorized Inputs"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "work_package_id",
+          "authorized",
+          "violated_rules",
+          "authorized_inputs"
+        ],
+        "title": "TransmissionDecision"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "VendorResult": {
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "const": "VendorResult.v1",
+            "title": "Schema Version",
+            "default": "VendorResult.v1"
+          },
+          "work_package_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+            "title": "Work Package Id"
+          },
+          "native_file_uris": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Native File Uris"
+          },
+          "result_manifest": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Result Manifest"
+          },
+          "checksum_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Checksum Sha256"
+          },
+          "tool_version": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Tool Version"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "work_package_id",
+          "native_file_uris",
+          "result_manifest",
+          "checksum_sha256",
+          "tool_version"
+        ],
+        "title": "VendorResult.v1"
+      },
+      "VendorResultDecision": {
+        "properties": {
+          "result_id": {
+            "type": "string",
+            "title": "Result Id"
+          },
+          "work_package_id": {
+            "type": "string",
+            "title": "Work Package Id"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACCEPTED",
+              "REJECTED"
+            ],
+            "title": "Status"
+          },
+          "decision": {
+            "type": "string",
+            "enum": [
+              "PASS",
+              "REWORK",
+              "BLOCK",
+              "REVIEW"
+            ],
+            "title": "Decision"
+          },
+          "violated_rules": {
+            "items": {
+              "$ref": "#/components/schemas/RuleViolation"
+            },
+            "type": "array",
+            "title": "Violated Rules"
+          },
+          "checksum_verified": {
+            "type": "boolean",
+            "title": "Checksum Verified"
+          },
+          "native_file_uris": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Native File Uris"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "result_id",
+          "work_package_id",
+          "status",
+          "decision",
+          "violated_rules",
+          "checksum_verified",
+          "native_file_uris"
+        ],
+        "title": "VendorResultDecision"
+      },
+      "VendorWorkPackage": {
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "const": "VendorWorkPackage.v1",
+            "title": "Schema Version",
+            "default": "VendorWorkPackage.v1"
+          },
+          "work_package_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+            "title": "Work Package Id"
+          },
+          "tenant_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+            "title": "Tenant Id"
+          },
+          "project_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+            "title": "Project Id"
+          },
+          "vendor_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+            "title": "Vendor Id"
+          },
+          "connector_type": {
+            "type": "string",
+            "enum": [
+              "REST_GRAPHQL",
+              "CLI_SDK",
+              "FILE_PORTAL",
+              "SCPI_VISA",
+              "MES_ERP",
+              "MQTT_OPCUA"
+            ],
+            "title": "Connector Type"
+          },
+          "approved_input_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Approved Input Ids",
+            "description": "ARTIFACT_ID@REVISION, each must be PASS"
+          },
+          "budget_cap": {
+            "$ref": "#/components/schemas/Money"
+          },
+          "expected_outputs": {
+            "items": {
+              "$ref": "#/components/schemas/ExpectedOutput"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Expected Outputs"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "work_package_id",
+          "tenant_id",
+          "project_id",
+          "vendor_id",
+          "connector_type",
+          "approved_input_ids",
+          "budget_cap",
+          "expected_outputs"
+        ],
+        "title": "VendorWorkPackage.v1"
+      }
+    }
+  }
+}

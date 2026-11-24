@@ -1,0 +1,83 @@
+{
+  "tenant_id": "acme",
+  "project_id": "PRJ-PSU-24V-120W",
+  "artifact_id": "RFQ-2026-0043",
+  "schema_version": "Artifact.v1",
+  "artifact_type": "RFQ",
+  "source_id": "SRC-ACME-RFQ-PORTAL",
+  "processing_purpose": "RFQ_ANALYSIS",
+  "release_stage": "CONCEPT",
+  "revision": "A",
+  "synthetic": false,
+  "source_sha256": "b822ebb4c5a47c72239a41ba61e9314f0372e4ad690ffeaac9a18a0c581d8258",
+  "file_refs": [],
+  "payload": {
+    "rfq_id": "RFQ-2026-0043",
+    "customer_name": "Acme Industrial Controls",
+    "product_category": "power_supply",
+    "quantity": 2500,
+    "target_unit_price": {
+      "amount": "18.50",
+      "currency": "USD"
+    },
+    "requested_delivery_date": "2027-03-31",
+    "compliance_standards": [
+      "IEC 62368-1"
+    ],
+    "requirements": [
+      {
+        "req_id": "R-001",
+        "parameter": "input_voltage_v",
+        "value": 48,
+        "unit": "V",
+        "value_origin": "CUSTOMER",
+        "tolerance": {
+          "kind": "PCT",
+          "plus": 10,
+          "minus": 10
+        }
+      },
+      {
+        "req_id": "R-002",
+        "parameter": "output_voltage_v",
+        "value": 24,
+        "unit": "V",
+        "value_origin": "CUSTOMER",
+        "tolerance": {
+          "kind": "PCT",
+          "plus": 1,
+          "minus": 1
+        }
+      },
+      {
+        "req_id": "R-003",
+        "parameter": "output_current_a",
+        "value": 5,
+        "unit": "A",
+        "value_origin": "CUSTOMER"
+      },
+      {
+        "req_id": "R-004",
+        "parameter": "output_power_w",
+        "value": 150,
+        "unit": "W",
+        "value_origin": "CUSTOMER"
+      },
+      {
+        "req_id": "R-003",
+        "parameter": "efficiency_pct",
+        "value": 92,
+        "unit": "%",
+        "value_origin": "CUSTOMER"
+      },
+      {
+        "req_id": "R-006",
+        "parameter": "operating_temp_min_c",
+        "value": -40,
+        "unit": "degC",
+        "value_origin": "CUSTOMER"
+      }
+    ]
+  },
+  "source_artifact_ids": []
+}

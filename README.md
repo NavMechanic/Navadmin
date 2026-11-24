@@ -16,6 +16,17 @@ ATHENA_DQ_TOKENS='{"<token>": {"tenant_id": "demo", "actor_id": "demo.engineer"}
   uvicorn api.gateway_router:create_app_from_env --factory
 ```
 
+## ATHENA N0 — Data Intelligence, Quality & Governance Gateway
+
+`athena_n0_starter/` is a standalone FastAPI service. It gates every package before N1–N8 see it,
+using six stages (N0.1 intake → N0.6 release), eight `*.v1` JSON Schema 2020-12 contracts and
+durable, append-only storage. LLM extraction runs behind a rights-gated, schema-constrained
+boundary. See [athena_n0_starter/README.md](athena_n0_starter/README.md).
+
+```bash
+cd athena_n0_starter && pip install -r requirements.txt && python -m pytest -q
+```
+
 ## ATHENA data acquisition pipeline
 
 `data_pipeline/` fetches, verifies and formats the 75 N0–N8 sources (SRC-001..SRC-075). It uses

@@ -1,0 +1,14 @@
+{
+  "source_id": "SRC-ACME-RFQ-PORTAL",
+  "tenant_id": "acme",
+  "publisher": "Acme Industrial Controls (customer)",
+  "license": "LicenseRef-Acme-MNDA-2026",
+  "permitted_use": [
+    "RFQ_ANALYSIS",
+    "PRODUCT_DEFINITION",
+    "LLM_EXTRACTION"
+  ],
+  "data_origin": "REAL",
+  "confidentiality": "CONFIDENTIAL",
+  "allowed_vendor_ids": []
+}

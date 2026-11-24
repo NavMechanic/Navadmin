@@ -1,0 +1,7 @@
+# Production extras on top of requirements.txt
+-r requirements.txt
+psycopg[binary]>=3.2         # PostgreSQL: N0_DATABASE_URL=postgresql+psycopg://...
+boto3>=1.34                  # S3 object storage: N0_STORAGE_BACKEND=s3
+docling>=2.0                 # layout-aware PDF/DOCX/XLSX parsing (replaces the fallback parsers)
+presidio-analyzer>=2.2       # PII detection (replaces the regex fallback recognizers)
+presidio-anonymizer>=2.2

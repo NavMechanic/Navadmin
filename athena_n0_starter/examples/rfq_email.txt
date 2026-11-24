@@ -1,0 +1,13 @@
+Subject: RFQ 2026-0042 - 24 V DIN-rail power supply
+
+Customer: Acme Industrial Controls
+Product category: power supply
+Quantity: 2,500
+
+Input voltage: 48 V
+Output voltage: 24 V
+Output current: 5 A
+Operating temperature: -40 to +85 C
+Compliance: IEC 62368-1
+
+Please quote by 2026-12-15. Contact: procurement@acme-controls.example, +49 89 1234 5678.
