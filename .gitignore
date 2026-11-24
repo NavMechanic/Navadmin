@@ -42,8 +42,11 @@ venv.bak/
 .env.local
 credentials.json
 google-credentials.json
+service_account.json
 data/chroma_db/
 data/qdrant_db/
+data/.drive_manifest.json
+.qdrant_db/
 *.log
 
 # ATHENA DQ gateway registry (runtime state)
@@ -53,3 +56,6 @@ data/.dq_registry.tmp
 # ATHENA data lake (fetched datasets, live caches, ledgers, exports) — never committed
 data_lake/*
 !data_lake/README.md
+
+# Streamlit secrets (keep the .example, ignore the real one)
+.streamlit/secrets.toml
