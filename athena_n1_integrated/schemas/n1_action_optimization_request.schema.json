@@ -1,0 +1,182 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n1_action_optimization_request",
+  "$defs": {
+    "CandidateAction": {
+      "additionalProperties": false,
+      "properties": {
+        "action_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+          "title": "Action Id",
+          "type": "string"
+        },
+        "action_type": {
+          "enum": [
+            "DESK_RESEARCH",
+            "REQUEST_ATTESTATION",
+            "PURCHASE_MARKET_DATA",
+            "REQUEST_BUYER_INTERVIEW",
+            "EMAIL_OUTREACH",
+            "ATTEND_PREBID_MEETING",
+            "SUBMIT_CLARIFICATION_QUESTION",
+            "SUBMIT_BID",
+            "PORTAL_SCRAPE",
+            "AUTO_OUTREACH_CAMPAIGN"
+          ],
+          "title": "Action Type",
+          "type": "string"
+        },
+        "target_account_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Target Account Id"
+        },
+        "target_evidence_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Target Evidence Id"
+        },
+        "currency": {
+          "pattern": "^[A-Z]{3}$",
+          "title": "Currency",
+          "type": "string"
+        },
+        "execution_cost": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Execution Cost"
+        },
+        "delay_cost_per_day": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": "0",
+          "title": "Delay Cost Per Day"
+        },
+        "expected_delay_days": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Expected Delay Days",
+          "type": "integer"
+        },
+        "expected_loss_avoided": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "description": "user-supplied; N1 does not invent probabilities",
+          "title": "Expected Loss Avoided"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        }
+      },
+      "required": [
+        "action_id",
+        "action_type",
+        "currency",
+        "execution_cost",
+        "expected_loss_avoided"
+      ],
+      "title": "CandidateAction",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "tenant_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "report_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Report Id"
+    },
+    "currency": {
+      "pattern": "^[A-Z]{3}$",
+      "title": "Currency",
+      "type": "string"
+    },
+    "budget_cap": {
+      "anyOf": [
+        {
+          "minimum": 0.0,
+          "type": "number"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Budget Cap"
+    },
+    "actions": {
+      "items": {
+        "$ref": "#/$defs/CandidateAction"
+      },
+      "minItems": 1,
+      "title": "Actions",
+      "type": "array"
+    }
+  },
+  "required": [
+    "tenant_id",
+    "currency",
+    "actions"
+  ],
+  "title": "ActionOptimizationRequest.v1",
+  "type": "object"
+}

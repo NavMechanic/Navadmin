@@ -123,7 +123,10 @@ Errors are `{"detail": {"code": ..., "message": ...}}`. Refusals are audited as 
 - the eight families: SourceRecord, Artifact, Requirement, ModelRun, VendorWorkPackage, VendorResult,
   GatewayDecision, ApprovalEvent (`*.v1`)
 - RFQDraft, ReleaseManifest and EvaluationResult
-- the nine payload schemas under `schemas/payloads/`
+- the thirteen payload schemas under `schemas/payloads/`, including the market-intelligence types
+  `MARKET_BATCH` and `BUYER_RECORD` (inputs to N1), plus `COMMERCIAL_SHORTLIST` (N1 → N6) and
+  `SAM_EVIDENCE` (N1 → N7). N0 recomputes SAM totals (N0-SAM-001) and blocks synthetic or unattested
+  spend presented as verified (N0-SAM-002).
 - `openapi.json`
 
 ```bash
@@ -159,6 +162,20 @@ Configuration is environment-driven (`app/config.py`):
 
 `N0_LLM_PROVIDER=anthropic` needs `ANTHROPIC_API_KEY` in the environment.
 
+**Authentication.** In production, use JWTs from your identity provider:
+
+- set `N0_JWT_SECRET` (HS256), or `N0_JWT_PUBLIC_KEY` / `N0_JWT_PUBLIC_KEY_FILE` (RS256/ES256);
+- optionally `N0_JWT_ISSUER` and `N0_JWT_AUDIENCE`;
+- leave `N0_TOKENS_JSON` empty.
+
+Tokens must carry `sub`, `tenant_id` and `exp`, and may carry `roles`, `nodes` and `clearance`. The
+`none` algorithm is refused. Unknown roles, a bad signature, the wrong issuer or an expired token
+all return 401.
+
+**Extensions.** `create_app(..., extensions=[fn])` calls each `fn(app)` with the finished app,
+so another node can mount its router on the same database, store, pipeline and authenticator.
+`athena_n1_integrated` uses this to mount N1.
+
 ### PostgreSQL + object storage
 
 ```bash
@@ -179,6 +196,7 @@ python -m pytest -q
 | `tests/test_llm_boundary.py` | baseline (disabled by default, unapproved source never reaches the model, nulls + missing_fields + evidence); external provider rights; PII redaction before transmission; schema-invalid / hallucinated / evidence-less output; Claude request shape, refusal handling, cost |
 | `tests/test_handoff_e2e.py` | `examples/valid_rfq.json` → PASS → RELEASE approval → N2; `examples/invalid_rfq.json` → refused → fixed revision B → released; stale/rejected approvals; extraction → REVIEW → resolution → N2; downstream pinning; feedback training gates; vendor round trip; lineage |
 | `tests/test_schemas.py` | 8 families are valid 2020-12 with the specified fields and vocabularies; committed schemas match the models; API outputs conform; Alembic migration equals the ORM and installs the triggers |
+| `tests/test_market_and_jwt.py` | MARKET_BATCH routes only to N1; one synthetic observation taints a batch; SAM_EVIDENCE totals recomputed, unattested spend blocked; JWT signature / expiry / issuer / role checks; role implications; `none` algorithm refused |
 
 ## Not verified here
 
@@ -189,7 +207,8 @@ python -m pytest -q
   (`alembic upgrade head --sql`). Tests use SQLite.
 - The **S3** backend and the **clamd** scanner have not been exercised.
 - The **Claude provider** was tested against a faked SDK client, so no live API call was made.
-- **Authentication** uses static bearer tokens (`N0_TOKENS_JSON`, hashed in memory).
-  `security.TokenRegistry.authenticate` is the seam for replacing it with OIDC/JWT.
+- **Authentication:** JWT verification was tested with HS256 tokens minted in the tests.
+  RS256/ES256 keys from a real identity provider (and JWKS rotation) have not been exercised.
+  Static tokens (`N0_TOKENS_JSON`) remain available for local development only.
 - **Model prices** in `llm_adapter.PRICING_USD_PER_MTOK` are list prices for estimates. Check them
   before using them for billing.

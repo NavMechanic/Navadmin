@@ -768,7 +768,8 @@
               "SOURCE_RIGHTS",
               "RELEASE",
               "REVIEW_RESOLUTION",
-              "FEEDBACK"
+              "FEEDBACK",
+              "EVIDENCE_ATTESTATION"
             ],
             "title": "Scope"
           },
@@ -911,7 +912,11 @@
               "MARKET_FEED",
               "FINANCE_RECORD",
               "TELEMETRY",
-              "MODEL_OUTPUT"
+              "MODEL_OUTPUT",
+              "MARKET_BATCH",
+              "BUYER_RECORD",
+              "COMMERCIAL_SHORTLIST",
+              "SAM_EVIDENCE"
             ],
             "title": "Artifact Type"
           },
@@ -2104,19 +2109,9 @@
           },
           "kind": {
             "type": "string",
-            "enum": [
-              "source",
-              "blob",
-              "artifact",
-              "model_run",
-              "decision",
-              "approval",
-              "release",
-              "node",
-              "work_package",
-              "vendor_result"
-            ],
-            "title": "Kind"
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "title": "Kind",
+            "description": "source, blob, artifact, model_run, decision, approval, release, node, work_package, vendor_result, or an extension's kind (n1_*)"
           },
           "attrs": {
             "additionalProperties": true,

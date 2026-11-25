@@ -11,7 +11,7 @@ from __future__ import annotations
 import os
 from datetime import datetime
 from pathlib import PurePosixPath, PureWindowsPath
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, Sequence
 
 from fastapi import Depends, FastAPI, File, Form, Query, Request, Response, UploadFile
 from fastapi.responses import JSONResponse
@@ -34,7 +34,7 @@ from .pipeline import N0Pipeline
 from .repository import Repository, dump, new_id
 from .rules import RULES, VALIDATOR_VERSION, normalize_revision, sha256_hex
 from .scanning import make_scanner, validate_upload
-from .security import Principal, TokenRegistry, principal_dependency
+from .security import Principal, build_authenticator, principal_dependency
 from .storage import make_store
 from .vendor_contracts import authorize_work_package, ingest_vendor_result
 
@@ -70,7 +70,10 @@ def _safe_filename(name: Optional[str]) -> str:
 
 
 def create_app(settings: Optional[Settings] = None, *, provider: Optional[Provider] = None,
-               clock: Callable[[], datetime] = utcnow) -> FastAPI:
+               clock: Callable[[], datetime] = utcnow,
+               extensions: Sequence[Callable[[FastAPI], None]] = ()) -> FastAPI:
+    """Build the N0 gateway. ``extensions`` are called with the finished app (sharing its database,
+    object store, pipeline and authenticator on ``app.state``) to mount further routers, e.g. N1."""
     settings = settings or Settings.from_env()
     db = Database(settings.database_url)
     if settings.auto_create_schema:
@@ -85,7 +88,7 @@ def create_app(settings: Optional[Settings] = None, *, provider: Optional[Provid
     app = FastAPI(title="ATHENA N0 — Data Intelligence, Quality & Governance Gateway", version=__version__,
                   description=DESCRIPTION)
     for k, v in dict(settings=settings, db=db, store=store, scanner=scanner, docling=docling, presidio=presidio,
-                     llm=llm, pipeline=pipeline, extraction=extraction, tokens=TokenRegistry(settings.tokens),
+                     llm=llm, pipeline=pipeline, extraction=extraction, tokens=build_authenticator(settings),
                      clock=clock).items():
         setattr(app.state, k, v)
 
@@ -403,6 +406,9 @@ def create_app(settings: Optional[Settings] = None, *, provider: Optional[Provid
             return {"tenant_id": p.tenant_id, "audit": repo.verify_chain(p.tenant_id, "audit"),
                     "approvals": repo.verify_chain(p.tenant_id, "approval")}
 
+    app.state.audit, app.state.guarded = audit, guarded
+    for extension in extensions:
+        extension(app)
     return app
 
 

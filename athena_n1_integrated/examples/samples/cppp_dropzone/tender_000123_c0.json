@@ -1,0 +1,41 @@
+{
+  "_note": "FICTIONAL sample shaped like the public API response; not real procurement data.",
+  "tender_id": "2026_EXMPL_000123_1",
+  "tender_ref_no": "EXMPL/PS/2026/123",
+  "organisation": "Example State Power Transmission Corporation|Procurement Wing",
+  "title": "Procurement of battery charger panels for 66 kV substations",
+  "service_category": "power_electronics",
+  "published_date": "2026-11-10T10:00:00+05:30",
+  "bid_submission_end_date": "2026-12-05T15:00:00+05:30",
+  "tender_value": {
+    "amount": "4500000",
+    "currency": "INR"
+  },
+  "corrigendum_seq": 0,
+  "quantity": 120,
+  "attachments": [
+    {
+      "name": "NIT.pdf",
+      "sha256": "ae9f148f60fbb7ec3d2595dccbaa77383015a6fd9c3816a9ceec34e222bb7e69",
+      "required": true
+    },
+    {
+      "name": "BOQ.xlsx",
+      "sha256": "316c90b4266dade87c56f69717a49aa6eb832cdf5cbcf846aaa98c1684f2ccbb",
+      "required": true
+    },
+    {
+      "name": "Corrigendum.pdf",
+      "required": false
+    }
+  ],
+  "requirements": [
+    {
+      "req_id": "C-1",
+      "parameter": "output_voltage_v",
+      "value": 110,
+      "unit": "V",
+      "value_origin": "CUSTOMER"
+    }
+  ]
+}

@@ -94,7 +94,11 @@
         "MARKET_FEED",
         "FINANCE_RECORD",
         "TELEMETRY",
-        "MODEL_OUTPUT"
+        "MODEL_OUTPUT",
+        "MARKET_BATCH",
+        "BUYER_RECORD",
+        "COMMERCIAL_SHORTLIST",
+        "SAM_EVIDENCE"
       ],
       "title": "Artifact Type",
       "type": "string"

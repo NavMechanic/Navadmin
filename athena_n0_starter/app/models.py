@@ -28,7 +28,9 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 NodeId = Literal["N0", "N1", "N2", "N3", "N4", "N5", "N6", "N7", "N8"]
 DownstreamNode = Literal["N1", "N2", "N3", "N4", "N5", "N6", "N7", "N8"]
 ArtifactType = Literal["RFQ", "DATASHEET", "EDA_PACKAGE", "SUPPLIER_QUOTE", "TEST_MEASUREMENT", "MARKET_FEED",
-                       "FINANCE_RECORD", "TELEMETRY", "MODEL_OUTPUT"]
+                       "FINANCE_RECORD", "TELEMETRY", "MODEL_OUTPUT",
+                       # market & opportunity intelligence (N1 inputs, then N1 → N6 / N7 outputs)
+                       "MARKET_BATCH", "BUYER_RECORD", "COMMERCIAL_SHORTLIST", "SAM_EVIDENCE"]
 ProcessingPurpose = Literal[
     "RFQ_ANALYSIS", "PRODUCT_DEFINITION", "DESIGN_ENGINEERING", "VERIFICATION", "SOURCING", "COMMERCIAL",
     "FINANCE", "LIFECYCLE", "MARKET_INTELLIGENCE", "EVALUATION",
@@ -249,11 +251,179 @@ class ModelOutputPayload(_Strict):
     output: dict[str, Any] = Field(default_factory=dict)
 
 
+# ----------------------------------------------------------------------------------------------
+# market & opportunity intelligence payloads
+# ----------------------------------------------------------------------------------------------
+ObservationType = Literal["TENDER_NOTICE", "CONTRACT_AWARD", "TRADE_STATISTIC", "BUDGET_DOCUMENT",
+                          "BUYER_INTERVIEW", "CRM_RECORD"]
+SourceConnector = Literal["UN_COMTRADE", "SAM_GOV", "TED_EU", "INDIA_CPPP", "CRM", "INTERVIEW", "MANUAL"]
+SpendType = Literal["VERIFIED_BUDGET", "INDICATIVE", "HYPOTHETICAL"]
+AmountKind = Literal["AWARD_VALUE", "ESTIMATED_VALUE", "BUDGET", "TRADE_VALUE", "STATED_SPEND"]
+RelationshipStage = Literal["NONE", "COLD", "WARM", "ACTIVE"]
+BudgetStatus = Literal["APPROVED", "PLANNED", "EXPLORATORY"]
+
+
+class MarketAmount(_Strict):
+    """Amount as stated by the source. Deliberately unconstrained in sign: N1.4 guardrails exclude
+    negative or malformed values per observation instead of rejecting the whole batch."""
+    amount: Decimal
+    currency: str = Field(pattern=r"^[A-Z]{3}$")
+
+
+class TenderAttachment(_Strict):
+    name: str = Field(min_length=1)
+    sha256: Optional[str] = Field(default=None, pattern=_SHA)
+    required: bool = False
+    present: bool = True
+
+
+class MarketObservation(_Strict):
+    """One piece of market evidence: a tender, an award, a trade statistic, a budget line, an
+    interview or a CRM fact. ``spend_type`` is decided by N1, not by the submitter."""
+    model_config = ConfigDict(extra="forbid", title="MarketObservation.v1")
+    schema_version: Literal["MarketObservation.v1"] = "MarketObservation.v1"
+    evidence_id: str = Field(pattern=_ID)
+    observation_type: ObservationType
+    source_connector: SourceConnector
+    source_url: Optional[str] = Field(default=None, pattern=r"^(https?|n0)://", max_length=2048)
+    source_record_id: Optional[str] = Field(default=None, max_length=256)
+    buyer_name: Optional[str] = Field(default=None, max_length=512)
+    buyer_identifiers: dict[str, str] = Field(default_factory=dict, description="e.g. {'uei': ..., 'vat': ...}")
+    buyer_country: Optional[str] = Field(default=None, pattern=r"^[A-Z]{2}$")
+    buyer_type: Optional[Literal["PUBLIC", "PRIVATE"]] = None
+    title: Optional[str] = Field(default=None, max_length=1024)
+    description: Optional[str] = Field(default=None, max_length=20000)
+    service_category: Optional[str] = Field(default=None, pattern=_PARAM)
+    classification_codes: dict[str, list[str]] = Field(default_factory=dict,
+                                                       description="{'cpv': [...], 'naics': [...], 'hs': [...]}")
+    amount: Optional[MarketAmount] = None
+    amount_kind: Optional[AmountKind] = None
+    budget_status: Optional[BudgetStatus] = None
+    published_at: datetime
+    deadline_at: Optional[datetime] = None
+    quantity: Optional[int] = None
+    requirements: list[Requirement] = Field(default_factory=list)
+    compliance_standards: list[str] = Field(default_factory=list)
+    payment_terms: Optional[str] = Field(default=None, max_length=512)
+    corrigendum_seq: int = Field(default=0, ge=0)
+    related_evidence_ids: list[str] = Field(default_factory=list,
+                                            description="e.g. an award lists the notice it awards")
+    attachments: list[TenderAttachment] = Field(default_factory=list)
+    relationship_stage: Optional[RelationshipStage] = None
+    do_not_contact: bool = False
+    extraction_method: Literal["STRUCTURED", "SLM", "MANUAL"] = "STRUCTURED"
+    extraction_model_run_id: Optional[str] = None
+    evidence_snippets: list[EvidenceSnippet] = Field(default_factory=list)
+    raw_sha256: Optional[str] = Field(default=None, pattern=_SHA)
+    synthetic: bool = False
+
+
+class MarketBatchPayload(_Strict):
+    model_config = ConfigDict(extra="forbid", title="MarketBatchPayload.v1")
+    batch_id: str = Field(pattern=_ID)
+    connector: SourceConnector
+    retrieved_at: datetime
+    query: dict[str, Any] = Field(default_factory=dict)
+    raw_payload_sha256: Optional[str] = Field(default=None, pattern=_SHA)
+    observations: list[MarketObservation] = Field(min_length=1)
+
+
+class BuyerRecord(_Strict):
+    """A named-buyer fact from the CRM or a customer interview."""
+    record_id: str = Field(pattern=_ID)
+    record_type: Literal["CRM_ACCOUNT", "INTERVIEW"]
+    buyer_name: str = Field(min_length=1, max_length=512)
+    buyer_identifiers: dict[str, str] = Field(default_factory=dict)
+    buyer_country: Optional[str] = Field(default=None, pattern=r"^[A-Z]{2}$")
+    buyer_type: Optional[Literal["PUBLIC", "PRIVATE"]] = None
+    relationship_stage: RelationshipStage = "NONE"
+    recorded_at: datetime
+    service_categories: list[str] = Field(default_factory=list)
+    stated_need: Optional[str] = Field(default=None, max_length=4000)
+    stated_budget: Optional[MarketAmount] = None
+    budget_status: Optional[BudgetStatus] = None
+    do_not_contact: bool = False
+    source_url: Optional[str] = Field(default=None, pattern=r"^(https?|n0)://", max_length=2048)
+    synthetic: bool = False
+
+
+class BuyerRecordPayload(_Strict):
+    model_config = ConfigDict(extra="forbid", title="BuyerRecordPayload.v1")
+    batch_id: str = Field(pattern=_ID)
+    connector: Literal["CRM", "INTERVIEW"]
+    retrieved_at: datetime
+    records: list[BuyerRecord] = Field(min_length=1)
+
+
+class TenderDeadline(_Strict):
+    evidence_id: str
+    deadline_at: datetime
+    source_url: Optional[str] = None
+
+
+class ShortlistEntry(_Strict):
+    rank: int = Field(ge=1)
+    account_id: str
+    legal_name: str
+    country: Optional[str] = None
+    heuristic_priority_score: float = Field(ge=0, le=100)
+    score_kind: Literal["HEURISTIC_PRIORITIZATION"] = "HEURISTIC_PRIORITIZATION"
+    tender_deadlines: list[TenderDeadline] = Field(default_factory=list)
+    eligibility_risk_flags: list[str] = Field(default_factory=list)
+    evidence_ids: list[str] = Field(min_length=1)
+
+
+class CommercialShortlistPayload(_Strict):
+    model_config = ConfigDict(extra="forbid", title="CommercialShortlistPayload.v1")
+    report_id: str = Field(pattern=_ID)
+    report_sha256: str = Field(pattern=_SHA)
+    generated_at: datetime
+    entries: list[ShortlistEntry] = Field(min_length=1)
+    disclaimer: str
+
+
+class VerifiedSpendItem(_Strict):
+    evidence_id: str
+    account_id: str
+    spend_type: SpendType
+    synthetic: bool
+    attestation_id: Optional[str] = None
+    original: MarketAmount
+    fx_rate: Decimal = Field(gt=0)
+    fx_as_of: date
+    amount_base: Decimal = Field(ge=0)
+    source_url: Optional[str] = None
+
+
+class CostedAction(_Strict):
+    action_id: str
+    action_type: str
+    target_account_id: Optional[str] = None
+    execution_cost: Decimal = Field(ge=0)
+    net_value: Decimal
+    status: Literal["RECOMMENDED_NOT_EXECUTED"] = "RECOMMENDED_NOT_EXECUTED"
+
+
+class SamEvidencePayload(_Strict):
+    model_config = ConfigDict(extra="forbid", title="SamEvidencePayload.v1")
+    report_id: str = Field(pattern=_ID)
+    report_sha256: str = Field(pattern=_SHA)
+    as_of: date
+    base_currency: str = Field(pattern=r"^[A-Z]{3}$")
+    verified_real_sam: Decimal = Field(ge=0)
+    indicative_spend: Decimal = Field(ge=0)
+    hypothetical_addressable_spend: Decimal = Field(ge=0)
+    verified_items: list[VerifiedSpendItem] = Field(default_factory=list)
+    caveats: list[str] = Field(default_factory=list)
+    costed_actions: list[CostedAction] = Field(default_factory=list)
+
+
 PAYLOAD_MODELS: dict[str, type[BaseModel]] = {
     "RFQ": RFQPayload, "DATASHEET": DatasheetPayload, "EDA_PACKAGE": EDAPackagePayload,
     "SUPPLIER_QUOTE": SupplierQuotePayload, "TEST_MEASUREMENT": TestMeasurementPayload,
     "MARKET_FEED": MarketFeedPayload, "FINANCE_RECORD": FinanceRecordPayload, "TELEMETRY": TelemetryPayload,
-    "MODEL_OUTPUT": ModelOutputPayload,
+    "MODEL_OUTPUT": ModelOutputPayload, "MARKET_BATCH": MarketBatchPayload, "BUYER_RECORD": BuyerRecordPayload,
+    "COMMERCIAL_SHORTLIST": CommercialShortlistPayload, "SAM_EVIDENCE": SamEvidencePayload,
 }
 REQUIREMENT_LISTS = {"RFQ": "requirements", "DATASHEET": "requirements", "TEST_MEASUREMENT": "measurements",
                      "TELEMETRY": "readings", "MODEL_OUTPUT": "requirements"}
@@ -423,7 +593,7 @@ class ApprovalEvent(_Strict):
     approver_id: str
     approver_role: str
     decision: Literal["APPROVED", "REJECTED"]
-    scope: Literal["SOURCE_RIGHTS", "RELEASE", "REVIEW_RESOLUTION", "FEEDBACK"]
+    scope: Literal["SOURCE_RIGHTS", "RELEASE", "REVIEW_RESOLUTION", "FEEDBACK", "EVIDENCE_ATTESTATION"]
     reason: str = Field(min_length=5)
     timestamp_utc: datetime
     prev_hash: str = Field(pattern=_SHA)
@@ -668,8 +838,9 @@ class VendorResultDecision(_Strict):
 
 class LineageNode(_Strict):
     id: str
-    kind: Literal["source", "blob", "artifact", "model_run", "decision", "approval", "release", "node",
-                  "work_package", "vendor_result"]
+    kind: str = Field(pattern=r"^[a-z][a-z0-9_]*$", description="source, blob, artifact, model_run, decision, "
+                                                                "approval, release, node, work_package, "
+                                                                "vendor_result, or an extension's kind (n1_*)")
     attrs: dict[str, Any] = Field(default_factory=dict)
 
 

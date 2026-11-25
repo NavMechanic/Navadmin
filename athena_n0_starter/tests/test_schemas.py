@@ -37,7 +37,8 @@ ENUMS = {
     ("VendorWorkPackage.v1", "connector_type"): {"REST_GRAPHQL", "CLI_SDK", "FILE_PORTAL", "SCPI_VISA", "MES_ERP",
                                                  "MQTT_OPCUA"},
     ("Artifact.v1", "artifact_type"): {"RFQ", "DATASHEET", "EDA_PACKAGE", "SUPPLIER_QUOTE", "TEST_MEASUREMENT",
-                                       "MARKET_FEED", "FINANCE_RECORD", "TELEMETRY", "MODEL_OUTPUT"},
+                                       "MARKET_FEED", "FINANCE_RECORD", "TELEMETRY", "MODEL_OUTPUT", "MARKET_BATCH",
+                                       "BUYER_RECORD", "COMMERCIAL_SHORTLIST", "SAM_EVIDENCE"},
 }
 
 

@@ -1,0 +1,16 @@
+# ATHENA N0 + N1 — core (SQLite + local storage, full test suite, demo and dashboard)
+fastapi>=0.115
+uvicorn[standard]>=0.30
+pydantic>=2.8
+jsonschema>=4.23
+sqlalchemy>=2.0.30
+alembic>=1.13
+python-multipart>=0.0.9
+httpx>=0.27            # connectors and the FastAPI TestClient
+PyJWT[crypto]>=2.10    # JWT bearer authentication
+pytest>=8.0
+pypdf>=4.0             # fallback PDF parser
+python-docx>=1.1       # fallback DOCX parser
+streamlit>=1.40        # dashboard/n1_dashboard.py
+anthropic>=2.12        # only when an anthropic SLM / explainer / N0 extractor is enabled
+# production extras: psycopg[binary] (PostgreSQL), boto3 (S3), docling, presidio-analyzer, presidio-anonymizer

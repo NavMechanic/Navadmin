@@ -47,7 +47,8 @@
         "SOURCE_RIGHTS",
         "RELEASE",
         "REVIEW_RESOLUTION",
-        "FEEDBACK"
+        "FEEDBACK",
+        "EVIDENCE_ATTESTATION"
       ],
       "title": "Scope",
       "type": "string"

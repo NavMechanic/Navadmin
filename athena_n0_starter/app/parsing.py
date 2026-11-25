@@ -129,7 +129,7 @@ def _luhn(digits: str) -> bool:
 
 _RECOGNIZERS = [
     ("EMAIL_ADDRESS", re.compile(r"\b[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}\b"), 0.95, None),
-    ("PHONE_NUMBER", re.compile(r"(?<![\w.])\+?\d{1,3}[\s\-.]?\(?\d{2,5}\)?[\s\-.]?\d{3,4}[\s\-.]?\d{3,5}(?![\w])(?!\.\d)"), 0.6, None),
+    ("PHONE_NUMBER", re.compile(r"(?<![\w.\-/])\+?\d{1,3}[\s\-.]?\(?\d{2,5}\)?[\s\-.]?\d{3,4}[\s\-.]?\d{3,5}(?![\w\-/])(?!\.\d)"), 0.6, None),
     ("CREDIT_CARD", re.compile(r"\b(?:\d[ \-]?){13,19}\b"), 0.9, lambda s: _luhn(re.sub(r"\D", "", s))),
     ("IBAN_CODE", re.compile(r"\b[A-Z]{2}\d{2}[A-Z0-9]{11,30}\b"), 0.85, None),
     ("IP_ADDRESS", re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}\b"), 0.6,

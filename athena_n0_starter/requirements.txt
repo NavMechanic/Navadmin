@@ -11,3 +11,4 @@ pytest>=8.0
 pypdf>=4.0             # fallback PDF parser
 python-docx>=1.1       # fallback DOCX parser
 anthropic>=2.12        # only used when N0_LLM_PROVIDER=anthropic
+PyJWT[crypto]>=2.10    # JWT bearer authentication (N0_JWT_SECRET / N0_JWT_PUBLIC_KEY)

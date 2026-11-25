@@ -8,7 +8,7 @@ each direction, so siblings — other artifacts that merely share a source — a
 """
 from __future__ import annotations
 
-from typing import Optional
+from typing import Callable, Optional
 
 from sqlalchemy import select
 
@@ -18,12 +18,23 @@ from .models import LineageEdge, LineageGraph, LineageNode
 from .repository import Repository
 
 
+AttrResolver = Callable[[Repository, str, str], dict]
+_RESOLVERS: dict[str, AttrResolver] = {}
+
+
+def register_attr_resolver(kind: str, resolver: AttrResolver) -> None:
+    """Let an extension (e.g. N1) describe its own lineage node kinds: ``resolver(repo, tenant, ref)``."""
+    _RESOLVERS[kind] = resolver
+
+
 def _kind(node_id: str) -> str:
     return node_id.split(":", 1)[0]
 
 
 def _attrs(repo: Repository, tenant_id: str, node_id: str) -> dict:
     kind, ref = node_id.split(":", 1)
+    if kind in _RESOLVERS:
+        return _RESOLVERS[kind](repo, tenant_id, ref)
     s = repo.s
     if kind == "artifact":
         aid, rev = ref.rsplit("@", 1)

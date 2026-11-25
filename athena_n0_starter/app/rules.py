@@ -19,6 +19,7 @@ import math
 import re
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
+from decimal import Decimal, InvalidOperation
 from typing import Any, Callable, Iterable, Optional
 
 from jsonschema import Draft202012Validator
@@ -89,6 +90,8 @@ _CATALOG = [
     ("N0-PROV-005", "ORIGIN_INVALID_FOR_TYPE", "REWORK", "PROVENANCE", "N0.4", "value_origin not allowed for this artifact_type"),
     ("N0-PROV-006", "HUMAN_CONFIRMATION_REQUIRED", "REVIEW", "PROVENANCE", "N0.4", "model-extracted values need human confirmation"),
     ("N0-LLM-002", "MODEL_OUTPUT_SCHEMA_INVALID", "REWORK", "SCHEMA", "N0.4", "LLM output failed schema revalidation"),
+    ("N0-SAM-001", "SAM_TOTAL_MISMATCH", "REWORK", "ARITHMETIC", "N0.4", "verified SAM total or an item's FX conversion disagrees with N0's recomputation"),
+    ("N0-SAM-002", "UNVERIFIED_SPEND_AS_VERIFIED", "BLOCK", "SAM_INTEGRITY", "N0.5", "verified SAM includes synthetic, unattested or non-VERIFIED_BUDGET spend"),
     # N0.5 hard policy
     ("N0-SYN-001", "SYNTHETIC_AS_REAL", "BLOCK", "SYNTHETIC", "N0.5", "synthetic data presented as real"),
     ("N0-SYN-002", "SYNTHETIC_STAGE_GATE", "BLOCK", "SYNTHETIC", "N0.5", "synthetic data beyond CONCEPT stage"),
@@ -103,7 +106,8 @@ RULES: dict[str, RuleSpec] = {code: RuleSpec(rid, code, sev, cat, stage, desc)
                               for rid, code, sev, cat, stage, desc in _CATALOG}
 assert len(RULES) == len(_CATALOG)
 HARD_POLICY_CATEGORIES = {"AUTHORIZATION", "TENANT_ISOLATION", "RIGHTS", "IP_LICENSING", "CONFIDENTIALITY",
-                          "INTEGRITY", "REVISION_CONTROL", "SYNTHETIC", "CALIBRATION", "SAFETY", "STAGE_GATE"}
+                          "INTEGRITY", "REVISION_CONTROL", "SYNTHETIC", "CALIBRATION", "SAFETY", "STAGE_GATE",
+                          "SAM_INTEGRITY"}
 _DIGEST = hashlib.sha256(json.dumps(_CATALOG).encode()).hexdigest()[:12]
 VALIDATOR_VERSION = f"n0-validator/1.0.0+rules.{_DIGEST}"
 
@@ -484,7 +488,9 @@ _SIGNATURES = [("RFQ", {"rfq_id", "requirements"}), ("DATASHEET", {"part_number"
                ("EDA_PACKAGE", {"design_id", "eda_tool"}), ("SUPPLIER_QUOTE", {"quote_id", "supplier_id"}),
                ("TEST_MEASUREMENT", {"test_id", "instruments"}), ("MARKET_FEED", {"feed_id", "series"}),
                ("FINANCE_RECORD", {"record_id", "period"}), ("TELEMETRY", {"device_id", "readings"}),
-               ("MODEL_OUTPUT", {"model_run_id", "task"})]
+               ("MODEL_OUTPUT", {"model_run_id", "task"}), ("MARKET_BATCH", {"batch_id", "observations"}),
+               ("BUYER_RECORD", {"batch_id", "records"}), ("COMMERCIAL_SHORTLIST", {"report_id", "entries"}),
+               ("SAM_EVIDENCE", {"report_id", "verified_items"})]
 
 
 def classify(payload: dict) -> Optional[str]:
@@ -501,7 +507,8 @@ def _as_dt(v: Any) -> Optional[datetime]:
         return None
 
 
-FRESHNESS = {"MARKET_FEED": ("as_of", timedelta(hours=24)), "TELEMETRY": ("observed_at", timedelta(hours=1))}
+FRESHNESS = {"MARKET_FEED": ("as_of", timedelta(hours=24)), "TELEMETRY": ("observed_at", timedelta(hours=1)),
+             "MARKET_BATCH": ("retrieved_at", timedelta(days=30)), "BUYER_RECORD": ("retrieved_at", timedelta(days=30))}
 
 
 def freshness_checks(artifact_type: str, payload: dict, now: datetime, f: Findings) -> None:
@@ -544,10 +551,11 @@ def hard_policy_checks(artifact: Artifact, source: Optional[SourceRecord], reqs:
     f.ran("calibration")
     f.ran("safety")
     p, stage = artifact.payload, RELEASE_STAGE_ORDER[artifact.release_stage]
-    marked = any(k == "_synthetic" and v is True for k, v in _walk_keys(p))
+    # a nested ``synthetic: true`` (e.g. one market observation in a batch) taints the whole artifact
+    marked = any(k in ("_synthetic", "synthetic") and v is True for k, v in _walk_keys(p))
     if not artifact.synthetic and ((source is not None and source.data_origin == "SYNTHETIC") or marked):
-        f.add("SYNTHETIC_AS_REAL", "synthetic data (source data_origin SYNTHETIC or _synthetic marker) "
-                                   "submitted with synthetic=false", "synthetic")
+        f.add("SYNTHETIC_AS_REAL", "synthetic data (source data_origin SYNTHETIC or a synthetic marker in the "
+                                   "payload) submitted with synthetic=false", "synthetic")
     if artifact.synthetic and stage > RELEASE_STAGE_ORDER["CONCEPT"]:
         f.add("SYNTHETIC_STAGE_GATE", f"synthetic data cannot enter release_stage {artifact.release_stage}",
               "release_stage")
@@ -576,6 +584,43 @@ def hard_policy_checks(artifact: Artifact, source: Optional[SourceRecord], reqs:
                                             "exceeds the 60 V DC SELV limit and no safety standard is declared")
 
 
+def _dec(v: Any) -> Optional[Decimal]:
+    try:
+        d = Decimal(str(v))
+    except (InvalidOperation, ValueError, TypeError):
+        return None
+    return d if d.is_finite() else None
+
+
+def market_checks(artifact_type: str, payload: dict, synthetic: bool, f: Findings) -> None:
+    """SAM_EVIDENCE integrity, recomputed deterministically: N0 never trusts a submitted total."""
+    if artifact_type != "SAM_EVIDENCE":
+        return
+    f.ran("sam_integrity")
+    items = payload.get("verified_items") or []
+    total = Decimal(0)
+    for i, it in enumerate(items):
+        if not isinstance(it, dict):
+            continue
+        where = f"payload.verified_items[{i}]"
+        if it.get("synthetic") is True or it.get("spend_type") != "VERIFIED_BUDGET" or not it.get("attestation_id"):
+            f.add("UNVERIFIED_SPEND_AS_VERIFIED", f"{it.get('evidence_id')} is synthetic, unattested or "
+                                                  f"{it.get('spend_type')}; it cannot be verified SAM", where)
+        amount = _dec((it.get("original") or {}).get("amount"))
+        rate, base = _dec(it.get("fx_rate")), _dec(it.get("amount_base"))
+        if amount is not None and rate is not None and base is not None:
+            if abs(amount * rate - base) > Decimal("0.01"):
+                f.add("SAM_TOTAL_MISMATCH", f"{it.get('evidence_id')}: {amount} × {rate} ≠ {base}", where)
+            total += base
+    stated = _dec(payload.get("verified_real_sam"))
+    if stated is not None and abs(stated - total) > Decimal("0.01"):
+        f.add("SAM_TOTAL_MISMATCH", f"verified_real_sam {stated} ≠ Σ verified_items {total}",
+              "payload.verified_real_sam")
+    if synthetic and stated is not None and stated > 0:
+        f.add("UNVERIFIED_SPEND_AS_VERIFIED", "a synthetic artifact cannot carry verified real SAM",
+              "payload.verified_real_sam")
+
+
 # ----------------------------------------------------------------------------------------------
 # routing (N0.6)
 # ----------------------------------------------------------------------------------------------
@@ -583,6 +628,7 @@ TYPE_DESTINATIONS = {
     "RFQ": ["N1", "N2", "N6"], "DATASHEET": ["N2", "N3", "N5"], "EDA_PACKAGE": ["N3", "N4", "N5"],
     "SUPPLIER_QUOTE": ["N5", "N7"], "TEST_MEASUREMENT": ["N3", "N4", "N8"], "MARKET_FEED": ["N1", "N6", "N7"],
     "FINANCE_RECORD": ["N7"], "TELEMETRY": ["N4", "N8"], "MODEL_OUTPUT": ["N2", "N3"],
+    "MARKET_BATCH": ["N1"], "BUYER_RECORD": ["N1"], "COMMERCIAL_SHORTLIST": ["N6"], "SAM_EVIDENCE": ["N7"],
 }
 PURPOSE_DESTINATIONS = {
     "RFQ_ANALYSIS": ["N1", "N2", "N6"], "PRODUCT_DEFINITION": ["N2", "N3"], "DESIGN_ENGINEERING": ["N3", "N4", "N5"],

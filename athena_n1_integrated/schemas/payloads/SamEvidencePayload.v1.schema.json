@@ -1,0 +1,281 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:SamEvidencePayload.v1",
+  "$defs": {
+    "CostedAction": {
+      "additionalProperties": false,
+      "properties": {
+        "action_id": {
+          "title": "Action Id",
+          "type": "string"
+        },
+        "action_type": {
+          "title": "Action Type",
+          "type": "string"
+        },
+        "target_account_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Target Account Id"
+        },
+        "execution_cost": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Execution Cost"
+        },
+        "net_value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Net Value"
+        },
+        "status": {
+          "const": "RECOMMENDED_NOT_EXECUTED",
+          "default": "RECOMMENDED_NOT_EXECUTED",
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "action_id",
+        "action_type",
+        "execution_cost",
+        "net_value"
+      ],
+      "title": "CostedAction",
+      "type": "object"
+    },
+    "MarketAmount": {
+      "additionalProperties": false,
+      "description": "Amount as stated by the source. Deliberately unconstrained in sign: N1.4 guardrails exclude\nnegative or malformed values per observation instead of rejecting the whole batch.",
+      "properties": {
+        "amount": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Amount"
+        },
+        "currency": {
+          "pattern": "^[A-Z]{3}$",
+          "title": "Currency",
+          "type": "string"
+        }
+      },
+      "required": [
+        "amount",
+        "currency"
+      ],
+      "title": "MarketAmount",
+      "type": "object"
+    },
+    "VerifiedSpendItem": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence_id": {
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "account_id": {
+          "title": "Account Id",
+          "type": "string"
+        },
+        "spend_type": {
+          "enum": [
+            "VERIFIED_BUDGET",
+            "INDICATIVE",
+            "HYPOTHETICAL"
+          ],
+          "title": "Spend Type",
+          "type": "string"
+        },
+        "synthetic": {
+          "title": "Synthetic",
+          "type": "boolean"
+        },
+        "attestation_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Attestation Id"
+        },
+        "original": {
+          "$ref": "#/$defs/MarketAmount"
+        },
+        "fx_rate": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Fx Rate"
+        },
+        "fx_as_of": {
+          "format": "date",
+          "title": "Fx As Of",
+          "type": "string"
+        },
+        "amount_base": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Amount Base"
+        },
+        "source_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Url"
+        }
+      },
+      "required": [
+        "evidence_id",
+        "account_id",
+        "spend_type",
+        "synthetic",
+        "original",
+        "fx_rate",
+        "fx_as_of",
+        "amount_base"
+      ],
+      "title": "VerifiedSpendItem",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "report_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+      "title": "Report Id",
+      "type": "string"
+    },
+    "report_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Report Sha256",
+      "type": "string"
+    },
+    "as_of": {
+      "format": "date",
+      "title": "As Of",
+      "type": "string"
+    },
+    "base_currency": {
+      "pattern": "^[A-Z]{3}$",
+      "title": "Base Currency",
+      "type": "string"
+    },
+    "verified_real_sam": {
+      "anyOf": [
+        {
+          "minimum": 0.0,
+          "type": "number"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "title": "Verified Real Sam"
+    },
+    "indicative_spend": {
+      "anyOf": [
+        {
+          "minimum": 0.0,
+          "type": "number"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "title": "Indicative Spend"
+    },
+    "hypothetical_addressable_spend": {
+      "anyOf": [
+        {
+          "minimum": 0.0,
+          "type": "number"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "title": "Hypothetical Addressable Spend"
+    },
+    "verified_items": {
+      "items": {
+        "$ref": "#/$defs/VerifiedSpendItem"
+      },
+      "title": "Verified Items",
+      "type": "array"
+    },
+    "caveats": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Caveats",
+      "type": "array"
+    },
+    "costed_actions": {
+      "items": {
+        "$ref": "#/$defs/CostedAction"
+      },
+      "title": "Costed Actions",
+      "type": "array"
+    }
+  },
+  "required": [
+    "report_id",
+    "report_sha256",
+    "as_of",
+    "base_currency",
+    "verified_real_sam",
+    "indicative_spend",
+    "hypothetical_addressable_spend"
+  ],
+  "title": "SamEvidencePayload.v1",
+  "type": "object"
+}

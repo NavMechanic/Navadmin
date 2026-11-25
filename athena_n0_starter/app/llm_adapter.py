@@ -221,8 +221,11 @@ class AnthropicProvider:
     name, external = "anthropic", True
 
     def __init__(self, model: str = "claude-opus-5-5", effort: str = "medium", client=None,
-                 max_tokens: int = 16000) -> None:
+                 max_tokens: int = 16000, server_side_fallback: Optional[bool] = None) -> None:
         self.model, self.effort, self.max_tokens = model, effort, max_tokens
+        # the server-side refusal fallback is not offered for every model (e.g. Haiku)
+        self.server_side_fallback = (not model.startswith("claude-haiku")) if server_side_fallback is None \
+            else server_side_fallback
         self._client = client
 
     @property
@@ -234,16 +237,15 @@ class AnthropicProvider:
 
     def complete_json(self, system: str, user: str, schema: dict) -> LLMResult:
         import anthropic
+        request = dict(model=self.model, max_tokens=self.max_tokens, system=system,
+                       messages=[{"role": "user", "content": user}],
+                       output_config={"effort": self.effort, "format": {"type": "json_schema", "schema": schema}})
         try:
-            response = self.client.beta.messages.create(
-                model=self.model,
-                max_tokens=self.max_tokens,
-                betas=["server-side-fallback-2026-07-01"],
-                fallbacks="default",
-                system=system,
-                messages=[{"role": "user", "content": user}],
-                output_config={"effort": self.effort, "format": {"type": "json_schema", "schema": schema}},
-            )
+            if self.server_side_fallback:
+                response = self.client.beta.messages.create(betas=["server-side-fallback-2026-07-01"],
+                                                            fallbacks="default", **request)
+            else:
+                response = self.client.messages.create(**request)
         except anthropic.RateLimitError as exc:
             raise LLMError(f"rate limited by the model provider: {exc}") from exc
         except anthropic.APIStatusError as exc:
