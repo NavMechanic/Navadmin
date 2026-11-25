@@ -1,0 +1,10 @@
+ISO-10303-21;
+HEADER;
+FILE_DESCRIPTION(('PSU-120W DIN-rail enclosure'),'2;1');
+FILE_NAME('enclosure.step','2026-11-20T09:00:00',('design'),('synthetic'),'Open CASCADE STEP processor 7.7','FreeCAD 0.21.2','Unknown');
+FILE_SCHEMA(('AUTOMOTIVE_DESIGN { 1 0 10303 214 1 1 1 1 }'));
+ENDSEC;
+DATA;
+#1=CARTESIAN_POINT('',(0.,0.,0.));
+ENDSEC;
+END-ISO-10303-21;

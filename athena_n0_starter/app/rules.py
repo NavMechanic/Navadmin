@@ -25,8 +25,9 @@ from typing import Any, Callable, Iterable, Optional
 from jsonschema import Draft202012Validator
 from pydantic import ValidationError
 
-from .models import (CONFIDENTIALITY_RANK, PAYLOAD_MODELS, RELEASE_STAGE_ORDER, REQUIREMENT_LISTS, Artifact,
-                     Derivation, Requirement, RightsDecision, RuleViolation, SourceRecord)
+from .models import (CONFIDENTIALITY_RANK, NATIVE_EXTENSIONS, NON_NATIVE_EXTENSIONS, PAYLOAD_MODELS,
+                     RELEASE_STAGE_ORDER, REQUIRED_CORNERS, REQUIREMENT_LISTS, Artifact, Derivation, Requirement,
+                     RightsDecision, RuleViolation, SourceRecord)
 from .units import UnitError, normalize, parameter_dimension
 
 # ----------------------------------------------------------------------------------------------
@@ -92,6 +93,23 @@ _CATALOG = [
     ("N0-LLM-002", "MODEL_OUTPUT_SCHEMA_INVALID", "REWORK", "SCHEMA", "N0.4", "LLM output failed schema revalidation"),
     ("N0-SAM-001", "SAM_TOTAL_MISMATCH", "REWORK", "ARITHMETIC", "N0.4", "verified SAM total or an item's FX conversion disagrees with N0's recomputation"),
     ("N0-SAM-002", "UNVERIFIED_SPEND_AS_VERIFIED", "BLOCK", "SAM_INTEGRITY", "N0.5", "verified SAM includes synthetic, unattested or non-VERIFIED_BUDGET spend"),
+    # design releases (N3 → N4 / N5), all three design scopes
+    ("N0-DES-001", "NATIVE_FILES_MISSING", "BLOCK", "DESIGN_INTEGRITY", "N0.5", "required native editable design files are missing (PDF / screenshot-only)"),
+    ("N0-DES-002", "DESIGN_FILE_UNVERIFIED", "BLOCK", "DESIGN_INTEGRITY", "N0.5", "a native design file lacks a SHA-256 or a tool version"),
+    ("N0-DES-003", "CRITICAL_ERC_DRC", "BLOCK", "SAFETY", "N0.5", "unresolved critical ERC/DRC violations"),
+    ("N0-DES-004", "BOM_REVISION_MISMATCH", "BLOCK", "REVISION_CONTROL", "N0.5", "BOM and PCB/design revisions differ"),
+    ("N0-DES-005", "DERATING_BREACH", "BLOCK", "SAFETY", "N0.5", "component stress exceeds its derated rating"),
+    ("N0-DES-006", "CREEPAGE_CLEARANCE", "BLOCK", "SAFETY", "N0.5", "creepage or clearance below the required minimum"),
+    ("N0-DES-007", "SCOPE_EVIDENCE_MISSING", "BLOCK", "DESIGN_INTEGRITY", "N0.5", "release lacks the verification evidence its design scope requires"),
+    ("N0-SIM-001", "SOLVER_VERSION_MISSING", "REWORK", "SIMULATION", "N0.4", "simulation evidence lacks the solver name or version"),
+    ("N0-SIM-002", "SIMULATION_NOT_CONVERGED", "REWORK", "SIMULATION", "N0.4", "a simulation corner did not converge"),
+    ("N0-SIM-003", "WORST_CASE_CORNER_MISSING", "BLOCK", "SAFETY", "N0.5", "a required worst-case simulation corner is missing"),
+    ("N0-MTH-001", "NATIVE_GEOMETRY_MISSING", "BLOCK", "DESIGN_INTEGRITY", "N0.5", "no native STEP / CAD geometry"),
+    ("N0-MTH-002", "THERMAL_BOUNDARY_MISSING", "REWORK", "THERMAL", "N0.4", "thermal boundary conditions are missing"),
+    ("N0-MTH-003", "THERMAL_ASSUMPTIONS_MISSING", "REWORK", "THERMAL", "N0.4", "ambient / load assumptions or component limits are missing"),
+    ("N0-MTH-004", "THERMAL_LIMIT_EXCEEDED", "BLOCK", "SAFETY", "N0.5", "a component exceeds its temperature limit minus the margin"),
+    ("N0-BOM-001", "BOM_LINE_INVALID", "REWORK", "BOM", "N0.4", "BOM line without an MPN, or quantity ≠ number of refdes"),
+    ("N0-BOM-002", "DUPLICATE_REFDES", "REWORK", "BOM", "N0.4", "a refdes appears on more than one BOM line"),
     # N0.5 hard policy
     ("N0-SYN-001", "SYNTHETIC_AS_REAL", "BLOCK", "SYNTHETIC", "N0.5", "synthetic data presented as real"),
     ("N0-SYN-002", "SYNTHETIC_STAGE_GATE", "BLOCK", "SYNTHETIC", "N0.5", "synthetic data beyond CONCEPT stage"),
@@ -107,7 +125,7 @@ RULES: dict[str, RuleSpec] = {code: RuleSpec(rid, code, sev, cat, stage, desc)
 assert len(RULES) == len(_CATALOG)
 HARD_POLICY_CATEGORIES = {"AUTHORIZATION", "TENANT_ISOLATION", "RIGHTS", "IP_LICENSING", "CONFIDENTIALITY",
                           "INTEGRITY", "REVISION_CONTROL", "SYNTHETIC", "CALIBRATION", "SAFETY", "STAGE_GATE",
-                          "SAM_INTEGRITY"}
+                          "SAM_INTEGRITY", "DESIGN_INTEGRITY"}
 _DIGEST = hashlib.sha256(json.dumps(_CATALOG).encode()).hexdigest()[:12]
 VALIDATOR_VERSION = f"n0-validator/1.0.0+rules.{_DIGEST}"
 
@@ -490,7 +508,8 @@ _SIGNATURES = [("RFQ", {"rfq_id", "requirements"}), ("DATASHEET", {"part_number"
                ("FINANCE_RECORD", {"record_id", "period"}), ("TELEMETRY", {"device_id", "readings"}),
                ("MODEL_OUTPUT", {"model_run_id", "task"}), ("MARKET_BATCH", {"batch_id", "observations"}),
                ("BUYER_RECORD", {"batch_id", "records"}), ("COMMERCIAL_SHORTLIST", {"report_id", "entries"}),
-               ("SAM_EVIDENCE", {"report_id", "verified_items"})]
+               ("SAM_EVIDENCE", {"report_id", "verified_items"}), ("PRD", {"prd_id", "design_constraints"}),
+               ("DESIGN_RELEASE", {"release_id", "scope", "files"}), ("BOM_RELEASE", {"release_id", "items"})]
 
 
 def classify(payload: dict) -> Optional[str]:
@@ -576,7 +595,7 @@ def hard_policy_checks(artifact: Artifact, source: Optional[SourceRecord], reqs:
                   "release_stage")
         else:
             f.add("MODEL_OUTPUT_UNREVIEWED", "model output requires human review before downstream use")
-    if artifact.artifact_type in ("RFQ", "DATASHEET"):
+    if artifact.artifact_type in ("RFQ", "DATASHEET", "PRD"):
         hazardous = [r for r in reqs if parameter_dimension(r.parameter) == "voltage" and r.si_value is not None
                      and abs(r.si_value) > 60]
         if hazardous and not p.get("compliance_standards"):
@@ -621,6 +640,125 @@ def market_checks(artifact_type: str, payload: dict, synthetic: bool, f: Finding
               "payload.verified_real_sam")
 
 
+def _ext(path: str) -> str:
+    p = str(path).lower()
+    i = p.rfind(".")
+    return p[i:] if i >= 0 else ""
+
+
+_SCOPE_NATIVE = {"schematic_pcb": {"SCHEMATIC", "PCB"}, "circuit_simulation": {"NETLIST"},
+                 "mechanical_thermal": {"GEOMETRY"}}
+
+
+def design_checks(artifact_type: str, payload: dict, f: Findings) -> None:
+    """N0 release policy for N3 design releases (all three scopes) and engineering BOMs. N0 re-derives
+    nativeness from file extensions and re-checks every number; nothing in the payload is trusted."""
+    if artifact_type == "DESIGN_RELEASE":
+        _design_release_checks(payload, f)
+    elif artifact_type == "BOM_RELEASE":
+        _bom_release_checks(payload, f)
+
+
+def _num(v: Any) -> Optional[float]:
+    d = _dec(v)
+    return float(d) if d is not None else None
+
+
+def _design_release_checks(p: dict, f: Findings) -> None:
+    f.ran("design_release_policy")
+    scope = p.get("scope")
+    files = [x for x in p.get("files") or [] if isinstance(x, dict)]
+    roles = set()
+    for i, x in enumerate(files):
+        role = NATIVE_EXTENSIONS.get(_ext(x.get("path", "")))
+        if role:
+            roles.add(role)
+            if not x.get("sha256") or not x.get("tool_version"):
+                f.add("DESIGN_FILE_UNVERIFIED", f"{x.get('path')} lacks a SHA-256 or tool version", f"payload.files[{i}]")
+    missing = _SCOPE_NATIVE.get(scope, set()) - roles
+    if missing:
+        only = files and all(_ext(x.get("path", "")) in NON_NATIVE_EXTENSIONS for x in files)
+        f.add("NATIVE_GEOMETRY_MISSING" if scope == "mechanical_thermal" else "NATIVE_FILES_MISSING",
+              f"{scope} release needs native {sorted(missing)}" + (" but contains only PDF/image files" if only else ""),
+              "payload.files")
+    if scope == "schematic_pcb":
+        for key in ("erc", "drc"):
+            s = p.get(key)
+            if not isinstance(s, dict):
+                f.add("SCOPE_EVIDENCE_MISSING", f"schematic_pcb release has no {key.upper()} summary", f"payload.{key}")
+            elif int(s.get("critical") or 0) > 0:
+                f.add("CRITICAL_ERC_DRC", f"{s['critical']} unresolved critical {key.upper()} violation(s)",
+                      f"payload.{key}")
+    elif scope == "circuit_simulation":
+        sim = p.get("simulation")
+        if not isinstance(sim, dict):
+            f.add("SCOPE_EVIDENCE_MISSING", "circuit_simulation release has no simulation evidence", "payload.simulation")
+        else:
+            if not sim.get("solver") or not sim.get("solver_version"):
+                f.add("SOLVER_VERSION_MISSING", "simulation evidence must name the solver and its version",
+                      "payload.simulation")
+            corners = [c for c in sim.get("corners") or [] if isinstance(c, dict)]
+            names = {c.get("name") for c in corners}
+            for c in sorted(set(REQUIRED_CORNERS) | set(sim.get("required_corners") or [])):
+                if c not in names:
+                    f.add("WORST_CASE_CORNER_MISSING", f"worst-case corner {c} was not simulated",
+                          "payload.simulation.corners")
+            for c in corners:
+                if c.get("converged") is not True:
+                    f.add("SIMULATION_NOT_CONVERGED", f"corner {c.get('name')} did not converge",
+                          "payload.simulation.corners")
+    elif scope == "mechanical_thermal":
+        th = p.get("thermal")
+        if not isinstance(th, dict):
+            f.add("SCOPE_EVIDENCE_MISSING", "mechanical_thermal release has no thermal evidence", "payload.thermal")
+        else:
+            if not th.get("boundary_conditions"):
+                f.add("THERMAL_BOUNDARY_MISSING", "thermal boundary conditions are empty", "payload.thermal")
+            if th.get("ambient_c") is None or th.get("load_w") is None:
+                f.add("THERMAL_ASSUMPTIONS_MISSING", "ambient temperature and load assumptions are required",
+                      "payload.thermal")
+            margin = _num(th.get("margin_c")) or 0.0
+            limits = th.get("limits_c") or {}
+            for ref, t in sorted((th.get("max_temps_c") or {}).items()):
+                lim = _num(limits.get(ref))
+                if lim is None:
+                    f.add("THERMAL_ASSUMPTIONS_MISSING", f"no temperature limit for {ref}", "payload.thermal.limits_c")
+                elif (_num(t) or 0) > lim - margin:
+                    f.add("THERMAL_LIMIT_EXCEEDED", f"{ref} reaches {t} °C; limit {lim} °C minus {margin} °C margin",
+                          "payload.thermal.max_temps_c")
+    for i, d in enumerate(p.get("derating") or []):
+        stress, rating, factor = _num(d.get("stress")), _num(d.get("rating")), _num(d.get("factor"))
+        if None not in (stress, rating, factor) and abs(stress) > factor * abs(rating):
+            f.add("DERATING_BREACH", f"{d.get('refdes')} {d.get('parameter')}: {stress} > {factor} × {rating}",
+                  f"payload.derating[{i}]")
+    for i, c in enumerate(p.get("clearance") or []):
+        actual, required = _num(c.get("actual_mm")), _num(c.get("required_mm"))
+        if None not in (actual, required) and actual < required:
+            f.add("CREEPAGE_CLEARANCE", f"{c.get('kind')} {actual} mm < required {required} mm",
+                  f"payload.clearance[{i}]")
+
+
+def _bom_release_checks(p: dict, f: Findings) -> None:
+    f.ran("bom_policy")
+    if p.get("pcb_revision") is not None and p.get("pcb_revision") != p.get("design_revision"):
+        f.add("BOM_REVISION_MISMATCH", f"BOM is for design revision {p.get('design_revision')} but the PCB is "
+                                       f"revision {p.get('pcb_revision')}", "payload.pcb_revision")
+    seen: dict[str, int] = {}
+    for i, it in enumerate(p.get("items") or []):
+        if not isinstance(it, dict):
+            continue
+        refs = it.get("refdes") or []
+        if not it.get("dnp") and not it.get("mpn"):
+            f.add("BOM_LINE_INVALID", f"line {it.get('line')} ({', '.join(refs)}) has no MPN", f"payload.items[{i}]")
+        if not it.get("dnp") and it.get("qty") != len(refs):
+            f.add("BOM_LINE_INVALID", f"line {it.get('line')}: qty {it.get('qty')} ≠ {len(refs)} refdes",
+                  f"payload.items[{i}]")
+        for r in refs:
+            if r in seen:
+                f.add("DUPLICATE_REFDES", f"{r} is on lines {seen[r]} and {it.get('line')}", f"payload.items[{i}]")
+            seen.setdefault(r, it.get("line"))
+
+
 # ----------------------------------------------------------------------------------------------
 # routing (N0.6)
 # ----------------------------------------------------------------------------------------------
@@ -629,6 +767,7 @@ TYPE_DESTINATIONS = {
     "SUPPLIER_QUOTE": ["N5", "N7"], "TEST_MEASUREMENT": ["N3", "N4", "N8"], "MARKET_FEED": ["N1", "N6", "N7"],
     "FINANCE_RECORD": ["N7"], "TELEMETRY": ["N4", "N8"], "MODEL_OUTPUT": ["N2", "N3"],
     "MARKET_BATCH": ["N1"], "BUYER_RECORD": ["N1"], "COMMERCIAL_SHORTLIST": ["N6"], "SAM_EVIDENCE": ["N7"],
+    "PRD": ["N3"], "DESIGN_RELEASE": ["N4"], "BOM_RELEASE": ["N5"],
 }
 PURPOSE_DESTINATIONS = {
     "RFQ_ANALYSIS": ["N1", "N2", "N6"], "PRODUCT_DEFINITION": ["N2", "N3"], "DESIGN_ENGINEERING": ["N3", "N4", "N5"],

@@ -43,6 +43,7 @@ class Principal(BaseModel):
     assigned_roles: list[str] = Field(default_factory=list)
     nodes: list[NodeId] = Field(default_factory=list)
     clearance: Confidentiality = "CONFIDENTIAL"
+    vendor_id: Optional[str] = Field(default=None, description="set for external vendor identities (JWT claim)")
     auth_method: str = "static"
 
     def has(self, *roles: str) -> bool:
@@ -112,7 +113,7 @@ class Authenticator:
             raise _unauthorized(f"invalid token: {exc}") from exc
         spec = {"principal_id": str(claims["sub"]), "tenant_id": str(claims["tenant_id"]),
                 "roles": claims.get("roles") or [], "nodes": claims.get("nodes") or [],
-                "clearance": claims.get("clearance", "CONFIDENTIAL")}
+                "clearance": claims.get("clearance", "CONFIDENTIAL"), "vendor_id": claims.get("vendor_id")}
         try:
             return self._principal(spec, "jwt")
         except (ValueError, ValidationError) as exc:

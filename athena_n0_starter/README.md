@@ -26,7 +26,7 @@ models and vendors that the source's rights and the tenant's ACLs allow.
 |---|---|---|
 | **N0.1 intake & permissions** | role/node attribute, tenant isolation, SourceRecord.v1 rights (approval, purpose, licence, expiry), clearance, revision control (format, superseded, immutable), SHA-256 of files and payload | BLOCK |
 | **N0.2 parsing & normalization** | Docling parsing of referenced files, Presidio PII detection, SI normalization of every requirement | REWORK (units, parse), REVIEW (PII) |
-| **N0.3 context** | payload classification vs `artifact_type` (9 types), upstream `ID@REV` resolution, model-run linkage, evidence-in-source, critical-spec completeness → `missing_fields` | BLOCK (upstream), REWORK, REVIEW |
+| **N0.3 context** | payload classification vs `artifact_type` (16 types), upstream `ID@REV` resolution, model-run linkage, evidence-in-source, critical-spec completeness → `missing_fields` | BLOCK (upstream), REWORK, REVIEW |
 | **N0.4 data quality** | JSON Schema 2020-12, V × I power balance, efficiency, ranges, tolerance, 80 % derating, duplicates, contradictions, freshness, `value_origin` truthfulness | REWORK, BLOCK (mislabelled origin) |
 | **N0.5 hard policy** | synthetic-as-real, synthetic beyond CONCEPT, calibration, > 60 V without a safety standard, EDA DRC/ERC and model output stage gates | BLOCK, REVIEW |
 | **N0.6 release** | decision precedence BLOCK > REWORK > REVIEW > PASS, `allowed_destinations`, canonical artifact, release manifest, lineage, audit event | — |
@@ -123,10 +123,15 @@ Errors are `{"detail": {"code": ..., "message": ...}}`. Refusals are audited as 
 - the eight families: SourceRecord, Artifact, Requirement, ModelRun, VendorWorkPackage, VendorResult,
   GatewayDecision, ApprovalEvent (`*.v1`)
 - RFQDraft, ReleaseManifest and EvaluationResult
-- the thirteen payload schemas under `schemas/payloads/`, including the market-intelligence types
+- the sixteen payload schemas under `schemas/payloads/`, including the market-intelligence types
   `MARKET_BATCH` and `BUYER_RECORD` (inputs to N1), plus `COMMERCIAL_SHORTLIST` (N1 → N6) and
   `SAM_EVIDENCE` (N1 → N7). N0 recomputes SAM totals (N0-SAM-001) and blocks synthetic or unattested
   spend presented as verified (N0-SAM-002).
+- the product / design digital-thread types `PRD` (N2 → N3), `DESIGN_RELEASE` (N3 → N4, all three
+  design scopes) and `BOM_RELEASE` (N3 → N5), plus `bom_item.v1`. N0 re-derives nativeness from file
+  extensions and BLOCKs PDF-only / screenshot-only packages, unversioned native files, critical
+  ERC/DRC counts, missing worst-case corners, derating and creepage/clearance breaches, thermal
+  limits and PCB/BOM revision drift (`N0-DES-*`, `N0-SIM-*`, `N0-MTH-*`, `N0-BOM-*`).
 - `openapi.json`
 
 ```bash
@@ -197,6 +202,7 @@ python -m pytest -q
 | `tests/test_handoff_e2e.py` | `examples/valid_rfq.json` → PASS → RELEASE approval → N2; `examples/invalid_rfq.json` → refused → fixed revision B → released; stale/rejected approvals; extraction → REVIEW → resolution → N2; downstream pinning; feedback training gates; vendor round trip; lineage |
 | `tests/test_schemas.py` | 8 families are valid 2020-12 with the specified fields and vocabularies; committed schemas match the models; API outputs conform; Alembic migration equals the ORM and installs the triggers |
 | `tests/test_market_and_jwt.py` | MARKET_BATCH routes only to N1; one synthetic observation taints a batch; SAM_EVIDENCE totals recomputed, unattested spend blocked; JWT signature / expiry / issuer / role checks; role implications; `none` algorithm refused |
+| `tests/test_design_artifacts.py` | DESIGN_RELEASE for all three scopes passes and routes to N4; the hard design policies BLOCK; CAE rework cases; unversioned files; BOM revision drift and line checks; EDA MIME sniffing; PRD checks from N2 |
 
 ## Not verified here
 

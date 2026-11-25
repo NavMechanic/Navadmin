@@ -25,14 +25,24 @@ ALLOWED_MIME = {
     "application/pdf": (".pdf",),
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document": (".docx",),
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": (".xlsx",),
-    "application/json": (".json",),
+    "application/json": (".json", ".kicad_pro", ".gbrjob"),
     "text/csv": (".csv",),
     "text/plain": (".txt", ".log", ".md"),
     "application/zip": (".zip",),
     "model/step": (".step", ".stp"),
     "image/png": (".png",),
     "image/jpeg": (".jpg", ".jpeg"),
+    # native EDA / CAE formats (text-based; sniffed from content, never from the extension alone)
+    "application/x-kicad-schematic": (".kicad_sch",),
+    "application/x-kicad-pcb": (".kicad_pcb",),
+    "text/x-spice": (".cir", ".sp", ".spice", ".net", ".lib"),
+    "application/x-spice-raw": (".raw",),
+    "application/vnd.gerber": (".gbr", ".gtl", ".gbl", ".gto", ".gbo", ".gts", ".gbs", ".gtp", ".gbp", ".gm1",
+                               ".gko", ".g1", ".g2"),
+    "application/x-excellon": (".drl", ".xln"),
 }
+_TEXTUAL = {"text/csv", "application/json", "text/x-spice", "application/x-kicad-schematic", "application/x-kicad-pcb",
+            "application/vnd.gerber", "application/x-excellon", "application/x-spice-raw", "model/step"}
 
 
 @dataclass
@@ -90,6 +100,21 @@ def sniff_mime(data: bytes) -> str:
         return "text/x-shellscript"
     if t.startswith("<!doctype html") or t.startswith("<html") or "<script" in t[:2048]:
         return "text/html"
+    if t.startswith("(kicad_sch"):
+        return "application/x-kicad-schematic"
+    if t.startswith("(kicad_pcb"):
+        return "application/x-kicad-pcb"
+    if t.startswith(("g04", "%fs", "%tf", "%mo")):
+        return "application/vnd.gerber"
+    if t.startswith("m48"):
+        return "application/x-excellon"
+    if t.startswith("title:") and "plotname:" in t:
+        return "application/x-spice-raw"
+    lines = [ln.strip() for ln in t.splitlines() if ln.strip()]
+    if lines and lines[0].startswith("*") and any(
+            ln.startswith((".param", ".include", ".lib", ".tran", ".op", ".dc", ".ac", ".subckt", ".model", ".meas",
+                           ".temp", ".end")) for ln in lines[1:]):
+        return "text/x-spice"
     if t.startswith("{") or t.startswith("["):
         return "application/json"
     first = text.split("\n", 1)[0]
@@ -113,7 +138,7 @@ def validate_upload(data: bytes, filename: str, declared_mime: Optional[str], ma
             problems.append(f"extension {ext or '(none)'} does not match detected type {mime}")
     declared = (declared_mime or "").split(";")[0].strip().lower()
     if declared and declared not in ("application/octet-stream", mime) and not (
-            declared == "text/plain" and mime in ("text/csv", "application/json")):
+            declared == "text/plain" and mime in _TEXTUAL):
         problems.append(f"declared Content-Type {declared} does not match detected type {mime}")
     if mime.startswith("application/vnd.openxmlformats") or mime == "application/zip":
         try:

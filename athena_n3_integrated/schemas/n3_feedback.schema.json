@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n3_feedback",
+  "additionalProperties": false,
+  "properties": {
+    "feedback_id": {
+      "title": "Feedback Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "target_kind": {
+      "title": "Target Kind",
+      "type": "string"
+    },
+    "target_id": {
+      "title": "Target Id",
+      "type": "string"
+    },
+    "label": {
+      "title": "Label",
+      "type": "string"
+    },
+    "reason": {
+      "title": "Reason",
+      "type": "string"
+    },
+    "created_by": {
+      "title": "Created By",
+      "type": "string"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "training_eligible": {
+      "title": "Training Eligible",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "feedback_id",
+    "tenant_id",
+    "target_kind",
+    "target_id",
+    "label",
+    "reason",
+    "created_by",
+    "created_at",
+    "training_eligible"
+  ],
+  "title": "N3Feedback",
+  "type": "object"
+}

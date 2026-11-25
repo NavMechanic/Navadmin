@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n2_prd_record",
+  "additionalProperties": false,
+  "properties": {
+    "prd_id": {
+      "title": "Prd Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "revision": {
+      "title": "Revision",
+      "type": "string"
+    },
+    "n0_artifact_id": {
+      "title": "N0 Artifact Id",
+      "type": "string"
+    },
+    "payload_sha256": {
+      "title": "Payload Sha256",
+      "type": "string"
+    },
+    "n0_decision": {
+      "enum": [
+        "PASS",
+        "REWORK",
+        "BLOCK",
+        "REVIEW"
+      ],
+      "title": "N0 Decision",
+      "type": "string"
+    },
+    "n0_decision_id": {
+      "title": "N0 Decision Id",
+      "type": "string"
+    },
+    "violated_codes": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Violated Codes",
+      "type": "array"
+    },
+    "source_rfq": {
+      "title": "Source Rfq",
+      "type": "string"
+    },
+    "authored_by": {
+      "title": "Authored By",
+      "type": "string"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "prd_id",
+    "tenant_id",
+    "revision",
+    "n0_artifact_id",
+    "payload_sha256",
+    "n0_decision",
+    "n0_decision_id",
+    "violated_codes",
+    "source_rfq",
+    "authored_by",
+    "created_at"
+  ],
+  "title": "PRDRecord.v1",
+  "type": "object"
+}

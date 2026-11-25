@@ -1,0 +1,277 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n2_prd_create_request",
+  "$defs": {
+    "DesignConstraints": {
+      "additionalProperties": false,
+      "description": "Engineering constraints N2 locks into the PRD; N3 verifies designs against them.",
+      "properties": {
+        "input_voltage_min_v": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Input Voltage Min V"
+        },
+        "input_voltage_max_v": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Input Voltage Max V"
+        },
+        "ambient_min_c": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ambient Min C"
+        },
+        "ambient_max_c": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ambient Max C"
+        },
+        "load_max_a": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Load Max A"
+        },
+        "load_max_w": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Load Max W"
+        },
+        "derating_factor": {
+          "default": 0.8,
+          "exclusiveMinimum": 0,
+          "maximum": 1,
+          "title": "Derating Factor",
+          "type": "number"
+        },
+        "min_clearance_mm": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Min Clearance Mm"
+        },
+        "min_creepage_mm": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Min Creepage Mm"
+        },
+        "thermal_margin_c": {
+          "default": 10.0,
+          "minimum": 0,
+          "title": "Thermal Margin C",
+          "type": "number"
+        },
+        "max_pcb_layers": {
+          "anyOf": [
+            {
+              "maximum": 64,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max Pcb Layers"
+        }
+      },
+      "title": "DesignConstraints",
+      "type": "object"
+    },
+    "TestLimit": {
+      "additionalProperties": false,
+      "properties": {
+        "parameter": {
+          "pattern": "^[a-z][a-z0-9_]{1,79}$",
+          "title": "Parameter",
+          "type": "string"
+        },
+        "min": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Min"
+        },
+        "max": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit"
+        },
+        "requirement_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Requirement Ref"
+        }
+      },
+      "required": [
+        "parameter"
+      ],
+      "title": "TestLimit",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "tenant_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "project_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+      "title": "Project Id",
+      "type": "string"
+    },
+    "source_id": {
+      "description": "SourceRecord permitting PRODUCT_DEFINITION for N2 output",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+      "title": "Source Id",
+      "type": "string"
+    },
+    "prd_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+      "title": "Prd Id",
+      "type": "string"
+    },
+    "product_name": {
+      "minLength": 1,
+      "title": "Product Name",
+      "type": "string"
+    },
+    "rfq_artifact_id": {
+      "title": "Rfq Artifact Id",
+      "type": "string"
+    },
+    "rfq_revision": {
+      "title": "Rfq Revision",
+      "type": "string"
+    },
+    "design_scopes": {
+      "items": {
+        "enum": [
+          "schematic_pcb",
+          "circuit_simulation",
+          "mechanical_thermal"
+        ],
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Design Scopes",
+      "type": "array"
+    },
+    "design_constraints": {
+      "$ref": "#/$defs/DesignConstraints"
+    },
+    "test_limits": {
+      "items": {
+        "$ref": "#/$defs/TestLimit"
+      },
+      "title": "Test Limits",
+      "type": "array"
+    }
+  },
+  "required": [
+    "tenant_id",
+    "project_id",
+    "source_id",
+    "prd_id",
+    "product_name",
+    "rfq_artifact_id",
+    "rfq_revision",
+    "design_scopes",
+    "design_constraints"
+  ],
+  "title": "PRDCreateRequest",
+  "type": "object"
+}

@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n3_routing",
+  "$defs": {
+    "Money": {
+      "additionalProperties": false,
+      "properties": {
+        "amount": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Amount"
+        },
+        "currency": {
+          "pattern": "^[A-Z]{3}$",
+          "title": "Currency",
+          "type": "string"
+        }
+      },
+      "required": [
+        "amount",
+        "currency"
+      ],
+      "title": "Money",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "route_id": {
+      "title": "Route Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "work_package_id": {
+      "title": "Work Package Id",
+      "type": "string"
+    },
+    "executor": {
+      "enum": [
+        "TOOL",
+        "VENDOR"
+      ],
+      "title": "Executor",
+      "type": "string"
+    },
+    "tool": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Tool"
+    },
+    "vendor_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Vendor Id"
+    },
+    "budget": {
+      "$ref": "#/$defs/Money"
+    },
+    "vendor_work_package_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "N0 VendorWorkPackage.v1 id",
+      "title": "Vendor Work Package Id"
+    },
+    "authorized": {
+      "title": "Authorized",
+      "type": "boolean"
+    },
+    "reasons": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Reasons",
+      "type": "array"
+    },
+    "routed_by": {
+      "title": "Routed By",
+      "type": "string"
+    },
+    "routed_at": {
+      "format": "date-time",
+      "title": "Routed At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "route_id",
+    "tenant_id",
+    "work_package_id",
+    "executor",
+    "budget",
+    "authorized",
+    "reasons",
+    "routed_by",
+    "routed_at"
+  ],
+  "title": "N3Routing",
+  "type": "object"
+}

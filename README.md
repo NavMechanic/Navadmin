@@ -39,6 +39,21 @@ cd athena_n1_integrated && pip install -r requirements.txt && python -m pytest -
 python examples/run_local_demo.py && streamlit run dashboard/n1_dashboard.py
 ```
 
+## ATHENA N3 — Design Intelligence & CAD/CAE Execution Engine
+
+`athena_n3_integrated/` mounts N1, a minimal N2 PRD service and N3 on the N0 gateway. N3 locks an
+N2-approved PRD into a baseline, plans work packages for three design scopes (schematic/PCB, circuit
+simulation, mechanical/thermal) and runs KiCad CLI / ngspice in a sandbox or routes work to qualified
+vendors. It verifies the native deliverables: ERC/DRC, worst-case corners, BOM and revision lineage.
+A separate design authority approves them, and N3 releases N0-checked manifests to N4 and N5. Hard
+safety findings always BLOCK, and a PRD revision invalidates dependent work. Rebuilt from the
+specification. See [athena_n3_integrated/README.md](athena_n3_integrated/README.md).
+
+```bash
+cd athena_n3_integrated && pip install -r requirements.txt && python -m pytest -q
+python examples/run_n3_demo.py
+```
+
 ## ATHENA data acquisition pipeline
 
 `data_pipeline/` fetches, verifies and formats the 75 N0–N8 sources (SRC-001..SRC-075). It uses

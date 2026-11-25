@@ -30,7 +30,9 @@ DownstreamNode = Literal["N1", "N2", "N3", "N4", "N5", "N6", "N7", "N8"]
 ArtifactType = Literal["RFQ", "DATASHEET", "EDA_PACKAGE", "SUPPLIER_QUOTE", "TEST_MEASUREMENT", "MARKET_FEED",
                        "FINANCE_RECORD", "TELEMETRY", "MODEL_OUTPUT",
                        # market & opportunity intelligence (N1 inputs, then N1 → N6 / N7 outputs)
-                       "MARKET_BATCH", "BUYER_RECORD", "COMMERCIAL_SHORTLIST", "SAM_EVIDENCE"]
+                       "MARKET_BATCH", "BUYER_RECORD", "COMMERCIAL_SHORTLIST", "SAM_EVIDENCE",
+                       # product & design digital thread (N2 → N3 → N4 / N5)
+                       "PRD", "DESIGN_RELEASE", "BOM_RELEASE"]
 ProcessingPurpose = Literal[
     "RFQ_ANALYSIS", "PRODUCT_DEFINITION", "DESIGN_ENGINEERING", "VERIFICATION", "SOURCING", "COMMERCIAL",
     "FINANCE", "LIFECYCLE", "MARKET_INTELLIGENCE", "EVALUATION",
@@ -418,15 +420,175 @@ class SamEvidencePayload(_Strict):
     costed_actions: list[CostedAction] = Field(default_factory=list)
 
 
+# ----------------------------------------------------------------------------------------------
+# product & design digital thread payloads (N2 PRD → N3 design releases → N4 / N5)
+# ----------------------------------------------------------------------------------------------
+DesignScope = Literal["schematic_pcb", "circuit_simulation", "mechanical_thermal"]
+DESIGN_SCOPES = ("schematic_pcb", "circuit_simulation", "mechanical_thermal")
+REQUIRED_CORNERS = ("vin_min", "vin_max", "temp_max", "load_max")
+NATIVE_EXTENSIONS = {".kicad_sch": "SCHEMATIC", ".kicad_pcb": "PCB", ".kicad_pro": "PROJECT", ".step": "GEOMETRY",
+                     ".stp": "GEOMETRY", ".fcstd": "GEOMETRY", ".sldprt": "GEOMETRY", ".sldasm": "GEOMETRY",
+                     ".cir": "NETLIST", ".sp": "NETLIST", ".spice": "NETLIST", ".net": "NETLIST", ".lib": "NETLIST"}
+NON_NATIVE_EXTENSIONS = {".pdf", ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".svg", ".tif", ".tiff", ".webp"}
+
+
+class DesignConstraints(_Strict):
+    """Engineering constraints N2 locks into the PRD; N3 verifies designs against them."""
+    input_voltage_min_v: Optional[float] = None
+    input_voltage_max_v: Optional[float] = None
+    ambient_min_c: Optional[float] = None
+    ambient_max_c: Optional[float] = None
+    load_max_a: Optional[float] = Field(default=None, ge=0)
+    load_max_w: Optional[float] = Field(default=None, ge=0)
+    derating_factor: float = Field(default=0.8, gt=0, le=1)
+    min_clearance_mm: Optional[float] = Field(default=None, gt=0)
+    min_creepage_mm: Optional[float] = Field(default=None, gt=0)
+    thermal_margin_c: float = Field(default=10.0, ge=0)
+    max_pcb_layers: Optional[int] = Field(default=None, ge=1, le=64)
+
+
+class TestLimit(_Strict):
+    __test__ = False
+    parameter: str = Field(pattern=_PARAM)
+    min: Optional[float] = None
+    max: Optional[float] = None
+    unit: Optional[str] = None
+    requirement_ref: Optional[str] = None
+
+
+class PRDPayload(_Strict):
+    model_config = ConfigDict(extra="forbid", title="PRDPayload.v1")
+    prd_id: str = Field(pattern=_ID)
+    product_name: str = Field(min_length=1)
+    customer_name: str = Field(min_length=1)
+    product_category: str = Field(min_length=1)
+    quantity: int = Field(gt=0)
+    source_rfq: Optional[str] = Field(default=None, description="ARTIFACT_ID@REVISION of the N1 RFQ seed")
+    requirements: list[Requirement] = Field(min_length=1)
+    design_constraints: DesignConstraints
+    design_scopes: list[DesignScope] = Field(min_length=1)
+    test_limits: list[TestLimit] = Field(default_factory=list)
+    compliance_standards: list[str] = Field(default_factory=list)
+    authored_by: str
+
+
+class DesignFile(_Strict):
+    path: str = Field(min_length=1, max_length=512)
+    role: str = Field(pattern=r"^[A-Z][A-Z_]{1,31}$")
+    sha256: Optional[str] = Field(default=None, pattern=_SHA)
+    tool: Optional[str] = None
+    tool_version: Optional[str] = None
+    blob_uri: Optional[str] = None
+
+
+class CheckSummary(_Strict):
+    tool: str
+    tool_version: Optional[str] = None
+    critical: int = Field(ge=0)
+    errors: int = Field(ge=0)
+    warnings: int = Field(ge=0)
+    report_sha256: Optional[str] = Field(default=None, pattern=_SHA)
+    waived: int = Field(default=0, ge=0)
+
+
+class CornerResult(_Strict):
+    name: str
+    converged: bool
+    parameters: dict[str, float] = Field(default_factory=dict)
+    measures: dict[str, float] = Field(default_factory=dict)
+    log_sha256: Optional[str] = Field(default=None, pattern=_SHA)
+
+
+class SimulationEvidence(_Strict):
+    solver: Optional[str] = None
+    solver_version: Optional[str] = None
+    required_corners: list[str] = Field(default_factory=lambda: list(REQUIRED_CORNERS))
+    corners: list[CornerResult] = Field(default_factory=list)
+
+
+class ThermalEvidence(_Strict):
+    solver: Optional[str] = None
+    solver_version: Optional[str] = None
+    boundary_conditions: dict[str, Any] = Field(default_factory=dict)
+    ambient_c: Optional[float] = None
+    load_w: Optional[float] = None
+    max_temps_c: dict[str, float] = Field(default_factory=dict)
+    limits_c: dict[str, float] = Field(default_factory=dict)
+    margin_c: float = Field(default=10.0, ge=0)
+
+
+class DeratingCheck(_Strict):
+    refdes: str
+    parameter: str
+    stress: float
+    rating: float = Field(gt=0)
+    factor: float = Field(gt=0, le=1)
+
+
+class ClearanceCheck(_Strict):
+    kind: Literal["clearance", "creepage"]
+    required_mm: float = Field(gt=0)
+    actual_mm: float = Field(ge=0)
+
+
+class DesignReleasePayload(_Strict):
+    """N3 → N4: a design-authority-approved design package for the next controlled engineering step.
+    It is not safety certification, laboratory qualification or mass-manufacturing release."""
+    model_config = ConfigDict(extra="forbid", title="DesignReleasePayload.v1")
+    release_id: str = Field(pattern=_ID)
+    scope: DesignScope
+    prd_ref: str = Field(description="PRD ARTIFACT_ID@REVISION the design is locked to")
+    prd_payload_sha256: str = Field(pattern=_SHA)
+    design_revision: str = Field(min_length=1, max_length=16)
+    files: list[DesignFile] = Field(min_length=1)
+    erc: Optional[CheckSummary] = None
+    drc: Optional[CheckSummary] = None
+    simulation: Optional[SimulationEvidence] = None
+    thermal: Optional[ThermalEvidence] = None
+    derating: list[DeratingCheck] = Field(default_factory=list)
+    clearance: list[ClearanceCheck] = Field(default_factory=list)
+    test_limits: list[TestLimit] = Field(default_factory=list)
+    assessment_ids: list[str] = Field(min_length=1)
+    review_ids: list[str] = Field(min_length=1)
+    approval_scope: str
+
+
+class BomItem(_Strict):
+    model_config = ConfigDict(extra="forbid", title="bom_item.v1")
+    schema_version: Literal["bom_item.v1"] = "bom_item.v1"
+    line: int = Field(ge=1)
+    mpn: Optional[str] = None
+    manufacturer: Optional[str] = None
+    refdes: list[str] = Field(min_length=1)
+    qty: int = Field(ge=0)
+    value: Optional[str] = None
+    footprint: Optional[str] = None
+    description: Optional[str] = None
+    dnp: bool = False
+
+
+class BomReleasePayload(_Strict):
+    """N3 → N5: engineering BOM locked to one design revision."""
+    model_config = ConfigDict(extra="forbid", title="BomReleasePayload.v1")
+    release_id: str = Field(pattern=_ID)
+    scope: DesignScope
+    prd_ref: str
+    design_revision: str = Field(min_length=1, max_length=16)
+    pcb_revision: Optional[str] = Field(default=None, max_length=16)
+    bom_source_sha256: str = Field(pattern=_SHA)
+    items: list[BomItem] = Field(min_length=1)
+
+
 PAYLOAD_MODELS: dict[str, type[BaseModel]] = {
     "RFQ": RFQPayload, "DATASHEET": DatasheetPayload, "EDA_PACKAGE": EDAPackagePayload,
     "SUPPLIER_QUOTE": SupplierQuotePayload, "TEST_MEASUREMENT": TestMeasurementPayload,
     "MARKET_FEED": MarketFeedPayload, "FINANCE_RECORD": FinanceRecordPayload, "TELEMETRY": TelemetryPayload,
     "MODEL_OUTPUT": ModelOutputPayload, "MARKET_BATCH": MarketBatchPayload, "BUYER_RECORD": BuyerRecordPayload,
     "COMMERCIAL_SHORTLIST": CommercialShortlistPayload, "SAM_EVIDENCE": SamEvidencePayload,
+    "PRD": PRDPayload, "DESIGN_RELEASE": DesignReleasePayload, "BOM_RELEASE": BomReleasePayload,
 }
 REQUIREMENT_LISTS = {"RFQ": "requirements", "DATASHEET": "requirements", "TEST_MEASUREMENT": "measurements",
-                     "TELEMETRY": "readings", "MODEL_OUTPUT": "requirements"}
+                     "TELEMETRY": "readings", "MODEL_OUTPUT": "requirements", "PRD": "requirements"}
 
 
 # ----------------------------------------------------------------------------------------------
@@ -863,4 +1025,4 @@ SCHEMA_FAMILIES: dict[str, type[BaseModel]] = {
     "GatewayDecision.v1": GatewayDecision, "ApprovalEvent.v1": ApprovalEvent,
 }
 EXTRA_SCHEMAS: dict[str, type[BaseModel]] = {"RFQDraft.v1": RFQDraft, "ReleaseManifest.v1": ReleaseManifest,
-                                             "EvaluationResult.v1": EvaluationResult}
+                                             "EvaluationResult.v1": EvaluationResult, "bom_item.v1": BomItem}

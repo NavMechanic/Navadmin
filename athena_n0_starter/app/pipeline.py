@@ -32,7 +32,7 @@ from .models import (REQUIREMENT_LISTS, Artifact, AuditEventOut, EvaluateRequest
 from .parsing import DoclingAdapter, ParseError, PresidioAdapter
 from .repository import Repository, dump, new_id
 from .rules import (VALIDATOR_VERSION, Findings, allowed_destinations, canonical_json, check_clearance, classify,
-                    consistency_checks, decide, derive_values, evaluate_rights, evidence_checks, explain,
+                    consistency_checks, decide, design_checks, derive_values, evaluate_rights, evidence_checks, explain,
                     freshness_checks, hard_policy_checks, market_checks, missing_specs, normalize_requirements,
                     normalize_revision,
                     physics_checks, provenance_checks, quality_score, revision_order, schema_checks, sha256_hex)
@@ -331,6 +331,7 @@ class N0Pipeline:
         provenance_checks(a.artifact_type, a.payload, ctx.reqs, ctx.derived, f)
         freshness_checks(a.artifact_type, a.payload, ctx.now, f)
         market_checks(a.artifact_type, a.payload, a.synthetic, f)
+        design_checks(a.artifact_type, a.payload, f)
         f.ran("duplicate_content")
         dupes = repo.same_content_elsewhere(a.tenant_id, a.artifact_id, ctx.payload_sha256)
         if dupes:

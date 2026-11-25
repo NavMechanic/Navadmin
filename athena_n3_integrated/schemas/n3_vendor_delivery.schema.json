@@ -1,0 +1,359 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n3_vendor_delivery",
+  "$defs": {
+    "N3FileEvidence": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "title": "Path",
+          "type": "string"
+        },
+        "role": {
+          "enum": [
+            "SCHEMATIC",
+            "PCB",
+            "PROJECT",
+            "GEOMETRY",
+            "NETLIST",
+            "GERBER",
+            "DRILL",
+            "ODB",
+            "BOM",
+            "ERC_REPORT",
+            "DRC_REPORT",
+            "SIM_LOG",
+            "SIM_RAW",
+            "THERMAL_REPORT",
+            "DOCUMENT",
+            "IMAGE",
+            "OTHER"
+          ],
+          "title": "Role",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "blob_id": {
+          "title": "Blob Id",
+          "type": "string"
+        },
+        "uri": {
+          "title": "Uri",
+          "type": "string"
+        },
+        "size_bytes": {
+          "minimum": 0,
+          "title": "Size Bytes",
+          "type": "integer"
+        },
+        "native": {
+          "title": "Native",
+          "type": "boolean"
+        },
+        "detected_format": {
+          "title": "Detected Format",
+          "type": "string"
+        },
+        "tool": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tool"
+        },
+        "tool_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tool Version"
+        },
+        "revision": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Revision"
+        },
+        "origin": {
+          "enum": [
+            "VENDOR",
+            "TOOL_JOB",
+            "ENGINEER"
+          ],
+          "title": "Origin",
+          "type": "string"
+        },
+        "delivery_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Delivery Id"
+        },
+        "job_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Job Id"
+        }
+      },
+      "required": [
+        "path",
+        "role",
+        "sha256",
+        "blob_id",
+        "uri",
+        "size_bytes",
+        "native",
+        "detected_format",
+        "origin"
+      ],
+      "title": "N3FileEvidence",
+      "type": "object"
+    },
+    "N3FileManifest": {
+      "additionalProperties": false,
+      "properties": {
+        "design_revision": {
+          "maxLength": 16,
+          "minLength": 1,
+          "title": "Design Revision",
+          "type": "string"
+        },
+        "entries": {
+          "items": {
+            "$ref": "#/$defs/N3FileManifestEntry"
+          },
+          "minItems": 1,
+          "title": "Entries",
+          "type": "array"
+        },
+        "replaces_previous": {
+          "default": true,
+          "description": "true: this delivery is the complete file set and replaces earlier deliveries; false: files are merged by path",
+          "title": "Replaces Previous",
+          "type": "boolean"
+        },
+        "notes": {
+          "anyOf": [
+            {
+              "maxLength": 4000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Notes"
+        }
+      },
+      "required": [
+        "design_revision",
+        "entries"
+      ],
+      "title": "N3FileManifest",
+      "type": "object"
+    },
+    "N3FileManifestEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Path",
+          "type": "string"
+        },
+        "role": {
+          "enum": [
+            "SCHEMATIC",
+            "PCB",
+            "PROJECT",
+            "GEOMETRY",
+            "NETLIST",
+            "GERBER",
+            "DRILL",
+            "ODB",
+            "BOM",
+            "ERC_REPORT",
+            "DRC_REPORT",
+            "SIM_LOG",
+            "SIM_RAW",
+            "THERMAL_REPORT",
+            "DOCUMENT",
+            "IMAGE",
+            "OTHER"
+          ],
+          "title": "Role",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "tool": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tool"
+        },
+        "tool_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tool Version"
+        }
+      },
+      "required": [
+        "path",
+        "role",
+        "sha256"
+      ],
+      "title": "N3FileManifestEntry",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "N3VendorDelivery.v1",
+      "default": "N3VendorDelivery.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "delivery_id": {
+      "title": "Delivery Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "work_package_id": {
+      "title": "Work Package Id",
+      "type": "string"
+    },
+    "vendor_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Vendor Id"
+    },
+    "submitted_by": {
+      "title": "Submitted By",
+      "type": "string"
+    },
+    "submitted_at": {
+      "format": "date-time",
+      "title": "Submitted At",
+      "type": "string"
+    },
+    "manifest": {
+      "$ref": "#/$defs/N3FileManifest"
+    },
+    "files": {
+      "items": {
+        "$ref": "#/$defs/N3FileEvidence"
+      },
+      "title": "Files",
+      "type": "array"
+    },
+    "status": {
+      "enum": [
+        "ACCEPTED",
+        "REJECTED"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "rejection_codes": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Rejection Codes",
+      "type": "array"
+    },
+    "problems": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Problems",
+      "type": "array"
+    },
+    "n0_vendor_result_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "N0 VendorResult.v1 decision id for deliveries against a vendor route",
+      "title": "N0 Vendor Result Id"
+    }
+  },
+  "required": [
+    "delivery_id",
+    "tenant_id",
+    "work_package_id",
+    "submitted_by",
+    "submitted_at",
+    "manifest",
+    "files",
+    "status"
+  ],
+  "title": "N3VendorDelivery",
+  "type": "object"
+}

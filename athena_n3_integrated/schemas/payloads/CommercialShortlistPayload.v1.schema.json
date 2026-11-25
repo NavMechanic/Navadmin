@@ -1,0 +1,150 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:CommercialShortlistPayload.v1",
+  "$defs": {
+    "ShortlistEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "rank": {
+          "minimum": 1,
+          "title": "Rank",
+          "type": "integer"
+        },
+        "account_id": {
+          "title": "Account Id",
+          "type": "string"
+        },
+        "legal_name": {
+          "title": "Legal Name",
+          "type": "string"
+        },
+        "country": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Country"
+        },
+        "heuristic_priority_score": {
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Heuristic Priority Score",
+          "type": "number"
+        },
+        "score_kind": {
+          "const": "HEURISTIC_PRIORITIZATION",
+          "default": "HEURISTIC_PRIORITIZATION",
+          "title": "Score Kind",
+          "type": "string"
+        },
+        "tender_deadlines": {
+          "items": {
+            "$ref": "#/$defs/TenderDeadline"
+          },
+          "title": "Tender Deadlines",
+          "type": "array"
+        },
+        "eligibility_risk_flags": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Eligibility Risk Flags",
+          "type": "array"
+        },
+        "evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Evidence Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "rank",
+        "account_id",
+        "legal_name",
+        "heuristic_priority_score",
+        "evidence_ids"
+      ],
+      "title": "ShortlistEntry",
+      "type": "object"
+    },
+    "TenderDeadline": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence_id": {
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "deadline_at": {
+          "format": "date-time",
+          "title": "Deadline At",
+          "type": "string"
+        },
+        "source_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Url"
+        }
+      },
+      "required": [
+        "evidence_id",
+        "deadline_at"
+      ],
+      "title": "TenderDeadline",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "report_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+      "title": "Report Id",
+      "type": "string"
+    },
+    "report_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Report Sha256",
+      "type": "string"
+    },
+    "generated_at": {
+      "format": "date-time",
+      "title": "Generated At",
+      "type": "string"
+    },
+    "entries": {
+      "items": {
+        "$ref": "#/$defs/ShortlistEntry"
+      },
+      "minItems": 1,
+      "title": "Entries",
+      "type": "array"
+    },
+    "disclaimer": {
+      "title": "Disclaimer",
+      "type": "string"
+    }
+  },
+  "required": [
+    "report_id",
+    "report_sha256",
+    "generated_at",
+    "entries",
+    "disclaimer"
+  ],
+  "title": "CommercialShortlistPayload.v1",
+  "type": "object"
+}

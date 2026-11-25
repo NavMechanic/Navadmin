@@ -916,7 +916,10 @@
               "MARKET_BATCH",
               "BUYER_RECORD",
               "COMMERCIAL_SHORTLIST",
-              "SAM_EVIDENCE"
+              "SAM_EVIDENCE",
+              "PRD",
+              "DESIGN_RELEASE",
+              "BOM_RELEASE"
             ],
             "title": "Artifact Type"
           },
