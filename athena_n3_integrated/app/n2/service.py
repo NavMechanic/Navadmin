@@ -98,6 +98,7 @@ class N2Service:
                              source_rfq=f"{row.artifact_id}@{row.revision}", requirements=canon["requirements"],
                              design_constraints=req.design_constraints, design_scopes=req.design_scopes,
                              test_limits=req.test_limits, compliance_standards=canon.get("compliance_standards", []),
+                             hazards=req.hazards, safety_critical_requirement_ids=req.safety_critical_requirement_ids,
                              authored_by=p.principal_id).model_dump(mode="json")
         art = Artifact(tenant_id=p.tenant_id, project_id=req.project_id, artifact_id=f"PRD-{req.prd_id}",
                        artifact_type="PRD", source_id=req.source_id, processing_purpose="PRODUCT_DEFINITION",

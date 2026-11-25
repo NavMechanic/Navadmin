@@ -54,6 +54,28 @@ cd athena_n3_integrated && pip install -r requirements.txt && python -m pytest -
 python examples/run_n3_demo.py
 ```
 
+## ATHENA N4 — Quality, Verification & Reliability Engine
+
+`athena_n4_integrated/` mounts N1, N2, N3, N4 and a minimal N8 receiver on the N0 gateway. N4 locks
+N3-approved design revisions and builds a requirements-to-test matrix with 100 % safety-critical
+coverage. It keeps a PFMEA and control plan with CAPA-verified actions, using a labelled custom
+attention heuristic rather than AIAG-VDA AP unless a licensed table is configured.
+
+N4 imports SCPI/VISA, accredited-lab, AOI and offline CSV evidence. It checks every reading for SI
+units, expanded uncertainty, an in-date calibration and a guard band. When value ± U crosses a limit
+the result is INDETERMINATE, never PASS. FAIL, INDETERMINATE, expired calibration, missing SOPs,
+unmapped safety-critical requirements, tampered evidence and synthetic data presented as physical
+all hard-BLOCK.
+
+A separate, qualified test authority approves the exact evidence hash. N0-checked
+`VERIFICATION_RELEASE` packages then go to N8, N6 and N7. Rebuilt from the specification. See
+[athena_n4_integrated/README.md](athena_n4_integrated/README.md).
+
+```bash
+cd athena_n4_integrated && pip install -r requirements.txt && python -m pytest -q
+python examples/run_n4_demo.py
+```
+
 ## ATHENA data acquisition pipeline
 
 `data_pipeline/` fetches, verifies and formats the 75 N0–N8 sources (SRC-001..SRC-075). It uses

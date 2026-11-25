@@ -110,6 +110,24 @@ _CATALOG = [
     ("N0-MTH-004", "THERMAL_LIMIT_EXCEEDED", "BLOCK", "SAFETY", "N0.5", "a component exceeds its temperature limit minus the margin"),
     ("N0-BOM-001", "BOM_LINE_INVALID", "REWORK", "BOM", "N0.4", "BOM line without an MPN, or quantity ≠ number of refdes"),
     ("N0-BOM-002", "DUPLICATE_REFDES", "REWORK", "BOM", "N0.4", "a refdes appears on more than one BOM line"),
+    ("N0-PRD-001", "CRITICAL_REFERENCE_INVALID", "REWORK", "COMPLETENESS", "N0.4", "a hazard or safety-critical id references no requirement of the PRD"),
+    # verification releases (N4 → N6 / N7 / N8)
+    ("N0-VER-001", "VERIFICATION_INCOMPLETE", "BLOCK", "VERIFICATION", "N0.5", "verification_status is not VERIFIED"),
+    ("N0-VER-002", "UNIT_NOT_SI", "BLOCK", "METROLOGY", "N0.5", "measurement unit is not in the SI registry"),
+    ("N0-VER-003", "UNCERTAINTY_MISSING", "BLOCK", "METROLOGY", "N0.5", "measurement without a positive expanded uncertainty"),
+    ("N0-VER-004", "MEASUREMENT_FAIL", "BLOCK", "METROLOGY", "N0.5", "value ± uncertainty lies entirely outside a limit"),
+    ("N0-VER-005", "GUARD_BAND_INDETERMINATE", "BLOCK", "METROLOGY", "N0.5", "value ± uncertainty crosses a specification limit"),
+    ("N0-VER-006", "VERDICT_MISMATCH", "BLOCK", "METROLOGY", "N0.5", "stated verdict disagrees with N0's guard-band recomputation"),
+    ("N0-VER-007", "CALIBRATION_MISSING", "BLOCK", "CALIBRATION", "N0.5", "physical measurement without instrument, calibration id and due date"),
+    ("N0-VER-008", "PROVENANCE_METHOD_MISMATCH", "BLOCK", "VERIFICATION", "N0.5", "evidence provenance cannot verify this method"),
+    ("N0-VER-009", "SYNTHETIC_AS_PHYSICAL", "BLOCK", "SYNTHETIC", "N0.5", "synthetic or mock measurements presented as qualification evidence"),
+    ("N0-VER-010", "EVIDENCE_HASH_MISSING", "BLOCK", "INTEGRITY", "N0.5", "measurement without the SHA-256 of its raw evidence"),
+    ("N0-VER-011", "UNMAPPED_SAFETY_CRITICAL", "BLOCK", "SAFETY", "N0.5", "a safety-critical requirement lacks passing physical verification"),
+    ("N0-VER-012", "SEPARATION_OF_DUTIES", "BLOCK", "AUTHORIZATION", "N0.5", "approver also submitted evidence, or no approver"),
+    ("N0-VER-013", "STANDARD_OVERCLAIM", "BLOCK", "CLAIMS", "N0.5", "AIAG-VDA Action Priority claimed without a licensed table reference"),
+    ("N0-VER-014", "RELIABILITY_OVERCLAIM", "BLOCK", "CLAIMS", "N0.5", "reliability figure not labelled research-only, or offered as a claim"),
+    ("N0-VER-015", "DESIGN_REVISION_UNLOCKED", "BLOCK", "REVISION_CONTROL", "N0.5", "design references are not the pinned upstream artifacts"),
+    ("N0-VER-016", "INSPECTION_NOT_ACCEPTED", "BLOCK", "VERIFICATION", "N0.5", "attribute inspection with confirmed defects, unadjudicated model calls or no human acceptance"),
     # N0.5 hard policy
     ("N0-SYN-001", "SYNTHETIC_AS_REAL", "BLOCK", "SYNTHETIC", "N0.5", "synthetic data presented as real"),
     ("N0-SYN-002", "SYNTHETIC_STAGE_GATE", "BLOCK", "SYNTHETIC", "N0.5", "synthetic data beyond CONCEPT stage"),
@@ -125,7 +143,7 @@ RULES: dict[str, RuleSpec] = {code: RuleSpec(rid, code, sev, cat, stage, desc)
 assert len(RULES) == len(_CATALOG)
 HARD_POLICY_CATEGORIES = {"AUTHORIZATION", "TENANT_ISOLATION", "RIGHTS", "IP_LICENSING", "CONFIDENTIALITY",
                           "INTEGRITY", "REVISION_CONTROL", "SYNTHETIC", "CALIBRATION", "SAFETY", "STAGE_GATE",
-                          "SAM_INTEGRITY", "DESIGN_INTEGRITY"}
+                          "SAM_INTEGRITY", "DESIGN_INTEGRITY", "METROLOGY", "VERIFICATION", "CLAIMS"}
 _DIGEST = hashlib.sha256(json.dumps(_CATALOG).encode()).hexdigest()[:12]
 VALIDATOR_VERSION = f"n0-validator/1.0.0+rules.{_DIGEST}"
 
@@ -509,7 +527,8 @@ _SIGNATURES = [("RFQ", {"rfq_id", "requirements"}), ("DATASHEET", {"part_number"
                ("MODEL_OUTPUT", {"model_run_id", "task"}), ("MARKET_BATCH", {"batch_id", "observations"}),
                ("BUYER_RECORD", {"batch_id", "records"}), ("COMMERCIAL_SHORTLIST", {"report_id", "entries"}),
                ("SAM_EVIDENCE", {"report_id", "verified_items"}), ("PRD", {"prd_id", "design_constraints"}),
-               ("DESIGN_RELEASE", {"release_id", "scope", "files"}), ("BOM_RELEASE", {"release_id", "items"})]
+               ("DESIGN_RELEASE", {"release_id", "scope", "files"}), ("BOM_RELEASE", {"release_id", "items"}),
+               ("VERIFICATION_RELEASE", {"release_id", "verification_status", "traceability"})]
 
 
 def classify(payload: dict) -> Optional[str]:
@@ -657,6 +676,141 @@ def design_checks(artifact_type: str, payload: dict, f: Findings) -> None:
         _design_release_checks(payload, f)
     elif artifact_type == "BOM_RELEASE":
         _bom_release_checks(payload, f)
+    elif artifact_type == "PRD":
+        _prd_reference_checks(payload, f)
+
+
+def _prd_reference_checks(p: dict, f: Findings) -> None:
+    f.ran("prd_safety_references")
+    ids = {r.get("req_id") for r in p.get("requirements") or [] if isinstance(r, dict)}
+    for i, h in enumerate(p.get("hazards") or []):
+        for rid in (h.get("requirement_ids") or []) if isinstance(h, dict) else []:
+            if rid not in ids:
+                f.add("CRITICAL_REFERENCE_INVALID", f"hazard {h.get('hazard_id')} links unknown requirement {rid}",
+                      f"payload.hazards[{i}]")
+    for rid in p.get("safety_critical_requirement_ids") or []:
+        if rid not in ids:
+            f.add("CRITICAL_REFERENCE_INVALID", f"safety-critical id {rid} is not a requirement",
+                  "payload.safety_critical_requirement_ids")
+
+
+def guard_band_verdict(value: Decimal, uncertainty: Decimal, lower: Optional[Decimal],
+                       upper: Optional[Decimal]) -> str:
+    """ILAC-G8-style decision with a guard band equal to the expanded uncertainty U:
+    PASS only if [value − U, value + U] lies inside the limits; FAIL if it lies entirely outside a
+    limit; INDETERMINATE whenever value ± U crosses a limit (never PASS). Exact Decimal arithmetic."""
+    lo, hi = value - uncertainty, value + uncertainty
+    if (upper is not None and lo > upper) or (lower is not None and hi < lower):
+        return "FAIL"
+    if (upper is not None and hi > upper) or (lower is not None and lo < lower):
+        return "INDETERMINATE"
+    return "PASS"
+
+
+def verification_checks(artifact: Artifact, f: Findings) -> None:
+    """N0 release policy for N4 verification packages. Every verdict is recomputed here."""
+    if artifact.artifact_type != "VERIFICATION_RELEASE":
+        return
+    from .models import METHOD_PROVENANCE, PHYSICAL_PROVENANCE, RELIABILITY_RESEARCH_LABEL
+    from .units import UnitError, lookup
+    f.ran("verification_policy")
+    p = artifact.payload
+    if p.get("verification_status") != "VERIFIED":
+        f.add("VERIFICATION_INCOMPLETE", f"verification_status is {p.get('verification_status')}",
+              "payload.verification_status")
+    if artifact.synthetic and p.get("verification_status") == "VERIFIED":
+        f.add("SYNTHETIC_AS_PHYSICAL", "a synthetic package can never be VERIFIED qualification evidence",
+              "payload.verification_status")
+    passed: dict[str, bool] = {}
+    for i, m in enumerate(p.get("measurements") or []):
+        if not isinstance(m, dict):
+            continue
+        where, tid = f"payload.measurements[{i}]", m.get("test_id")
+        ok = True
+        try:
+            lookup(str(m.get("unit")))
+        except UnitError:
+            f.add("UNIT_NOT_SI", f"{m.get('measurement_id')}: unit {m.get('unit')!r} is not SI", where)
+            ok = False
+        value, u = _dec(m.get("value")), _dec(m.get("expanded_uncertainty"))
+        if u is None or u <= 0:
+            f.add("UNCERTAINTY_MISSING", f"{m.get('measurement_id')} has no positive expanded uncertainty", where)
+            ok = False
+        elif value is not None:
+            verdict = guard_band_verdict(value, u, _dec(m.get("lower_limit")), _dec(m.get("upper_limit")))
+            if verdict == "FAIL":
+                f.add("MEASUREMENT_FAIL", f"{m.get('measurement_id')}: {value} ± {u} outside the limits", where)
+            elif verdict == "INDETERMINATE":
+                f.add("GUARD_BAND_INDETERMINATE", f"{m.get('measurement_id')}: {value} ± {u} crosses "
+                                                  f"[{m.get('lower_limit')}, {m.get('upper_limit')}]", where)
+            if verdict != m.get("verdict"):
+                f.add("VERDICT_MISMATCH", f"{m.get('measurement_id')}: stated {m.get('verdict')}, recomputed "
+                                          f"{verdict}", where)
+            ok = ok and verdict == "PASS"
+        prov, method = m.get("provenance"), m.get("method")
+        if prov in PHYSICAL_PROVENANCE:
+            due, at = _as_dt(m.get("calibration_due")), _as_dt(m.get("captured_at"))
+            if not m.get("instrument_id") or not m.get("calibration_id") or due is None:
+                f.add("CALIBRATION_MISSING", f"{m.get('measurement_id')} lacks instrument / calibration", where)
+                ok = False
+            elif at is None or due <= at:
+                f.add("CALIBRATION_EXPIRED", f"{m.get('measurement_id')}: calibration due {due} not after capture "
+                                             f"{at}", where)
+                ok = False
+        if prov in ("SYNTHETIC", "MOCK_FIXTURE"):
+            f.add("SYNTHETIC_AS_PHYSICAL", f"{m.get('measurement_id')} is {prov}", where)
+            ok = False
+        elif prov not in METHOD_PROVENANCE.get(str(method), ()):
+            f.add("PROVENANCE_METHOD_MISMATCH", f"{m.get('measurement_id')}: {prov} cannot verify {method}", where)
+            ok = False
+        if not m.get("raw_sha256"):
+            f.add("EVIDENCE_HASH_MISSING", f"{m.get('measurement_id')} has no raw evidence hash", where)
+            ok = False
+        passed[tid] = passed.get(tid, True) and ok
+    by_test_method = {m.get("test_id"): m.get("method") for m in p.get("measurements") or [] if isinstance(m, dict)}
+    for i, a in enumerate(p.get("attribute_inspections") or []):
+        if not isinstance(a, dict):
+            continue
+        ok = (a.get("human_verdict") == "ACCEPT" and not a.get("defects_confirmed") and not a.get("unadjudicated")
+              and bool(a.get("adjudicator")) and a.get("adjudicator") not in (p.get("evidence_submitters") or []))
+        if a.get("provenance") in ("SYNTHETIC", "MOCK_FIXTURE"):
+            f.add("SYNTHETIC_AS_PHYSICAL", f"inspection {a.get('test_id')} is {a.get('provenance')}",
+                  f"payload.attribute_inspections[{i}]")
+            ok = False
+        if not ok:
+            f.add("INSPECTION_NOT_ACCEPTED", f"inspection {a.get('test_id')} / {a.get('unit_serial')}: "
+                                             f"{a.get('defects_confirmed')} confirmed, {a.get('unadjudicated')} "
+                                             f"unadjudicated, human verdict {a.get('human_verdict')}",
+                  f"payload.attribute_inspections[{i}]")
+        tid = a.get("test_id")
+        passed[tid] = passed.get(tid, True) and ok
+        by_test_method.setdefault(tid, "INSPECTION")
+    for i, t in enumerate(p.get("traceability") or []):
+        if not isinstance(t, dict) or not t.get("safety_critical"):
+            continue
+        physical = [x for x in t.get("test_ids") or [] if passed.get(x) and by_test_method.get(x) != "SIM"]
+        if t.get("verdict") != "VERIFIED" or not physical:
+            f.add("UNMAPPED_SAFETY_CRITICAL", f"{t.get('requirement_id')} has no passing physical verification",
+                  f"payload.traceability[{i}]")
+    if not p.get("approved_by") or p.get("approved_by") in (p.get("evidence_submitters") or []):
+        f.add("SEPARATION_OF_DUTIES", "the approver must be a separate person from every evidence submitter",
+              "payload.approved_by")
+    if p.get("prioritization_method") == "AIAG_VDA_AP_LICENSED" and not p.get("ap_license_ref"):
+        f.add("STANDARD_OVERCLAIM", "AIAG-VDA Action Priority needs a licensed lookup-table reference",
+              "payload.prioritization_method")
+    rel = p.get("reliability")
+    if isinstance(rel, dict) and (rel.get("label") != RELIABILITY_RESEARCH_LABEL or rel.get("release_eligible")):
+        f.add("RELIABILITY_OVERCLAIM", "reliability figures are research-only statistical illustrations",
+              "payload.reliability")
+    if isinstance(p.get("commercial"), dict) and any("mtbf" in str(c).lower() or "reliab" in str(c).lower()
+                                                     for c in p["commercial"].get("claims") or []):
+        f.add("RELIABILITY_OVERCLAIM", "commercial claims cannot cite research-only reliability figures",
+              "payload.commercial.claims")
+    pinned = set(artifact.source_artifact_ids)
+    refs = list(p.get("design_refs") or [])
+    if not refs or not set(refs) <= pinned or p.get("design_revision") not in {r.rsplit("@", 1)[-1] for r in refs}:
+        f.add("DESIGN_REVISION_UNLOCKED", "design_refs must be the pinned upstream DESIGN_RELEASE revisions and "
+                                          "include design_revision", "payload.design_refs")
 
 
 def _num(v: Any) -> Optional[float]:
@@ -767,7 +921,7 @@ TYPE_DESTINATIONS = {
     "SUPPLIER_QUOTE": ["N5", "N7"], "TEST_MEASUREMENT": ["N3", "N4", "N8"], "MARKET_FEED": ["N1", "N6", "N7"],
     "FINANCE_RECORD": ["N7"], "TELEMETRY": ["N4", "N8"], "MODEL_OUTPUT": ["N2", "N3"],
     "MARKET_BATCH": ["N1"], "BUYER_RECORD": ["N1"], "COMMERCIAL_SHORTLIST": ["N6"], "SAM_EVIDENCE": ["N7"],
-    "PRD": ["N3"], "DESIGN_RELEASE": ["N4"], "BOM_RELEASE": ["N5"],
+    "PRD": ["N3"], "DESIGN_RELEASE": ["N4"], "BOM_RELEASE": ["N5"], "VERIFICATION_RELEASE": ["N6", "N7", "N8"],
 }
 PURPOSE_DESTINATIONS = {
     "RFQ_ANALYSIS": ["N1", "N2", "N6"], "PRODUCT_DEFINITION": ["N2", "N3"], "DESIGN_ENGINEERING": ["N3", "N4", "N5"],

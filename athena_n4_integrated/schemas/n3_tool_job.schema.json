@@ -1,0 +1,331 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n3_tool_job",
+  "$defs": {
+    "Corner": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "pattern": "^[a-z][a-z0-9_]{0,31}$",
+          "title": "Name",
+          "type": "string"
+        },
+        "params": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "title": "Params",
+          "type": "object"
+        },
+        "temp_c": {
+          "default": 27.0,
+          "title": "Temp C",
+          "type": "number"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "Corner",
+      "type": "object"
+    },
+    "N3FileEvidence": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "title": "Path",
+          "type": "string"
+        },
+        "role": {
+          "enum": [
+            "SCHEMATIC",
+            "PCB",
+            "PROJECT",
+            "GEOMETRY",
+            "NETLIST",
+            "GERBER",
+            "DRILL",
+            "ODB",
+            "BOM",
+            "ERC_REPORT",
+            "DRC_REPORT",
+            "SIM_LOG",
+            "SIM_RAW",
+            "THERMAL_REPORT",
+            "DOCUMENT",
+            "IMAGE",
+            "OTHER"
+          ],
+          "title": "Role",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "blob_id": {
+          "title": "Blob Id",
+          "type": "string"
+        },
+        "uri": {
+          "title": "Uri",
+          "type": "string"
+        },
+        "size_bytes": {
+          "minimum": 0,
+          "title": "Size Bytes",
+          "type": "integer"
+        },
+        "native": {
+          "title": "Native",
+          "type": "boolean"
+        },
+        "detected_format": {
+          "title": "Detected Format",
+          "type": "string"
+        },
+        "tool": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tool"
+        },
+        "tool_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tool Version"
+        },
+        "revision": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Revision"
+        },
+        "origin": {
+          "enum": [
+            "VENDOR",
+            "TOOL_JOB",
+            "ENGINEER"
+          ],
+          "title": "Origin",
+          "type": "string"
+        },
+        "delivery_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Delivery Id"
+        },
+        "job_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Job Id"
+        }
+      },
+      "required": [
+        "path",
+        "role",
+        "sha256",
+        "blob_id",
+        "uri",
+        "size_bytes",
+        "native",
+        "detected_format",
+        "origin"
+      ],
+      "title": "N3FileEvidence",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "job_id": {
+      "title": "Job Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "work_package_id": {
+      "title": "Work Package Id",
+      "type": "string"
+    },
+    "tool": {
+      "title": "Tool",
+      "type": "string"
+    },
+    "operation": {
+      "title": "Operation",
+      "type": "string"
+    },
+    "input_sha256": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Input Sha256",
+      "type": "array"
+    },
+    "corners": {
+      "items": {
+        "$ref": "#/$defs/Corner"
+      },
+      "title": "Corners",
+      "type": "array"
+    },
+    "status": {
+      "enum": [
+        "QUEUED",
+        "RUNNING",
+        "SUCCEEDED",
+        "FAILED",
+        "TIMEOUT"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "tool_version": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Tool Version"
+    },
+    "argv": {
+      "items": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "title": "Argv",
+      "type": "array"
+    },
+    "exit_codes": {
+      "items": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "title": "Exit Codes",
+      "type": "array"
+    },
+    "outputs": {
+      "items": {
+        "$ref": "#/$defs/N3FileEvidence"
+      },
+      "title": "Outputs",
+      "type": "array"
+    },
+    "output_exit_codes": {
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "description": "output path → exit code of the step that wrote it",
+      "title": "Output Exit Codes",
+      "type": "object"
+    },
+    "limits": {
+      "additionalProperties": true,
+      "title": "Limits",
+      "type": "object"
+    },
+    "error": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Error"
+    },
+    "submitted_by": {
+      "title": "Submitted By",
+      "type": "string"
+    },
+    "submitted_at": {
+      "format": "date-time",
+      "title": "Submitted At",
+      "type": "string"
+    },
+    "finished_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Finished At"
+    }
+  },
+  "required": [
+    "job_id",
+    "tenant_id",
+    "work_package_id",
+    "tool",
+    "operation",
+    "input_sha256",
+    "status",
+    "submitted_by",
+    "submitted_at"
+  ],
+  "title": "N3ToolJob",
+  "type": "object"
+}

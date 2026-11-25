@@ -1,0 +1,19 @@
+* ATHENA PSU-120W averaged buck model, 48 V in / 24 V out (synthetic demo data)
+* Corner parameters vin (V) and iload (A) are set by the N3 corner wrapper, never here.
+* ATHENA_FAKE_MEAS vout_min=23.95
+* ATHENA_FAKE_MEAS vout_max=24.02
+* ATHENA_FAKE_MEAS stress_q1_v=vin
+* ATHENA_FAKE_MEAS stress_c3_v=24.02
+VIN in 0 DC {vin}
+BCTL ctl 0 V = 24.0/max(V(in),1)
+BSW sw 0 V = V(in)*V(ctl)
+RDC sw mid 0.01
+L1 mid out 22u IC={iload}
+C3 out 0 100u IC=24
+RLOAD out 0 {24/iload}
+.tran 1u 2m uic
+.meas tran vout_min MIN v(out) from=1m to=2m
+.meas tran vout_max MAX v(out) from=1m to=2m
+.meas tran stress_q1_v MAX v(in)
+.meas tran stress_c3_v MAX v(out)
+.end

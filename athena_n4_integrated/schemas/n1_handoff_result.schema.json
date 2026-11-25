@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n1_handoff_result",
+  "$defs": {
+    "HandoffPackage": {
+      "additionalProperties": false,
+      "properties": {
+        "target": {
+          "enum": [
+            "N2",
+            "N6",
+            "N7"
+          ],
+          "title": "Target",
+          "type": "string"
+        },
+        "artifact_type": {
+          "title": "Artifact Type",
+          "type": "string"
+        },
+        "artifact_id": {
+          "title": "Artifact Id",
+          "type": "string"
+        },
+        "revision": {
+          "title": "Revision",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "RELEASED",
+            "REFUSED"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "n0_decision": {
+          "anyOf": [
+            {
+              "enum": [
+                "PASS",
+                "REWORK",
+                "BLOCK",
+                "REVIEW"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "N0 Decision"
+        },
+        "n0_decision_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "N0 Decision Id"
+        },
+        "violated_codes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Violated Codes",
+          "type": "array"
+        },
+        "manifest_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Manifest Id"
+        },
+        "approval_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Approval Id"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        },
+        "excluded_evidence": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Excluded Evidence",
+          "type": "array"
+        }
+      },
+      "required": [
+        "target",
+        "artifact_type",
+        "artifact_id",
+        "revision",
+        "status",
+        "reason"
+      ],
+      "title": "HandoffPackage",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "handoff_id": {
+      "title": "Handoff Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "report_id": {
+      "title": "Report Id",
+      "type": "string"
+    },
+    "report_sha256": {
+      "title": "Report Sha256",
+      "type": "string"
+    },
+    "requested_by": {
+      "title": "Requested By",
+      "type": "string"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "packages": {
+      "items": {
+        "$ref": "#/$defs/HandoffPackage"
+      },
+      "title": "Packages",
+      "type": "array"
+    }
+  },
+  "required": [
+    "handoff_id",
+    "tenant_id",
+    "report_id",
+    "report_sha256",
+    "requested_by",
+    "created_at",
+    "packages"
+  ],
+  "title": "N1Handoff.v1",
+  "type": "object"
+}

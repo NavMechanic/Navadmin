@@ -1,0 +1,136 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n4_capa",
+  "additionalProperties": false,
+  "properties": {
+    "capa_id": {
+      "title": "Capa Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "plan_id": {
+      "title": "Plan Id",
+      "type": "string"
+    },
+    "title": {
+      "title": "Title",
+      "type": "string"
+    },
+    "pfmea_entry_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Pfmea Entry Ids",
+      "type": "array"
+    },
+    "root_cause": {
+      "title": "Root Cause",
+      "type": "string"
+    },
+    "corrective_action": {
+      "title": "Corrective Action",
+      "type": "string"
+    },
+    "owner": {
+      "title": "Owner",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "OPEN",
+        "VERIFIED_EFFECTIVE",
+        "VERIFIED_INEFFECTIVE"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "opened_by": {
+      "title": "Opened By",
+      "type": "string"
+    },
+    "opened_at": {
+      "format": "date-time",
+      "title": "Opened At",
+      "type": "string"
+    },
+    "verified_by": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Verified By"
+    },
+    "verified_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Verified At"
+    },
+    "verification_evidence_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Verification Evidence Id"
+    },
+    "verification_evidence_sha256": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Verification Evidence Sha256"
+    },
+    "notes": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Notes"
+    }
+  },
+  "required": [
+    "capa_id",
+    "tenant_id",
+    "plan_id",
+    "title",
+    "pfmea_entry_ids",
+    "root_cause",
+    "corrective_action",
+    "owner",
+    "status",
+    "opened_by",
+    "opened_at"
+  ],
+  "title": "N4Capa",
+  "type": "object"
+}

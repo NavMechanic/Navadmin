@@ -34,8 +34,8 @@ from .repository import Repository, dump, new_id
 from .rules import (VALIDATOR_VERSION, Findings, allowed_destinations, canonical_json, check_clearance, classify,
                     consistency_checks, decide, design_checks, derive_values, evaluate_rights, evidence_checks, explain,
                     freshness_checks, hard_policy_checks, market_checks, missing_specs, normalize_requirements,
-                    normalize_revision,
-                    physics_checks, provenance_checks, quality_score, revision_order, schema_checks, sha256_hex)
+                    normalize_revision, physics_checks, provenance_checks, quality_score, revision_order,
+                    schema_checks, sha256_hex, verification_checks)
 from .security import Principal
 from .storage import ObjectStore, StorageError, make_uri, parse_uri
 
@@ -332,6 +332,7 @@ class N0Pipeline:
         freshness_checks(a.artifact_type, a.payload, ctx.now, f)
         market_checks(a.artifact_type, a.payload, a.synthetic, f)
         design_checks(a.artifact_type, a.payload, f)
+        verification_checks(a, f)
         f.ran("duplicate_content")
         dupes = repo.same_content_elsewhere(a.tenant_id, a.artifact_id, ctx.payload_sha256)
         if dupes:

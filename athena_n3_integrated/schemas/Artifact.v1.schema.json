@@ -101,7 +101,8 @@
         "SAM_EVIDENCE",
         "PRD",
         "DESIGN_RELEASE",
-        "BOM_RELEASE"
+        "BOM_RELEASE",
+        "VERIFICATION_RELEASE"
       ],
       "title": "Artifact Type",
       "type": "string"

@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n8_intake",
+  "additionalProperties": false,
+  "properties": {
+    "intake_id": {
+      "title": "Intake Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "artifact_ref": {
+      "title": "Artifact Ref",
+      "type": "string"
+    },
+    "manifest_id": {
+      "title": "Manifest Id",
+      "type": "string"
+    },
+    "payload_sha256": {
+      "title": "Payload Sha256",
+      "type": "string"
+    },
+    "design_revision": {
+      "title": "Design Revision",
+      "type": "string"
+    },
+    "units": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Units",
+      "type": "array"
+    },
+    "monitors": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Monitors",
+      "type": "array"
+    },
+    "accepted_by": {
+      "title": "Accepted By",
+      "type": "string"
+    },
+    "accepted_at": {
+      "format": "date-time",
+      "title": "Accepted At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "intake_id",
+    "tenant_id",
+    "artifact_ref",
+    "manifest_id",
+    "payload_sha256",
+    "design_revision",
+    "units",
+    "monitors",
+    "accepted_by",
+    "accepted_at"
+  ],
+  "title": "N8Intake",
+  "type": "object"
+}

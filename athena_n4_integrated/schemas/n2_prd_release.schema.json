@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n2_prd_release",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "PRDRelease.v1",
+      "default": "PRDRelease.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "release_id": {
+      "title": "Release Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "prd_id": {
+      "title": "Prd Id",
+      "type": "string"
+    },
+    "prd_revision": {
+      "title": "Prd Revision",
+      "type": "string"
+    },
+    "n0_artifact_id": {
+      "title": "N0 Artifact Id",
+      "type": "string"
+    },
+    "payload_sha256": {
+      "title": "Payload Sha256",
+      "type": "string"
+    },
+    "n0_decision_id": {
+      "title": "N0 Decision Id",
+      "type": "string"
+    },
+    "manifest_id": {
+      "title": "Manifest Id",
+      "type": "string"
+    },
+    "manifest_sha256": {
+      "title": "Manifest Sha256",
+      "type": "string"
+    },
+    "approval_id": {
+      "title": "Approval Id",
+      "type": "string"
+    },
+    "approval_event_hash": {
+      "description": "hash-chained ApprovalEvent.v1 — the release signature",
+      "title": "Approval Event Hash",
+      "type": "string"
+    },
+    "approved_by": {
+      "title": "Approved By",
+      "type": "string"
+    },
+    "released_at": {
+      "format": "date-time",
+      "title": "Released At",
+      "type": "string"
+    },
+    "target_nodes": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Target Nodes",
+      "type": "array"
+    },
+    "supersedes_release_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Supersedes Release Id"
+    }
+  },
+  "required": [
+    "release_id",
+    "tenant_id",
+    "prd_id",
+    "prd_revision",
+    "n0_artifact_id",
+    "payload_sha256",
+    "n0_decision_id",
+    "manifest_id",
+    "manifest_sha256",
+    "approval_id",
+    "approval_event_hash",
+    "approved_by",
+    "released_at",
+    "target_nodes"
+  ],
+  "title": "PRDRelease.v1",
+  "type": "object"
+}

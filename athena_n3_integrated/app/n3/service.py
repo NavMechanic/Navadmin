@@ -17,7 +17,7 @@ release listener and lazily on each N3 call.
 from __future__ import annotations
 
 import posixpath
-from typing import Any, Optional
+from typing import Any, Callable, Optional
 
 from sqlalchemy import select
 
@@ -61,6 +61,7 @@ class N3Service:
         self.runner = runner or ToolRunner(settings)
         self.worker = JobWorker(settings.max_concurrent_jobs, settings.jobs_inline)
         self.n2.release_listeners.append(self.on_prd_release)
+        self.release_listeners: list[Callable[[N3Release], None]] = []      # downstream nodes (e.g. N4)
 
     # ==========================================================================================
     # helpers
@@ -855,6 +856,9 @@ class N3Service:
                         {"scope": req.scope, "design_revision": design_rev,
                          "packages": [{"target": x.target, "status": x.status, "manifest_id": x.manifest_id,
                                        "codes": x.violated_codes} for x in packages]})
+        if rel.status in ("RELEASED", "PARTIAL"):
+            for listener in self.release_listeners:
+                listener(rel)
         return rel
 
     def _file_refs(self, tenant: str, files: list[dict]) -> list[FileRef]:

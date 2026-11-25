@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n3_file_evidence",
+  "additionalProperties": false,
+  "properties": {
+    "path": {
+      "title": "Path",
+      "type": "string"
+    },
+    "role": {
+      "enum": [
+        "SCHEMATIC",
+        "PCB",
+        "PROJECT",
+        "GEOMETRY",
+        "NETLIST",
+        "GERBER",
+        "DRILL",
+        "ODB",
+        "BOM",
+        "ERC_REPORT",
+        "DRC_REPORT",
+        "SIM_LOG",
+        "SIM_RAW",
+        "THERMAL_REPORT",
+        "DOCUMENT",
+        "IMAGE",
+        "OTHER"
+      ],
+      "title": "Role",
+      "type": "string"
+    },
+    "sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Sha256",
+      "type": "string"
+    },
+    "blob_id": {
+      "title": "Blob Id",
+      "type": "string"
+    },
+    "uri": {
+      "title": "Uri",
+      "type": "string"
+    },
+    "size_bytes": {
+      "minimum": 0,
+      "title": "Size Bytes",
+      "type": "integer"
+    },
+    "native": {
+      "title": "Native",
+      "type": "boolean"
+    },
+    "detected_format": {
+      "title": "Detected Format",
+      "type": "string"
+    },
+    "tool": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Tool"
+    },
+    "tool_version": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Tool Version"
+    },
+    "revision": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Revision"
+    },
+    "origin": {
+      "enum": [
+        "VENDOR",
+        "TOOL_JOB",
+        "ENGINEER"
+      ],
+      "title": "Origin",
+      "type": "string"
+    },
+    "delivery_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Delivery Id"
+    },
+    "job_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Job Id"
+    }
+  },
+  "required": [
+    "path",
+    "role",
+    "sha256",
+    "blob_id",
+    "uri",
+    "size_bytes",
+    "native",
+    "detected_format",
+    "origin"
+  ],
+  "title": "N3FileEvidence",
+  "type": "object"
+}

@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n4_accepted_lab",
+  "additionalProperties": false,
+  "properties": {
+    "lab_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+      "title": "Lab Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Tenant Id"
+    },
+    "name": {
+      "title": "Name",
+      "type": "string"
+    },
+    "accreditation_body": {
+      "title": "Accreditation Body",
+      "type": "string"
+    },
+    "accreditation_number": {
+      "title": "Accreditation Number",
+      "type": "string"
+    },
+    "scopes": {
+      "description": "standards / test methods the accreditation covers",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Scopes",
+      "type": "array"
+    },
+    "valid_until": {
+      "format": "date",
+      "title": "Valid Until",
+      "type": "string"
+    },
+    "approved_by": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Approved By"
+    }
+  },
+  "required": [
+    "lab_id",
+    "name",
+    "accreditation_body",
+    "accreditation_number",
+    "scopes",
+    "valid_until"
+  ],
+  "title": "N4AcceptedLab",
+  "type": "object"
+}

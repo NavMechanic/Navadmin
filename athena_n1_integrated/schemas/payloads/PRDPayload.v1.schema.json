@@ -227,6 +227,57 @@
       "title": "EvidenceSnippet",
       "type": "object"
     },
+    "Hazard": {
+      "additionalProperties": false,
+      "description": "A product hazard from the N2 risk analysis. Every requirement it links becomes safety-critical\nfor N4: 100 % physical verification coverage before release.",
+      "properties": {
+        "hazard_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+          "title": "Hazard Id",
+          "type": "string"
+        },
+        "description": {
+          "minLength": 3,
+          "title": "Description",
+          "type": "string"
+        },
+        "severity": {
+          "maximum": 10,
+          "minimum": 1,
+          "title": "Severity",
+          "type": "integer"
+        },
+        "requirement_ids": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Requirement Ids",
+          "type": "array"
+        },
+        "standard_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "e.g. IEC 62368-1 clause 5.4.9",
+          "title": "Standard Ref"
+        }
+      },
+      "required": [
+        "hazard_id",
+        "description",
+        "severity",
+        "requirement_ids"
+      ],
+      "title": "Hazard",
+      "type": "object"
+    },
     "Requirement": {
       "additionalProperties": false,
       "description": "One value. ``value_origin`` says who stated it: the customer, a measurement, N0's own\ndeterministic derivation, or a model extraction awaiting human confirmation.",
@@ -526,6 +577,21 @@
         "type": "string"
       },
       "title": "Compliance Standards",
+      "type": "array"
+    },
+    "hazards": {
+      "items": {
+        "$ref": "#/$defs/Hazard"
+      },
+      "title": "Hazards",
+      "type": "array"
+    },
+    "safety_critical_requirement_ids": {
+      "description": "in addition to every requirement a hazard links",
+      "items": {
+        "type": "string"
+      },
+      "title": "Safety Critical Requirement Ids",
       "type": "array"
     },
     "authored_by": {

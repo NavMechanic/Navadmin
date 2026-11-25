@@ -1,0 +1,75 @@
+#!/usr/bin/env python3
+"""Test double for ngspice 42 batch mode (``ngspice -b -o <log> <deck>``), so the suite runs without
+ngspice. It reads the N3 corner wrapper (``.param`` / ``.temp`` / ``.include``) and writes a log in
+ngspice's format. Markers in the included netlist:
+
+  * ATHENA_FAKE_MEAS <name>=<number|param>          every corner (``param`` = a corner parameter)
+  * ATHENA_FAKE_MEAS@<corner> <name>=<number|param>  one corner only (overrides)
+  * ATHENA_FAKE_NONCONVERGE <corner>                 "Timestep too small", exit 1
+  * ATHENA_FAKE_SLEEP <seconds>                      hang (timeout tests)
+  * ATHENA_FAKE_PROBE                                log sandbox observations (env, cwd, network)
+"""
+import os
+import re
+import socket
+import sys
+import time
+from pathlib import Path
+
+
+def main(argv):
+    if "--version" in argv or "-v" in argv:
+        print("******\n** ngspice-42 : Circuit level simulation program\n** Compiled with KLU Direct Linear "
+              "Solver\n******")
+        return 0
+    log = Path(argv[argv.index("-o") + 1]) if "-o" in argv else None
+    deck = Path(argv[-1])
+    wrapper = deck.read_text()
+    params = {}
+    for line in wrapper.splitlines():
+        if line.lower().startswith(".param"):
+            params.update({k.lower(): float(v) for k, v in re.findall(r"(\w+)=([-+\d.eE]+)", line)})
+    temp = float((re.search(r"^\.temp\s+([-+\d.eE]+)", wrapper, re.M | re.I) or [None, "27"])[1])
+    inc = re.search(r"^\.include\s+(\S+)", wrapper, re.M | re.I)
+    body = Path(inc.group(1)).read_text() if inc else wrapper
+    corner = deck.stem.removeprefix("corner_")
+    title = body.splitlines()[0].strip().lower() if body.strip() else "* untitled"
+    m = re.search(r"ATHENA_FAKE_SLEEP (\d+)", body)
+    if m:
+        time.sleep(int(m.group(1)))
+    out = ["", "Note: No compatibility mode selected!", "", "", f"Circuit: {wrapper.splitlines()[0].strip().lower()}",
+           "", f"Doing analysis at TEMP = {temp:.6f} and TNOM = 27.000000", "", "Using SPARSE 1.3 as Direct Linear "
+           "Solver", ""]
+    code = 0
+    if re.search(rf"ATHENA_FAKE_NONCONVERGE\s+{re.escape(corner)}\b", body):
+        out += ["doAnalyses: TRAN:  Timestep too small; time = 1.2e-05, timestep = 1.25e-19: trouble with node out",
+                "", "tran simulation(s) aborted", "Simulation interrupted due to error!", ""]
+        code = 1
+    else:
+        found = re.findall(r"ATHENA_FAKE_MEAS(@\w+)?\s+(\w+)=([-+\w.]+)", body)
+        meas = {}
+        for tag, name, val in [x for x in found if not x[0]] + [x for x in found if x[0] == "@" + corner]:
+            meas[name] = params[val.lower()] if val.lower() in params else float(val)
+        out += ["No. of Data Rows : 1012", "", "  Measurements for Transient Analysis", ""]
+        out += [f"{n:<20}=  {v:.6e} at=  1.000000e-03" for n, v in meas.items()]
+        out += [""]
+    if "ATHENA_FAKE_PROBE" in body:
+        try:
+            socket.create_connection(("1.1.1.1", 53), timeout=1).close()
+            net = "open"
+        except OSError as exc:
+            net = f"blocked-{type(exc).__name__}"
+        out += [f"probe_env {','.join(sorted(os.environ))}", f"probe_cwd {os.getcwd()}", f"probe_net {net}",
+                f"probe_title {title}"]
+    out += ["Total analysis time (seconds) = 0.004", "", "Total elapsed time (seconds) = 0.021 ", "",
+            "Stack = 0 bytes."]
+    text = "\n".join(out) + "\n"
+    if log:
+        log.write_text(text)
+    else:
+        sys.stdout.write(text)
+    return code
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

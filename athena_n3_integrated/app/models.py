@@ -32,7 +32,9 @@ ArtifactType = Literal["RFQ", "DATASHEET", "EDA_PACKAGE", "SUPPLIER_QUOTE", "TES
                        # market & opportunity intelligence (N1 inputs, then N1 → N6 / N7 outputs)
                        "MARKET_BATCH", "BUYER_RECORD", "COMMERCIAL_SHORTLIST", "SAM_EVIDENCE",
                        # product & design digital thread (N2 → N3 → N4 / N5)
-                       "PRD", "DESIGN_RELEASE", "BOM_RELEASE"]
+                       "PRD", "DESIGN_RELEASE", "BOM_RELEASE",
+                       # verification thread (N4 → N6 / N7 / N8)
+                       "VERIFICATION_RELEASE"]
 ProcessingPurpose = Literal[
     "RFQ_ANALYSIS", "PRODUCT_DEFINITION", "DESIGN_ENGINEERING", "VERIFICATION", "SOURCING", "COMMERCIAL",
     "FINANCE", "LIFECYCLE", "MARKET_INTELLIGENCE", "EVALUATION",
@@ -456,6 +458,16 @@ class TestLimit(_Strict):
     requirement_ref: Optional[str] = None
 
 
+class Hazard(_Strict):
+    """A product hazard from the N2 risk analysis. Every requirement it links becomes safety-critical
+    for N4: 100 % physical verification coverage before release."""
+    hazard_id: str = Field(pattern=_ID)
+    description: str = Field(min_length=3)
+    severity: int = Field(ge=1, le=10)
+    requirement_ids: list[str] = Field(min_length=1)
+    standard_ref: Optional[str] = Field(default=None, description="e.g. IEC 62368-1 clause 5.4.9")
+
+
 class PRDPayload(_Strict):
     model_config = ConfigDict(extra="forbid", title="PRDPayload.v1")
     prd_id: str = Field(pattern=_ID)
@@ -469,6 +481,9 @@ class PRDPayload(_Strict):
     design_scopes: list[DesignScope] = Field(min_length=1)
     test_limits: list[TestLimit] = Field(default_factory=list)
     compliance_standards: list[str] = Field(default_factory=list)
+    hazards: list[Hazard] = Field(default_factory=list)
+    safety_critical_requirement_ids: list[str] = Field(default_factory=list, description="in addition to every "
+                                                       "requirement a hazard links")
     authored_by: str
 
 
@@ -579,6 +594,96 @@ class BomReleasePayload(_Strict):
     items: list[BomItem] = Field(min_length=1)
 
 
+VerificationMethod = Literal["SIM", "BENCH_ATE", "ACCREDITED_LAB", "INSPECTION"]
+VERIFICATION_METHODS = ("SIM", "BENCH_ATE", "ACCREDITED_LAB", "INSPECTION")
+MeasurementProvenance = Literal["PHYSICAL_ATE", "PHYSICAL_BENCH", "PHYSICAL_INSPECTION", "ACCREDITED_LAB",
+                                "SIMULATION", "SYNTHETIC", "MOCK_FIXTURE"]
+PHYSICAL_PROVENANCE = ("PHYSICAL_ATE", "PHYSICAL_BENCH", "PHYSICAL_INSPECTION", "ACCREDITED_LAB")
+METHOD_PROVENANCE: dict[str, tuple[str, ...]] = {
+    "SIM": ("SIMULATION",), "BENCH_ATE": ("PHYSICAL_ATE", "PHYSICAL_BENCH"), "ACCREDITED_LAB": ("ACCREDITED_LAB",),
+    "INSPECTION": ("PHYSICAL_INSPECTION",)}
+RELIABILITY_RESEARCH_LABEL = "RESEARCH_ONLY_STATISTICAL_ILLUSTRATION"
+PrioritizationMethod = Literal["CUSTOM_ATTENTION_HEURISTIC", "AIAG_VDA_AP_LICENSED"]
+
+
+class VerifiedMeasurement(_Strict):
+    """One measured (or simulated) characteristic with its guard-banded verdict. ``value``, the
+    expanded uncertainty and both limits share ``unit``."""
+    measurement_id: str
+    test_id: str
+    characteristic: str
+    unit_serial: Optional[str] = None
+    value: Decimal
+    unit: str
+    expanded_uncertainty: Optional[Decimal] = Field(default=None, ge=0)
+    coverage_factor: float = Field(default=2.0, gt=0)
+    lower_limit: Optional[Decimal] = None
+    upper_limit: Optional[Decimal] = None
+    verdict: Literal["PASS", "FAIL", "INDETERMINATE"]
+    method: VerificationMethod
+    provenance: MeasurementProvenance
+    instrument_id: Optional[str] = None
+    calibration_id: Optional[str] = None
+    calibration_due: Optional[datetime] = None
+    captured_at: datetime
+    raw_sha256: Optional[str] = Field(default=None, pattern=_SHA)
+
+
+class TraceEntry(_Strict):
+    requirement_id: str
+    safety_critical: bool
+    hazard_ids: list[str] = Field(default_factory=list)
+    test_ids: list[str] = Field(default_factory=list)
+    methods: list[VerificationMethod] = Field(default_factory=list)
+    verdict: Literal["VERIFIED", "NOT_VERIFIED"]
+
+
+class AttributeInspection(_Strict):
+    """Attribute (go / no-go) inspection of one unit, e.g. AOI. Model detections never decide it: the
+    verdict is a human adjudication, and every model-flagged or ambiguous call must be adjudicated."""
+    test_id: str
+    unit_serial: str
+    method: VerificationMethod = "INSPECTION"
+    provenance: MeasurementProvenance = "PHYSICAL_INSPECTION"
+    defects_confirmed: int = Field(ge=0)
+    unadjudicated: int = Field(ge=0)
+    human_verdict: Literal["ACCEPT", "REJECT"]
+    adjudicator: str
+    evidence_sha256: str = Field(pattern=_SHA)
+
+
+class VerificationReleasePayload(_Strict):
+    """N4 → N8 / N6 / N7: a design-revision-locked verification package. It is not product safety
+    certification unless an accredited lab certificate in it says so for its stated scope."""
+    model_config = ConfigDict(extra="forbid", title="VerificationReleasePayload.v1")
+    release_id: str = Field(pattern=_ID)
+    target: Literal["N6", "N7", "N8"]
+    prd_ref: str
+    design_refs: list[str] = Field(min_length=1, description="N3 DESIGN_RELEASE ARTIFACT_ID@REVISION")
+    design_revision: str = Field(min_length=1, max_length=16)
+    pcb_revision: Optional[str] = Field(default=None, max_length=16)
+    plan_id: str
+    plan_sha256: str = Field(pattern=_SHA)
+    assessment_id: str
+    evidence_sha256: str = Field(pattern=_SHA)
+    review_id: str
+    approved_by: str
+    evidence_submitters: list[str] = Field(default_factory=list)
+    verification_status: Literal["VERIFIED", "NOT_VERIFIED"]
+    measurements: list[VerifiedMeasurement] = Field(min_length=1)
+    attribute_inspections: list[AttributeInspection] = Field(default_factory=list)
+    traceability: list[TraceEntry] = Field(min_length=1)
+    unit_serials: list[str] = Field(default_factory=list)
+    prioritization_method: PrioritizationMethod = "CUSTOM_ATTENTION_HEURISTIC"
+    ap_license_ref: Optional[str] = None
+    reliability: Optional[dict[str, Any]] = None
+    control_plan: list[dict[str, Any]] = Field(default_factory=list)
+    lab_certificates: list[dict[str, Any]] = Field(default_factory=list)
+    commercial: Optional[dict[str, Any]] = None
+    finance: Optional[dict[str, Any]] = None
+    approval_scope: str
+
+
 PAYLOAD_MODELS: dict[str, type[BaseModel]] = {
     "RFQ": RFQPayload, "DATASHEET": DatasheetPayload, "EDA_PACKAGE": EDAPackagePayload,
     "SUPPLIER_QUOTE": SupplierQuotePayload, "TEST_MEASUREMENT": TestMeasurementPayload,
@@ -586,6 +691,7 @@ PAYLOAD_MODELS: dict[str, type[BaseModel]] = {
     "MODEL_OUTPUT": ModelOutputPayload, "MARKET_BATCH": MarketBatchPayload, "BUYER_RECORD": BuyerRecordPayload,
     "COMMERCIAL_SHORTLIST": CommercialShortlistPayload, "SAM_EVIDENCE": SamEvidencePayload,
     "PRD": PRDPayload, "DESIGN_RELEASE": DesignReleasePayload, "BOM_RELEASE": BomReleasePayload,
+    "VERIFICATION_RELEASE": VerificationReleasePayload,
 }
 REQUIREMENT_LISTS = {"RFQ": "requirements", "DATASHEET": "requirements", "TEST_MEASUREMENT": "measurements",
                      "TELEMETRY": "readings", "MODEL_OUTPUT": "requirements", "PRD": "requirements"}

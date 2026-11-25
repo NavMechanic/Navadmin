@@ -42,13 +42,13 @@ lineage). A separate design authority must approve them. N3 finally releases N0-
 app/main.py              combined entry point: N0 gateway + N1 + N2 + N3 (one DB / store / scanner / audit chain)
 app/gateway.py, app/*.py N0, byte-identical to athena_n0_starter (tests/test_n0_sync.py)
 app/n1/                  N1, byte-identical to athena_n1_integrated
-app/n2/                  minimal N2: PRD from an N0-released RFQ, four-eyes release to N3, release listeners
+app/n2/                  minimal N2: PRD (with hazards / safety-critical ids) from an N0-released RFQ, four-eyes release to N3, release listeners
 app/n3/models.py         contracts → schemas/n3_*.schema.json (13 families + job / vendor / routing records)
 app/n3/parsers.py        KiCad 6–9 sch/pcb/pro, ERC/DRC JSON, BOM CSV, ngspice logs, STEP, thermal JSON
 app/n3/engine.py         deterministic planning, verification, decision, rework ranking, release payloads
 app/n3/tool_runner.py    sandboxed kicad-cli / ngspice runner + background JobWorker
 app/n3/db.py             13 append-only N3 tables on the shared metadata
-app/n3/service.py        the seven stages, invalidation on PRD revision, views
+app/n3/service.py        the seven stages, invalidation on PRD revision, release listeners (N4), views
 app/n3/router.py         /v1/n3/* API
 scripts/run_tools.py     operator CLI over the same sandboxed runner
 examples/run_n3_demo.py  synthetic end-to-end demo; examples/designs/ the synthetic PSU-120W package

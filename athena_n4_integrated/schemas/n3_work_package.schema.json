@@ -1,0 +1,160 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n3_work_package",
+  "$defs": {
+    "Money": {
+      "additionalProperties": false,
+      "properties": {
+        "amount": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Amount"
+        },
+        "currency": {
+          "pattern": "^[A-Z]{3}$",
+          "title": "Currency",
+          "type": "string"
+        }
+      },
+      "required": [
+        "amount",
+        "currency"
+      ],
+      "title": "Money",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "N3WorkPackage.v1",
+      "default": "N3WorkPackage.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "work_package_id": {
+      "title": "Work Package Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "baseline_id": {
+      "title": "Baseline Id",
+      "type": "string"
+    },
+    "prd_artifact": {
+      "title": "Prd Artifact",
+      "type": "string"
+    },
+    "scope": {
+      "enum": [
+        "schematic_pcb",
+        "circuit_simulation",
+        "mechanical_thermal"
+      ],
+      "title": "Scope",
+      "type": "string"
+    },
+    "kind": {
+      "enum": [
+        "ELECTRICAL_SCHEMATIC",
+        "PCB_LAYOUT",
+        "DFM",
+        "CIRCUIT_SIMULATION",
+        "MECHANICAL",
+        "THERMAL"
+      ],
+      "title": "Kind",
+      "type": "string"
+    },
+    "title": {
+      "title": "Title",
+      "type": "string"
+    },
+    "required_native_roles": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Required Native Roles",
+      "type": "array"
+    },
+    "required_evidence_roles": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Required Evidence Roles",
+      "type": "array"
+    },
+    "acceptance_criteria": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Acceptance Criteria",
+      "type": "array"
+    },
+    "budget_cap": {
+      "$ref": "#/$defs/Money"
+    },
+    "due_date": {
+      "anyOf": [
+        {
+          "format": "date",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Due Date"
+    },
+    "created_by": {
+      "title": "Created By",
+      "type": "string"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "package_sha256": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "immutable content hash of this package",
+      "title": "Package Sha256"
+    }
+  },
+  "required": [
+    "work_package_id",
+    "tenant_id",
+    "baseline_id",
+    "prd_artifact",
+    "scope",
+    "kind",
+    "title",
+    "required_native_roles",
+    "required_evidence_roles",
+    "acceptance_criteria",
+    "budget_cap",
+    "created_by",
+    "created_at"
+  ],
+  "title": "N3WorkPackage",
+  "type": "object"
+}

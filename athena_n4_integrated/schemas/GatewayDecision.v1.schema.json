@@ -1,0 +1,295 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:GatewayDecision.v1",
+  "$defs": {
+    "RightsDecision": {
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "enum": [
+            "GRANTED",
+            "DENIED"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "source_id": {
+          "title": "Source Id",
+          "type": "string"
+        },
+        "approval_status": {
+          "anyOf": [
+            {
+              "enum": [
+                "PENDING",
+                "APPROVED",
+                "REJECTED",
+                "REVOKED"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Approval Status"
+        },
+        "license": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "License"
+        },
+        "processing_purpose": {
+          "title": "Processing Purpose",
+          "type": "string"
+        },
+        "purpose_permitted": {
+          "title": "Purpose Permitted",
+          "type": "boolean"
+        },
+        "llm_processing_allowed": {
+          "title": "Llm Processing Allowed",
+          "type": "boolean"
+        },
+        "vendor_transmission_allowed": {
+          "title": "Vendor Transmission Allowed",
+          "type": "boolean"
+        },
+        "training_allowed": {
+          "title": "Training Allowed",
+          "type": "boolean"
+        },
+        "reasons": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Reasons",
+          "type": "array"
+        }
+      },
+      "required": [
+        "status",
+        "source_id",
+        "processing_purpose",
+        "purpose_permitted",
+        "llm_processing_allowed",
+        "vendor_transmission_allowed",
+        "training_allowed"
+      ],
+      "title": "RightsDecision",
+      "type": "object"
+    },
+    "RuleViolation": {
+      "additionalProperties": false,
+      "properties": {
+        "rule_id": {
+          "title": "Rule Id",
+          "type": "string"
+        },
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "severity": {
+          "enum": [
+            "BLOCK",
+            "REWORK",
+            "REVIEW"
+          ],
+          "title": "Severity",
+          "type": "string"
+        },
+        "category": {
+          "title": "Category",
+          "type": "string"
+        },
+        "stage": {
+          "enum": [
+            "N0.1",
+            "N0.2",
+            "N0.3",
+            "N0.4",
+            "N0.5",
+            "N0.6"
+          ],
+          "title": "Stage",
+          "type": "string"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        },
+        "field": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Field"
+        }
+      },
+      "required": [
+        "rule_id",
+        "code",
+        "severity",
+        "category",
+        "stage",
+        "message"
+      ],
+      "title": "RuleViolation",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "GatewayDecision.v1",
+      "default": "GatewayDecision.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "decision_id": {
+      "title": "Decision Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "artifact_id": {
+      "title": "Artifact Id",
+      "type": "string"
+    },
+    "revision": {
+      "title": "Revision",
+      "type": "string"
+    },
+    "decision": {
+      "enum": [
+        "PASS",
+        "REWORK",
+        "BLOCK",
+        "REVIEW"
+      ],
+      "title": "Decision",
+      "type": "string"
+    },
+    "violated_rules": {
+      "items": {
+        "$ref": "#/$defs/RuleViolation"
+      },
+      "title": "Violated Rules",
+      "type": "array"
+    },
+    "missing_fields": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Missing Fields",
+      "type": "array"
+    },
+    "rights_decision": {
+      "$ref": "#/$defs/RightsDecision"
+    },
+    "explanation": {
+      "title": "Explanation",
+      "type": "string"
+    },
+    "allowed_destinations": {
+      "items": {
+        "enum": [
+          "N1",
+          "N2",
+          "N3",
+          "N4",
+          "N5",
+          "N6",
+          "N7",
+          "N8"
+        ],
+        "type": "string"
+      },
+      "title": "Allowed Destinations",
+      "type": "array"
+    },
+    "validator_version": {
+      "title": "Validator Version",
+      "type": "string"
+    },
+    "quality_score": {
+      "description": "advisory only; never overrides a hard policy",
+      "maximum": 100,
+      "minimum": 0,
+      "title": "Quality Score",
+      "type": "number"
+    },
+    "origin_node": {
+      "default": "N0",
+      "enum": [
+        "N0",
+        "N1",
+        "N2",
+        "N3",
+        "N4",
+        "N5",
+        "N6",
+        "N7",
+        "N8"
+      ],
+      "title": "Origin Node",
+      "type": "string"
+    },
+    "decided_at": {
+      "format": "date-time",
+      "title": "Decided At",
+      "type": "string"
+    },
+    "resolved_by_approval_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "set when a human REVIEW_RESOLUTION approval turned a REVIEW into PASS/REWORK; BLOCK decisions are never resolvable",
+      "title": "Resolved By Approval Id"
+    },
+    "qualification_disclaimer": {
+      "default": "PASS means the artifact satisfied N0's checks for its declared artifact_type and release_stage. It is not engineering qualification or product certification.",
+      "title": "Qualification Disclaimer",
+      "type": "string"
+    }
+  },
+  "required": [
+    "decision_id",
+    "tenant_id",
+    "artifact_id",
+    "revision",
+    "decision",
+    "violated_rules",
+    "missing_fields",
+    "rights_decision",
+    "explanation",
+    "allowed_destinations",
+    "validator_version",
+    "quality_score",
+    "decided_at"
+  ],
+  "title": "GatewayDecision.v1",
+  "type": "object"
+}

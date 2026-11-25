@@ -6,7 +6,7 @@ from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ..models import Decision, DesignConstraints, DesignScope, TestLimit
+from ..models import Decision, DesignConstraints, DesignScope, Hazard, TestLimit
 
 _ID = r"^[A-Za-z0-9][A-Za-z0-9._:\-]{1,127}$"
 
@@ -26,6 +26,9 @@ class PRDCreateRequest(_Strict):
     design_scopes: list[DesignScope] = Field(min_length=1)
     design_constraints: DesignConstraints
     test_limits: list[TestLimit] = Field(default_factory=list)
+    hazards: list[Hazard] = Field(default_factory=list, description="product hazards; linked requirements become "
+                                                                     "safety-critical for N4")
+    safety_critical_requirement_ids: list[str] = Field(default_factory=list)
 
 
 class PRDRecord(_Strict):

@@ -1,0 +1,227 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n3_release",
+  "$defs": {
+    "N3ReleasePackage": {
+      "additionalProperties": false,
+      "properties": {
+        "target": {
+          "enum": [
+            "N4",
+            "N5"
+          ],
+          "title": "Target",
+          "type": "string"
+        },
+        "artifact_type": {
+          "title": "Artifact Type",
+          "type": "string"
+        },
+        "artifact_id": {
+          "title": "Artifact Id",
+          "type": "string"
+        },
+        "revision": {
+          "title": "Revision",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "RELEASED",
+            "REFUSED",
+            "NOT_APPLICABLE"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "n0_decision": {
+          "anyOf": [
+            {
+              "enum": [
+                "PASS",
+                "REWORK",
+                "BLOCK",
+                "REVIEW"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "N0 Decision"
+        },
+        "n0_decision_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "N0 Decision Id"
+        },
+        "violated_codes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Violated Codes",
+          "type": "array"
+        },
+        "manifest_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Manifest Id"
+        },
+        "approval_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Approval Id"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "target",
+        "artifact_type",
+        "artifact_id",
+        "revision",
+        "status",
+        "reason"
+      ],
+      "title": "N3ReleasePackage",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "N3Release.v1",
+      "default": "N3Release.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "release_id": {
+      "title": "Release Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "baseline_id": {
+      "title": "Baseline Id",
+      "type": "string"
+    },
+    "scope": {
+      "enum": [
+        "schematic_pcb",
+        "circuit_simulation",
+        "mechanical_thermal"
+      ],
+      "title": "Scope",
+      "type": "string"
+    },
+    "prd_artifact": {
+      "title": "Prd Artifact",
+      "type": "string"
+    },
+    "design_revision": {
+      "title": "Design Revision",
+      "type": "string"
+    },
+    "payload_release_id": {
+      "description": "release_id inside the N0 DESIGN_RELEASE / BOM_RELEASE payloads",
+      "title": "Payload Release Id",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "RELEASED",
+        "PARTIAL",
+        "REFUSED"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "work_package_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Work Package Ids",
+      "type": "array"
+    },
+    "assessment_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Assessment Ids",
+      "type": "array"
+    },
+    "review_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Review Ids",
+      "type": "array"
+    },
+    "packages": {
+      "items": {
+        "$ref": "#/$defs/N3ReleasePackage"
+      },
+      "title": "Packages",
+      "type": "array"
+    },
+    "released_by": {
+      "title": "Released By",
+      "type": "string"
+    },
+    "released_at": {
+      "format": "date-time",
+      "title": "Released At",
+      "type": "string"
+    },
+    "approval_scope": {
+      "default": "N3 approval means this design package is suitable for the next controlled engineering step (N4 verification / N5 sourcing). It is NOT product safety certification, laboratory qualification or mass-manufacturing release.",
+      "title": "Approval Scope",
+      "type": "string"
+    }
+  },
+  "required": [
+    "release_id",
+    "tenant_id",
+    "baseline_id",
+    "scope",
+    "prd_artifact",
+    "design_revision",
+    "payload_release_id",
+    "status",
+    "work_package_ids",
+    "assessment_ids",
+    "review_ids",
+    "packages",
+    "released_by",
+    "released_at"
+  ],
+  "title": "N3Release",
+  "type": "object"
+}

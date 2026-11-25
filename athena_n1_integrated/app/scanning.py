@@ -40,6 +40,8 @@ ALLOWED_MIME = {
     "application/vnd.gerber": (".gbr", ".gtl", ".gbl", ".gto", ".gbo", ".gts", ".gbs", ".gtp", ".gbp", ".gm1",
                                ".gko", ".g1", ".g2"),
     "application/x-excellon": (".drl", ".xln"),
+    # verification evidence (N4): columnar test logs
+    "application/vnd.apache.parquet": (".parquet",),
 }
 _TEXTUAL = {"text/csv", "application/json", "text/x-spice", "application/x-kicad-schematic", "application/x-kicad-pcb",
             "application/vnd.gerber", "application/x-excellon", "application/x-spice-raw", "model/step"}
@@ -87,6 +89,8 @@ def sniff_mime(data: bytes) -> str:
                 return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             return "application/vnd.openxmlformats-officedocument"
         return "application/zip"
+    if head.startswith(b"PAR1") and data[-4:] == b"PAR1":
+        return "application/vnd.apache.parquet"
     if head.lstrip().startswith(b"ISO-10303-21"):
         return "model/step"
     try:
