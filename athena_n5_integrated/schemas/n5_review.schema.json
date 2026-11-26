@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n5_review",
+  "additionalProperties": false,
+  "properties": {
+    "review_id": {
+      "title": "Review Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "report_id": {
+      "title": "Report Id",
+      "type": "string"
+    },
+    "reviewer": {
+      "title": "Reviewer",
+      "type": "string"
+    },
+    "reviewer_role": {
+      "title": "Reviewer Role",
+      "type": "string"
+    },
+    "decision": {
+      "enum": [
+        "APPROVED",
+        "REJECTED"
+      ],
+      "title": "Decision",
+      "type": "string"
+    },
+    "reason": {
+      "title": "Reason",
+      "type": "string"
+    },
+    "report_sha256": {
+      "title": "Report Sha256",
+      "type": "string"
+    },
+    "quote_hashes": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Quote Hashes",
+      "type": "array"
+    },
+    "approval_event_id": {
+      "title": "Approval Event Id",
+      "type": "string"
+    },
+    "reviewed_at": {
+      "format": "date-time",
+      "title": "Reviewed At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "review_id",
+    "tenant_id",
+    "report_id",
+    "reviewer",
+    "reviewer_role",
+    "decision",
+    "reason",
+    "report_sha256",
+    "quote_hashes",
+    "approval_event_id",
+    "reviewed_at"
+  ],
+  "title": "N5Review",
+  "type": "object"
+}

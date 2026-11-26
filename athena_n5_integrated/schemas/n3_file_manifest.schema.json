@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n3_file_manifest",
+  "$defs": {
+    "N3FileManifestEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Path",
+          "type": "string"
+        },
+        "role": {
+          "enum": [
+            "SCHEMATIC",
+            "PCB",
+            "PROJECT",
+            "GEOMETRY",
+            "NETLIST",
+            "GERBER",
+            "DRILL",
+            "ODB",
+            "BOM",
+            "ERC_REPORT",
+            "DRC_REPORT",
+            "SIM_LOG",
+            "SIM_RAW",
+            "THERMAL_REPORT",
+            "DOCUMENT",
+            "IMAGE",
+            "OTHER"
+          ],
+          "title": "Role",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "tool": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tool"
+        },
+        "tool_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tool Version"
+        }
+      },
+      "required": [
+        "path",
+        "role",
+        "sha256"
+      ],
+      "title": "N3FileManifestEntry",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "design_revision": {
+      "maxLength": 16,
+      "minLength": 1,
+      "title": "Design Revision",
+      "type": "string"
+    },
+    "entries": {
+      "items": {
+        "$ref": "#/$defs/N3FileManifestEntry"
+      },
+      "minItems": 1,
+      "title": "Entries",
+      "type": "array"
+    },
+    "replaces_previous": {
+      "default": true,
+      "description": "true: this delivery is the complete file set and replaces earlier deliveries; false: files are merged by path",
+      "title": "Replaces Previous",
+      "type": "boolean"
+    },
+    "notes": {
+      "anyOf": [
+        {
+          "maxLength": 4000,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Notes"
+    }
+  },
+  "required": [
+    "design_revision",
+    "entries"
+  ],
+  "title": "N3FileManifest",
+  "type": "object"
+}

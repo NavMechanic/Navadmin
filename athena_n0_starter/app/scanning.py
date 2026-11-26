@@ -42,9 +42,13 @@ ALLOWED_MIME = {
     "application/x-excellon": (".drl", ".xln"),
     # verification evidence (N4): columnar test logs
     "application/vnd.apache.parquet": (".parquet",),
+    # supplier quotations (N5): EDI interchanges
+    "application/edi-x12": (".edi", ".x12"),
+    "application/edifact": (".edi", ".edifact"),
 }
 _TEXTUAL = {"text/csv", "application/json", "text/x-spice", "application/x-kicad-schematic", "application/x-kicad-pcb",
-            "application/vnd.gerber", "application/x-excellon", "application/x-spice-raw", "model/step"}
+            "application/vnd.gerber", "application/x-excellon", "application/x-spice-raw", "model/step",
+            "application/edi-x12", "application/edifact"}
 
 
 @dataclass
@@ -112,6 +116,10 @@ def sniff_mime(data: bytes) -> str:
         return "application/vnd.gerber"
     if t.startswith("m48"):
         return "application/x-excellon"
+    if t.startswith("isa*") and ("~" in t or "\nst*" in t):
+        return "application/edi-x12"
+    if t.startswith(("una:", "unb+")):
+        return "application/edifact"
     if t.startswith("title:") and "plotname:" in t:
         return "application/x-spice-raw"
     lines = [ln.strip() for ln in t.splitlines() if ln.strip()]

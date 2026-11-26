@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n5_site",
+  "additionalProperties": false,
+  "properties": {
+    "site_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{0,127}$",
+      "title": "Site Id",
+      "type": "string"
+    },
+    "name": {
+      "minLength": 2,
+      "title": "Name",
+      "type": "string"
+    },
+    "country": {
+      "pattern": "^[A-Z]{2}$",
+      "title": "Country",
+      "type": "string"
+    },
+    "os_id": {
+      "anyOf": [
+        {
+          "pattern": "^[A-Z]{2}[0-9A-Z]{8,20}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Open Supply Hub facility id",
+      "title": "Os Id"
+    },
+    "capabilities": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Capabilities",
+      "type": "array"
+    },
+    "osh_verified": {
+      "default": false,
+      "title": "Osh Verified",
+      "type": "boolean"
+    },
+    "osh_evidence": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Osh Evidence"
+    }
+  },
+  "required": [
+    "site_id",
+    "name",
+    "country"
+  ],
+  "title": "N5Site",
+  "type": "object"
+}

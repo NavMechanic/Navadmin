@@ -1,0 +1,237 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n4_scpi_log",
+  "$defs": {
+    "LogAttachment": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "title": "Path",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "role": {
+          "default": "WAVEFORM",
+          "enum": [
+            "WAVEFORM",
+            "RAW_LOG",
+            "IMAGE",
+            "OTHER"
+          ],
+          "title": "Role",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "title": "LogAttachment",
+      "type": "object"
+    },
+    "MethodRef": {
+      "additionalProperties": false,
+      "properties": {
+        "method_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+          "title": "Method Id",
+          "type": "string"
+        },
+        "revision": {
+          "maxLength": 16,
+          "minLength": 1,
+          "title": "Revision",
+          "type": "string"
+        }
+      },
+      "required": [
+        "method_id",
+        "revision"
+      ],
+      "title": "MethodRef",
+      "type": "object"
+    },
+    "ScpiInstrumentBlock": {
+      "additionalProperties": false,
+      "properties": {
+        "resource": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Resource"
+        },
+        "idn": {
+          "description": "*IDN? response: manufacturer,model,serial,firmware",
+          "minLength": 3,
+          "title": "Idn",
+          "type": "string"
+        },
+        "calibration_id": {
+          "title": "Calibration Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "idn",
+        "calibration_id"
+      ],
+      "title": "ScpiInstrumentBlock",
+      "type": "object"
+    },
+    "ScpiRecord": {
+      "additionalProperties": false,
+      "properties": {
+        "t": {
+          "description": "UTC timestamp of the query",
+          "format": "date-time",
+          "title": "T",
+          "type": "string"
+        },
+        "command": {
+          "title": "Command",
+          "type": "string"
+        },
+        "response": {
+          "title": "Response",
+          "type": "string"
+        },
+        "characteristic": {
+          "pattern": "^[a-z][a-z0-9_]{0,63}$",
+          "title": "Characteristic",
+          "type": "string"
+        },
+        "unit": {
+          "title": "Unit",
+          "type": "string"
+        },
+        "expanded_uncertainty": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Expanded Uncertainty"
+        },
+        "k": {
+          "default": 2.0,
+          "exclusiveMinimum": 0,
+          "title": "K",
+          "type": "number"
+        }
+      },
+      "required": [
+        "t",
+        "command",
+        "response",
+        "characteristic",
+        "unit",
+        "expanded_uncertainty"
+      ],
+      "title": "ScpiRecord",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": "athena-scpi-log/1",
+      "default": "athena-scpi-log/1",
+      "title": "Format",
+      "type": "string"
+    },
+    "station_id": {
+      "title": "Station Id",
+      "type": "string"
+    },
+    "operator": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Operator"
+    },
+    "test_id": {
+      "title": "Test Id",
+      "type": "string"
+    },
+    "unit_serial": {
+      "title": "Unit Serial",
+      "type": "string"
+    },
+    "method_ref": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/MethodRef"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "instrument": {
+      "$ref": "#/$defs/ScpiInstrumentBlock"
+    },
+    "records": {
+      "items": {
+        "$ref": "#/$defs/ScpiRecord"
+      },
+      "minItems": 1,
+      "title": "Records",
+      "type": "array"
+    },
+    "attachments": {
+      "items": {
+        "$ref": "#/$defs/LogAttachment"
+      },
+      "title": "Attachments",
+      "type": "array"
+    },
+    "claimed_provenance": {
+      "default": "PHYSICAL",
+      "enum": [
+        "PHYSICAL",
+        "SYNTHETIC"
+      ],
+      "title": "Claimed Provenance",
+      "type": "string"
+    },
+    "capture": {
+      "default": "ATE_SOFTWARE_EXPORT",
+      "enum": [
+        "LIVE_DRIVER",
+        "ATE_SOFTWARE_EXPORT"
+      ],
+      "title": "Capture",
+      "type": "string"
+    }
+  },
+  "required": [
+    "station_id",
+    "test_id",
+    "unit_serial",
+    "instrument",
+    "records"
+  ],
+  "title": "N4ScpiLog",
+  "type": "object"
+}

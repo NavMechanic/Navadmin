@@ -20,7 +20,8 @@ from .models import (ApprovalEvent, ApprovalRequest, ApprovalResponse, FeedbackR
                      GatewayDecision, HandoffReleaseRequest, ReleaseManifest)
 from .pipeline import promote_blobs
 from .repository import Repository, dump, new_id
-from .rules import VALIDATOR_VERSION, Findings, allowed_destinations, evaluate_rights, normalize_revision
+from .rules import (VALIDATOR_VERSION, Findings, allowed_destinations, evaluate_rights, normalize_revision,
+                    rights_dependencies)
 from .security import Principal
 from .storage import ObjectStore
 
@@ -125,6 +126,11 @@ def release_handoff(repo: Repository, principal: Principal, req: HandoffReleaseR
                       violated=[v.code for v in current.violated_rules])
     if req.source_node != row.origin_node:
         raise N0Error(409, "SOURCE_NODE_MISMATCH", f"artifact originated at {row.origin_node}, not {req.source_node}")
+    for sid in [row.source_id, *rights_dependencies(row.artifact_type, (row.canonical or {}).get("payload"))]:
+        src = repo.get_source(row.tenant_id, sid)
+        if src is None or src.approval_status != "APPROVED":
+            raise N0Error(409, "SOURCE_RIGHTS_REVOKED", f"{req.artifact_id}@{rev} depends on source {sid}, which is "
+                                                        f"{src.approval_status if src else 'not registered'}")
     blocked = [n for n in req.target_nodes if n not in current.allowed_destinations]
     if blocked:
         raise N0Error(409, "DESTINATION_NOT_ALLOWED", f"{blocked} not in allowed_destinations "

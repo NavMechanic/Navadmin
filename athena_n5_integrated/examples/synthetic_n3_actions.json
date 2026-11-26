@@ -1,0 +1,40 @@
+{
+  "assessment_id": "filled-in-by-the-demo",
+  "currency": "USD",
+  "budget_cap": "2000",
+  "candidates": [
+    {
+      "action_id": "WAIVE-CLEARANCE",
+      "action_type": "WAIVER_REQUEST",
+      "addresses": [
+        "CREEPAGE_CLEARANCE"
+      ],
+      "cost": "0",
+      "risk_reduction_value": "250000",
+      "description": "accept the violation to save schedule"
+    },
+    {
+      "action_id": "RELAYOUT-HV",
+      "action_type": "RELAYOUT",
+      "addresses": [
+        "CREEPAGE_CLEARANCE"
+      ],
+      "cost": "1200",
+      "delay_days": 3,
+      "delay_cost_per_day": "100",
+      "risk_reduction_value": "20000",
+      "description": "re-route the 48 V input copper to restore clearance"
+    },
+    {
+      "action_id": "VENDOR-REWORK",
+      "action_type": "VENDOR_REWORK",
+      "addresses": [
+        "CREEPAGE_CLEARANCE"
+      ],
+      "cost": "3500",
+      "delay_days": 10,
+      "delay_cost_per_day": "100",
+      "risk_reduction_value": "20000"
+    }
+  ]
+}

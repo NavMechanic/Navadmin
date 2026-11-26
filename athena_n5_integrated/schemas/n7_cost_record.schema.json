@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n7_cost_record",
+  "additionalProperties": false,
+  "properties": {
+    "intake_id": {
+      "title": "Intake Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "artifact": {
+      "title": "Artifact",
+      "type": "string"
+    },
+    "handoff_id": {
+      "title": "Handoff Id",
+      "type": "string"
+    },
+    "bom_ref": {
+      "title": "Bom Ref",
+      "type": "string"
+    },
+    "design_revision": {
+      "title": "Design Revision",
+      "type": "string"
+    },
+    "build_quantity": {
+      "title": "Build Quantity",
+      "type": "integer"
+    },
+    "base_currency": {
+      "title": "Base Currency",
+      "type": "string"
+    },
+    "cost_lines": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Cost Lines",
+      "type": "array"
+    },
+    "fx_assumptions": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Fx Assumptions",
+      "type": "array"
+    },
+    "indicative_total": {
+      "title": "Indicative Total",
+      "type": "string"
+    },
+    "indicative_unit_cost": {
+      "title": "Indicative Unit Cost",
+      "type": "string"
+    },
+    "earliest_quote_expiry": {
+      "title": "Earliest Quote Expiry",
+      "type": "string"
+    },
+    "label": {
+      "title": "Label",
+      "type": "string"
+    },
+    "excluded_cost_categories": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Excluded Cost Categories",
+      "type": "array"
+    },
+    "excluded_items_reported": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Excluded Items Reported",
+      "type": "array"
+    },
+    "synthetic": {
+      "title": "Synthetic",
+      "type": "boolean"
+    },
+    "verification_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Verification Ref"
+    },
+    "status": {
+      "const": "DRAFT",
+      "default": "DRAFT",
+      "title": "Status",
+      "type": "string"
+    },
+    "ingested_by": {
+      "title": "Ingested By",
+      "type": "string"
+    },
+    "ingested_at": {
+      "format": "date-time",
+      "title": "Ingested At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "intake_id",
+    "tenant_id",
+    "artifact",
+    "handoff_id",
+    "bom_ref",
+    "design_revision",
+    "build_quantity",
+    "base_currency",
+    "cost_lines",
+    "fx_assumptions",
+    "indicative_total",
+    "indicative_unit_cost",
+    "earliest_quote_expiry",
+    "label",
+    "excluded_cost_categories",
+    "excluded_items_reported",
+    "synthetic",
+    "ingested_by",
+    "ingested_at"
+  ],
+  "title": "N7CostRecord",
+  "type": "object"
+}

@@ -1,0 +1,298 @@
+{
+  "title": "PSU-120W design verification (synthetic)",
+  "test_cases": [
+    {
+      "test_id": "T-01",
+      "title": "output voltage, nominal line/load",
+      "requirement_ids": [
+        "R-002"
+      ],
+      "method": "BENCH_ATE",
+      "acceptance": [
+        {
+          "characteristic": "output_voltage",
+          "unit": "V",
+          "lower": "23.5",
+          "upper": "24.5"
+        }
+      ],
+      "method_ref": {
+        "method_id": "SOP-ATE-001",
+        "revision": "C"
+      },
+      "owner": "demo.te"
+    },
+    {
+      "test_id": "T-02",
+      "title": "line regulation 43.2 V",
+      "requirement_ids": [
+        "R-001",
+        "R-002"
+      ],
+      "method": "BENCH_ATE",
+      "acceptance": [
+        {
+          "characteristic": "output_voltage",
+          "unit": "V",
+          "lower": "23.5",
+          "upper": "24.5"
+        }
+      ],
+      "method_ref": {
+        "method_id": "SOP-ATE-001",
+        "revision": "C"
+      },
+      "owner": "demo.te"
+    },
+    {
+      "test_id": "T-03",
+      "title": "line regulation 52.8 V",
+      "requirement_ids": [
+        "R-001",
+        "R-002"
+      ],
+      "method": "BENCH_ATE",
+      "acceptance": [
+        {
+          "characteristic": "output_voltage",
+          "unit": "V",
+          "lower": "23.5",
+          "upper": "24.5"
+        }
+      ],
+      "method_ref": {
+        "method_id": "SOP-ATE-001",
+        "revision": "C"
+      },
+      "owner": "demo.te"
+    },
+    {
+      "test_id": "T-04",
+      "title": "load regulation 0–5 A",
+      "requirement_ids": [
+        "R-002",
+        "R-003"
+      ],
+      "method": "BENCH_ATE",
+      "acceptance": [
+        {
+          "characteristic": "output_voltage",
+          "unit": "V",
+          "lower": "23.5",
+          "upper": "24.5"
+        }
+      ],
+      "method_ref": {
+        "method_id": "SOP-ATE-001",
+        "revision": "C"
+      },
+      "owner": "demo.te"
+    },
+    {
+      "test_id": "T-05",
+      "title": "continuous output power",
+      "requirement_ids": [
+        "R-004"
+      ],
+      "method": "BENCH_ATE",
+      "acceptance": [
+        {
+          "characteristic": "output_power",
+          "unit": "W",
+          "lower": "120"
+        }
+      ],
+      "method_ref": {
+        "method_id": "SOP-ATE-001",
+        "revision": "C"
+      },
+      "owner": "demo.te"
+    },
+    {
+      "test_id": "T-06",
+      "title": "efficiency at full load",
+      "requirement_ids": [
+        "R-005"
+      ],
+      "method": "BENCH_ATE",
+      "acceptance": [
+        {
+          "characteristic": "efficiency",
+          "unit": "%",
+          "lower": "92"
+        }
+      ],
+      "method_ref": {
+        "method_id": "SOP-ATE-001",
+        "revision": "C"
+      },
+      "owner": "demo.te"
+    },
+    {
+      "test_id": "T-07",
+      "title": "output ripple pk-pk",
+      "requirement_ids": [
+        "R-011"
+      ],
+      "method": "BENCH_ATE",
+      "acceptance": [
+        {
+          "characteristic": "ripple_voltage",
+          "unit": "mV",
+          "upper": "120"
+        }
+      ],
+      "method_ref": {
+        "method_id": "SOP-ATE-001",
+        "revision": "C"
+      },
+      "owner": "demo.te"
+    },
+    {
+      "test_id": "T-08",
+      "title": "operation at −40 °C and +85 °C ambient",
+      "requirement_ids": [
+        "R-006",
+        "R-007"
+      ],
+      "method": "ACCREDITED_LAB",
+      "acceptance": [
+        {
+          "characteristic": "output_voltage",
+          "unit": "V",
+          "lower": "23.5",
+          "upper": "24.5"
+        }
+      ],
+      "method_ref": {
+        "method_id": "SOP-LAB-001",
+        "revision": "A"
+      },
+      "owner": "demo.te"
+    },
+    {
+      "test_id": "T-09",
+      "title": "hipot 3000 V AC 60 s",
+      "requirement_ids": [
+        "R-008"
+      ],
+      "method": "ACCREDITED_LAB",
+      "acceptance": [
+        {
+          "characteristic": "hipot_leakage_current",
+          "unit": "mA",
+          "upper": "5"
+        }
+      ],
+      "method_ref": {
+        "method_id": "SOP-LAB-001",
+        "revision": "A"
+      },
+      "owner": "demo.te"
+    },
+    {
+      "test_id": "T-10",
+      "title": "insulation resistance 500 V DC",
+      "requirement_ids": [
+        "R-009"
+      ],
+      "method": "ACCREDITED_LAB",
+      "acceptance": [
+        {
+          "characteristic": "insulation_resistance",
+          "unit": "Mohm",
+          "lower": "100"
+        }
+      ],
+      "method_ref": {
+        "method_id": "SOP-LAB-001",
+        "revision": "A"
+      },
+      "owner": "demo.te"
+    },
+    {
+      "test_id": "T-11",
+      "title": "touch current",
+      "requirement_ids": [
+        "R-010"
+      ],
+      "method": "ACCREDITED_LAB",
+      "acceptance": [
+        {
+          "characteristic": "touch_current",
+          "unit": "mA",
+          "upper": "0.25"
+        }
+      ],
+      "method_ref": {
+        "method_id": "SOP-LAB-001",
+        "revision": "A"
+      },
+      "owner": "demo.te"
+    },
+    {
+      "test_id": "T-12",
+      "title": "creepage measurement",
+      "requirement_ids": [
+        "R-012"
+      ],
+      "method": "INSPECTION",
+      "acceptance": [
+        {
+          "characteristic": "creepage_distance",
+          "unit": "mm",
+          "lower": "6.4"
+        }
+      ],
+      "method_ref": {
+        "method_id": "SOP-INS-001",
+        "revision": "B"
+      },
+      "owner": "demo.te"
+    },
+    {
+      "test_id": "T-13",
+      "title": "AOI solder / bridge inspection",
+      "requirement_ids": [
+        "R-012"
+      ],
+      "method": "INSPECTION",
+      "acceptance": [
+        {
+          "characteristic": "defect_count",
+          "unit": "count",
+          "upper": "0"
+        }
+      ],
+      "method_ref": {
+        "method_id": "SOP-INS-001",
+        "revision": "B"
+      },
+      "owner": "demo.te"
+    },
+    {
+      "test_id": "T-14",
+      "title": "worst-case corners (N3 SPICE)",
+      "requirement_ids": [
+        "R-001",
+        "R-002"
+      ],
+      "method": "SIM",
+      "acceptance": [
+        {
+          "characteristic": "vout_min",
+          "unit": "V",
+          "lower": "23.5",
+          "upper": "24.5"
+        }
+      ],
+      "method_ref": {
+        "method_id": "SOP-SIM-001",
+        "revision": "A"
+      },
+      "owner": "demo.te",
+      "sim_corner": "all",
+      "sim_model_uncertainty": "0.05"
+    }
+  ]
+}

@@ -1,0 +1,230 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n5_supplier_request",
+  "$defs": {
+    "ChannelProof": {
+      "additionalProperties": false,
+      "properties": {
+        "manufacturer": {
+          "minLength": 2,
+          "title": "Manufacturer",
+          "type": "string"
+        },
+        "proof_type": {
+          "enum": [
+            "MANUFACTURER_AUTHORIZED_LIST",
+            "FRANCHISE_AGREEMENT",
+            "MANUFACTURER_LETTER"
+          ],
+          "title": "Proof Type",
+          "type": "string"
+        },
+        "reference": {
+          "description": "URL of the manufacturer's distributor list, or a document id",
+          "minLength": 3,
+          "title": "Reference",
+          "type": "string"
+        },
+        "document_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Document Sha256"
+        },
+        "valid_until": {
+          "format": "date",
+          "title": "Valid Until",
+          "type": "string"
+        }
+      },
+      "required": [
+        "manufacturer",
+        "proof_type",
+        "reference",
+        "valid_until"
+      ],
+      "title": "N5ChannelProof",
+      "type": "object"
+    },
+    "SigningKey": {
+      "additionalProperties": false,
+      "properties": {
+        "key_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{0,127}$",
+          "title": "Key Id",
+          "type": "string"
+        },
+        "algorithm": {
+          "enum": [
+            "ED25519",
+            "RSA_PSS_SHA256",
+            "RSA_PKCS1_SHA256"
+          ],
+          "title": "Algorithm",
+          "type": "string"
+        },
+        "public_key_pem": {
+          "minLength": 40,
+          "title": "Public Key Pem",
+          "type": "string"
+        }
+      },
+      "required": [
+        "key_id",
+        "algorithm",
+        "public_key_pem"
+      ],
+      "title": "SigningKey",
+      "type": "object"
+    },
+    "SiteRef": {
+      "additionalProperties": false,
+      "properties": {
+        "site_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{0,127}$",
+          "title": "Site Id",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 2,
+          "title": "Name",
+          "type": "string"
+        },
+        "country": {
+          "pattern": "^[A-Z]{2}$",
+          "title": "Country",
+          "type": "string"
+        },
+        "os_id": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Z]{2}[0-9A-Z]{8,20}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Open Supply Hub facility id",
+          "title": "Os Id"
+        },
+        "capabilities": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Capabilities",
+          "type": "array"
+        },
+        "osh_verified": {
+          "default": false,
+          "title": "Osh Verified",
+          "type": "boolean"
+        },
+        "osh_evidence": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Osh Evidence"
+        }
+      },
+      "required": [
+        "site_id",
+        "name",
+        "country"
+      ],
+      "title": "N5Site",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "supplier_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{0,127}$",
+      "title": "Supplier Id",
+      "type": "string"
+    },
+    "kind": {
+      "enum": [
+        "MANUFACTURER",
+        "DISTRIBUTOR",
+        "EMS",
+        "ODM"
+      ],
+      "title": "Kind",
+      "type": "string"
+    },
+    "legal_name": {
+      "minLength": 2,
+      "title": "Legal Name",
+      "type": "string"
+    },
+    "country": {
+      "pattern": "^[A-Z]{2}$",
+      "title": "Country",
+      "type": "string"
+    },
+    "registration_ids": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "description": "e.g. GSTIN, DUNS, LEI, company number",
+      "minProperties": 1,
+      "title": "Registration Ids",
+      "type": "object"
+    },
+    "manufacturer_names": {
+      "description": "MANUFACTURER: the brands it makes",
+      "items": {
+        "type": "string"
+      },
+      "title": "Manufacturer Names",
+      "type": "array"
+    },
+    "sites": {
+      "items": {
+        "$ref": "#/$defs/SiteRef"
+      },
+      "title": "Sites",
+      "type": "array"
+    },
+    "channel_proofs": {
+      "items": {
+        "$ref": "#/$defs/ChannelProof"
+      },
+      "title": "Channel Proofs",
+      "type": "array"
+    },
+    "signing_keys": {
+      "description": "keys for signed drop-zone quotes",
+      "items": {
+        "$ref": "#/$defs/SigningKey"
+      },
+      "title": "Signing Keys",
+      "type": "array"
+    }
+  },
+  "required": [
+    "supplier_id",
+    "kind",
+    "legal_name",
+    "country",
+    "registration_ids"
+  ],
+  "title": "N5SupplierRequest",
+  "type": "object"
+}

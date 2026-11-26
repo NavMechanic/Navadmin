@@ -1,0 +1,23 @@
+{
+  "solver": "Elmer",
+  "solver_version": "9.0",
+  "boundary_conditions": {
+    "convection_h_w_m2k": 10,
+    "radiation_emissivity": 0.85,
+    "mounting": "DIN rail, vertical, enclosed cabinet"
+  },
+  "ambient_c": 85,
+  "load_w": 120,
+  "max_temps_c": {
+    "Q1": 128.0,
+    "Q2": 126.5,
+    "L1": 110.0,
+    "U1": 105.0
+  },
+  "limits_c": {
+    "Q1": 150,
+    "Q2": 150,
+    "L1": 155,
+    "U1": 125
+  }
+}

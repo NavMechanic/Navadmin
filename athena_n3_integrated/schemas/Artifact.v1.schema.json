@@ -102,7 +102,8 @@
         "PRD",
         "DESIGN_RELEASE",
         "BOM_RELEASE",
-        "VERIFICATION_RELEASE"
+        "VERIFICATION_RELEASE",
+        "SOURCING_HANDOFF"
       ],
       "title": "Artifact Type",
       "type": "string"

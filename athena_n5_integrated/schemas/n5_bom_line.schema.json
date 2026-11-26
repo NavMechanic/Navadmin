@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n5_bom_line",
+  "additionalProperties": false,
+  "properties": {
+    "line": {
+      "minimum": 1,
+      "title": "Line",
+      "type": "integer"
+    },
+    "mpn": {
+      "description": "exact-MPN key: whitespace removed, upper-cased; suffixes stay significant",
+      "title": "Mpn",
+      "type": "string"
+    },
+    "mpn_as_released": {
+      "title": "Mpn As Released",
+      "type": "string"
+    },
+    "manufacturer": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Manufacturer"
+    },
+    "refdes": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Refdes",
+      "type": "array"
+    },
+    "qty_per_unit": {
+      "minimum": 1,
+      "title": "Qty Per Unit",
+      "type": "integer"
+    },
+    "uom": {
+      "const": "EA",
+      "default": "EA",
+      "title": "Uom",
+      "type": "string"
+    },
+    "q_required": {
+      "description": "qty_per_unit × build_quantity",
+      "minimum": 1,
+      "title": "Q Required",
+      "type": "integer"
+    },
+    "critical": {
+      "default": false,
+      "title": "Critical",
+      "type": "boolean"
+    },
+    "critical_reason": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Critical Reason"
+    },
+    "value": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Value"
+    },
+    "footprint": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Footprint"
+    },
+    "description": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Description"
+    }
+  },
+  "required": [
+    "line",
+    "mpn",
+    "mpn_as_released",
+    "refdes",
+    "qty_per_unit",
+    "q_required"
+  ],
+  "title": "N5BomLine",
+  "type": "object"
+}

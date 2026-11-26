@@ -1,0 +1,22 @@
+{
+  "_note": "FICTIONAL sample shaped like the public API response; not real procurement data.",
+  "elapsedTime": "0.1 secs",
+  "count": 1,
+  "data": [
+    {
+      "typeCode": "C",
+      "freqCode": "A",
+      "period": "2025",
+      "reporterCode": 276,
+      "reporterISO": "DEU",
+      "reporterDesc": "Germany",
+      "flowCode": "M",
+      "flowDesc": "Import",
+      "partnerCode": 0,
+      "partnerDesc": "World",
+      "cmdCode": "8504",
+      "cmdDesc": "Electrical transformers, static converters and inductors",
+      "primaryValue": 12345678901.0
+    }
+  ]
+}

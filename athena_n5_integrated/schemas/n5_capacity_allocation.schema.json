@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n5_capacity_allocation",
+  "additionalProperties": false,
+  "properties": {
+    "allocated_qty": {
+      "description": "finished units (EMS / ODM) or parts (factory order) reserved",
+      "minimum": 1,
+      "title": "Allocated Qty",
+      "type": "integer"
+    },
+    "period_start": {
+      "format": "date",
+      "title": "Period Start",
+      "type": "string"
+    },
+    "period_end": {
+      "format": "date",
+      "title": "Period End",
+      "type": "string"
+    },
+    "site_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Site Id"
+    },
+    "document_sha256": {
+      "anyOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Document Sha256"
+    }
+  },
+  "required": [
+    "allocated_qty",
+    "period_start",
+    "period_end"
+  ],
+  "title": "N5CapacityAllocation",
+  "type": "object"
+}

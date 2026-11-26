@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n5_channel_proof",
+  "additionalProperties": false,
+  "properties": {
+    "manufacturer": {
+      "minLength": 2,
+      "title": "Manufacturer",
+      "type": "string"
+    },
+    "proof_type": {
+      "enum": [
+        "MANUFACTURER_AUTHORIZED_LIST",
+        "FRANCHISE_AGREEMENT",
+        "MANUFACTURER_LETTER"
+      ],
+      "title": "Proof Type",
+      "type": "string"
+    },
+    "reference": {
+      "description": "URL of the manufacturer's distributor list, or a document id",
+      "minLength": 3,
+      "title": "Reference",
+      "type": "string"
+    },
+    "document_sha256": {
+      "anyOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Document Sha256"
+    },
+    "valid_until": {
+      "format": "date",
+      "title": "Valid Until",
+      "type": "string"
+    }
+  },
+  "required": [
+    "manufacturer",
+    "proof_type",
+    "reference",
+    "valid_until"
+  ],
+  "title": "N5ChannelProof",
+  "type": "object"
+}

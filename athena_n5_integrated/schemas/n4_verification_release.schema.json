@@ -1,0 +1,191 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n4_verification_release",
+  "$defs": {
+    "N4ReleasePackage": {
+      "additionalProperties": false,
+      "properties": {
+        "target": {
+          "enum": [
+            "N6",
+            "N7",
+            "N8"
+          ],
+          "title": "Target",
+          "type": "string"
+        },
+        "artifact_id": {
+          "title": "Artifact Id",
+          "type": "string"
+        },
+        "revision": {
+          "title": "Revision",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "RELEASED",
+            "REFUSED"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "n0_decision": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "N0 Decision"
+        },
+        "n0_decision_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "N0 Decision Id"
+        },
+        "violated_codes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Violated Codes",
+          "type": "array"
+        },
+        "manifest_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Manifest Id"
+        },
+        "approval_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Approval Id"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "target",
+        "artifact_id",
+        "revision",
+        "status",
+        "reason"
+      ],
+      "title": "N4ReleasePackage",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "N4VerificationRelease.v1",
+      "default": "N4VerificationRelease.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "release_id": {
+      "title": "Release Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "plan_id": {
+      "title": "Plan Id",
+      "type": "string"
+    },
+    "assessment_id": {
+      "title": "Assessment Id",
+      "type": "string"
+    },
+    "review_id": {
+      "title": "Review Id",
+      "type": "string"
+    },
+    "design_revision": {
+      "title": "Design Revision",
+      "type": "string"
+    },
+    "evidence_sha256": {
+      "title": "Evidence Sha256",
+      "type": "string"
+    },
+    "payload_release_id": {
+      "title": "Payload Release Id",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "RELEASED",
+        "PARTIAL",
+        "REFUSED"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "packages": {
+      "items": {
+        "$ref": "#/$defs/N4ReleasePackage"
+      },
+      "title": "Packages",
+      "type": "array"
+    },
+    "released_by": {
+      "title": "Released By",
+      "type": "string"
+    },
+    "released_at": {
+      "format": "date-time",
+      "title": "Released At",
+      "type": "string"
+    },
+    "approval_scope": {
+      "default": "N4 verification release means the listed requirements were verified, for the stated design revision, by the recorded and calibrated evidence. It feeds the next controlled lifecycle step (N8 genealogy and monitoring, N6 / N7 planning). It is NOT product safety certification or a regulatory approval, except where an accredited laboratory certificate in the package states so for its own scope.",
+      "title": "Approval Scope",
+      "type": "string"
+    }
+  },
+  "required": [
+    "release_id",
+    "tenant_id",
+    "plan_id",
+    "assessment_id",
+    "review_id",
+    "design_revision",
+    "evidence_sha256",
+    "payload_release_id",
+    "status",
+    "packages",
+    "released_by",
+    "released_at"
+  ],
+  "title": "N4VerificationRelease",
+  "type": "object"
+}

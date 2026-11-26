@@ -35,7 +35,7 @@ from .rules import (VALIDATOR_VERSION, Findings, allowed_destinations, canonical
                     consistency_checks, decide, design_checks, derive_values, evaluate_rights, evidence_checks, explain,
                     freshness_checks, hard_policy_checks, market_checks, missing_specs, normalize_requirements,
                     normalize_revision, physics_checks, provenance_checks, quality_score, revision_order,
-                    schema_checks, sha256_hex, verification_checks)
+                    schema_checks, sha256_hex, sourcing_checks, verification_checks)
 from .security import Principal
 from .storage import ObjectStore, StorageError, make_uri, parse_uri
 
@@ -333,6 +333,8 @@ class N0Pipeline:
         market_checks(a.artifact_type, a.payload, a.synthetic, f)
         design_checks(a.artifact_type, a.payload, f)
         verification_checks(a, f)
+        sourcing_checks(a, f, ctx.now, self._pinned_payload(repo, a, "bom_ref"),
+                        lambda sid: (src.approval_status if (src := repo.get_source(a.tenant_id, sid)) else None))
         f.ran("duplicate_content")
         dupes = repo.same_content_elsewhere(a.tenant_id, a.artifact_id, ctx.payload_sha256)
         if dupes:
@@ -340,6 +342,18 @@ class N0Pipeline:
         ctx.missing = sorted(set(ctx.missing) | set(missing_required))
         for m in ctx.missing:
             f.add("MISSING_CRITICAL_FIELD", f"{m} is required", m)
+
+    @staticmethod
+    def _pinned_payload(repo: Repository, a: Artifact, key: str) -> Optional[dict]:
+        """Payload of the upstream ``ID@REV`` named by ``payload[key]``, if it is pinned in
+        ``source_artifact_ids`` and stored in this tenant."""
+        ref = a.payload.get(key)
+        if not isinstance(ref, str) or "@" not in ref or ref not in a.source_artifact_ids:
+            return None
+        uid, raw = ref.split("@", 1)
+        row = repo.get_artifact(a.tenant_id, uid, normalize_revision(raw) or raw)
+        payload = (row.canonical or {}).get("payload") if row is not None else None
+        return payload if isinstance(payload, dict) else None
 
     # ------------------------------------------------------------------ N0.5
     def hard_policy(self, ctx: _Ctx) -> None:

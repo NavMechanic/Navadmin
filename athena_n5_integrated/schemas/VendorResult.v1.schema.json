@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:VendorResult.v1",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "VendorResult.v1",
+      "default": "VendorResult.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "work_package_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+      "title": "Work Package Id",
+      "type": "string"
+    },
+    "native_file_uris": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Native File Uris",
+      "type": "array"
+    },
+    "result_manifest": {
+      "additionalProperties": true,
+      "title": "Result Manifest",
+      "type": "object"
+    },
+    "checksum_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Checksum Sha256",
+      "type": "string"
+    },
+    "tool_version": {
+      "minLength": 1,
+      "title": "Tool Version",
+      "type": "string"
+    },
+    "warnings": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Warnings",
+      "type": "array"
+    }
+  },
+  "required": [
+    "work_package_id",
+    "native_file_uris",
+    "result_manifest",
+    "checksum_sha256",
+    "tool_version"
+  ],
+  "title": "VendorResult.v1",
+  "type": "object"
+}

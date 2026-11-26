@@ -1,0 +1,51 @@
+{
+  "_note": "FICTIONAL sample shaped like the public API response; not real procurement data.",
+  "totalNoticeCount": 2,
+  "notices": [
+    {
+      "publication-number": "000101-2026",
+      "notice-title": {
+        "eng": "Supply of DIN-rail power supply units"
+      },
+      "buyer-name": {
+        "deu": [
+          "Stadtwerke Beispielstadt GmbH"
+        ]
+      },
+      "buyer-country": [
+        "DEU"
+      ],
+      "notice-type": "cn-standard",
+      "publication-date": "2026-11-14+01:00",
+      "classification-cpv": [
+        "31710000"
+      ],
+      "deadline-receipt-tender-date-lot": [
+        "2026-12-15T12:00:00+01:00"
+      ],
+      "estimated-value-glo": 1250000,
+      "estimated-value-cur-glo": "EUR"
+    },
+    {
+      "publication-number": "000202-2026",
+      "notice-title": {
+        "eng": "Award: rectifier and battery charger maintenance"
+      },
+      "buyer-name": {
+        "deu": [
+          "Stadtwerke Beispielstadt GmbH"
+        ]
+      },
+      "buyer-country": [
+        "DEU"
+      ],
+      "notice-type": "can-standard",
+      "publication-date": "2026-10-01+02:00",
+      "classification-cpv": [
+        "31711000"
+      ],
+      "total-value": 400000,
+      "total-value-cur": "EUR"
+    }
+  ]
+}

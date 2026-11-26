@@ -76,6 +76,31 @@ cd athena_n4_integrated && pip install -r requirements.txt && python -m pytest -
 python examples/run_n4_demo.py
 ```
 
+## ATHENA N5 — Procurement, Supplier Intelligence & BOM Optimization Engine
+
+`athena_n5_integrated/` mounts N1–N4, N5 and minimal N6 / N7 / N8 receivers on the N0 gateway. It
+works in five steps:
+
+1. **BOM lock.** N5 locks the N3-approved engineering BOM as exact-MPN lines.
+2. **Supplier qualification.** It qualifies distributors, manufacturers and EMS / ODM partners:
+   identity, Open Supply Hub sites, authorized-channel proof and a reviewer's attestation.
+3. **Quotes.** It takes manual and signed EMS quotations, plus on-demand DigiKey / Mouser / Nexar
+   lookups. The lookups are off by default, project-scoped and cached in memory only.
+4. **Rejection before pricing.** Every offer meets a deterministic hard-rejection matrix *before* any
+   costing, so a cheaper quotation can never override a BLOCK or REWORK.
+5. **Costing.** Eligible offers are costed exactly in Decimal:
+   Q_order = ⌈max(Q_required, MOQ) / pack⌉ × pack, at the applicable price break.
+
+A separate procurement approver signs off the exact report and quote hashes, and N5 then releases
+N0-recomputed **indicative material quote** drafts to N6 and N7. Revoking source rights in N0, or a
+new BOM / PRD revision, blocks the downstream drafts. Rebuilt from the specification. See
+[athena_n5_integrated/README.md](athena_n5_integrated/README.md).
+
+```bash
+cd athena_n5_integrated && pip install -r requirements.txt && python -m pytest -q
+python examples/run_n5_demo.py      # 20 × ₹6.50 + ₹12 = ₹142, 10 × ₹9 + ₹12 = ₹102 → ₹244 indicative material quote
+```
+
 ## ATHENA data acquisition pipeline
 
 `data_pipeline/` fetches, verifies and formats the 75 N0–N8 sources (SRC-001..SRC-075). It uses

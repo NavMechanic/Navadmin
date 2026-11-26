@@ -19,7 +19,7 @@ import math
 import re
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from decimal import Decimal, InvalidOperation
+from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 from typing import Any, Callable, Iterable, Optional
 
 from jsonschema import Draft202012Validator
@@ -128,6 +128,18 @@ _CATALOG = [
     ("N0-VER-014", "RELIABILITY_OVERCLAIM", "BLOCK", "CLAIMS", "N0.5", "reliability figure not labelled research-only, or offered as a claim"),
     ("N0-VER-015", "DESIGN_REVISION_UNLOCKED", "BLOCK", "REVISION_CONTROL", "N0.5", "design references are not the pinned upstream artifacts"),
     ("N0-VER-016", "INSPECTION_NOT_ACCEPTED", "BLOCK", "VERIFICATION", "N0.5", "attribute inspection with confirmed defects, unadjudicated model calls or no human acceptance"),
+    # sourcing handoffs (N5 → N6 / N7): every quantity and cost is recomputed here
+    ("N0-PRC-001", "ORDER_QUANTITY_MISMATCH", "BLOCK", "SOURCING", "N0.5", "q_required or q_order disagrees with ceil(max(Q_required, MOQ) / pack) × pack"),
+    ("N0-PRC-002", "PRICE_BREAK_MISMATCH", "BLOCK", "SOURCING", "N0.5", "unit price is not the price break applicable at q_order"),
+    ("N0-PRC-003", "EXTENDED_COST_MISMATCH", "BLOCK", "SOURCING", "N0.5", "extended cost, FX conversion or indicative total disagrees with N0's recomputation"),
+    ("N0-PRC-004", "QUOTE_EXPIRED", "BLOCK", "SOURCING", "N0.5", "a selected quotation has expired"),
+    ("N0-PRC-005", "MPN_NOT_EXACT", "BLOCK", "SOURCING", "N0.5", "quoted MPN or quantity differs from the approved engineering BOM line"),
+    ("N0-PRC-006", "BOM_REVISION_UNLOCKED", "BLOCK", "REVISION_CONTROL", "N0.5", "the BOM reference is not the pinned, current N3 BOM_RELEASE revision"),
+    ("N0-PRC-007", "INDICATIVE_SCOPE_MISSING", "BLOCK", "CLAIMS", "N0.5", "material total not labelled as an indicative material quote with its exclusions"),
+    ("N0-PRC-008", "SOURCE_RIGHTS_REVOKED", "BLOCK", "RIGHTS", "N0.5", "a quotation source is no longer APPROVED"),
+    ("N0-PRC-009", "SUPPLIER_NOT_APPROVED", "BLOCK", "SOURCING", "N0.5", "a selected supplier lacks an APPROVED qualification"),
+    ("N0-PRC-010", "FX_ASSUMPTION_MISSING", "BLOCK", "SOURCING", "N0.5", "a foreign-currency line without a matching FX assumption"),
+    ("N0-PRC-011", "LINE_UNSOURCED", "BLOCK", "SOURCING", "N0.5", "a BOM line has no sourced offer in the handoff"),
     # N0.5 hard policy
     ("N0-SYN-001", "SYNTHETIC_AS_REAL", "BLOCK", "SYNTHETIC", "N0.5", "synthetic data presented as real"),
     ("N0-SYN-002", "SYNTHETIC_STAGE_GATE", "BLOCK", "SYNTHETIC", "N0.5", "synthetic data beyond CONCEPT stage"),
@@ -143,7 +155,8 @@ RULES: dict[str, RuleSpec] = {code: RuleSpec(rid, code, sev, cat, stage, desc)
 assert len(RULES) == len(_CATALOG)
 HARD_POLICY_CATEGORIES = {"AUTHORIZATION", "TENANT_ISOLATION", "RIGHTS", "IP_LICENSING", "CONFIDENTIALITY",
                           "INTEGRITY", "REVISION_CONTROL", "SYNTHETIC", "CALIBRATION", "SAFETY", "STAGE_GATE",
-                          "SAM_INTEGRITY", "DESIGN_INTEGRITY", "METROLOGY", "VERIFICATION", "CLAIMS"}
+                          "SAM_INTEGRITY", "DESIGN_INTEGRITY", "METROLOGY", "VERIFICATION", "CLAIMS",
+                          "SOURCING"}
 _DIGEST = hashlib.sha256(json.dumps(_CATALOG).encode()).hexdigest()[:12]
 VALIDATOR_VERSION = f"n0-validator/1.0.0+rules.{_DIGEST}"
 
@@ -528,7 +541,8 @@ _SIGNATURES = [("RFQ", {"rfq_id", "requirements"}), ("DATASHEET", {"part_number"
                ("BUYER_RECORD", {"batch_id", "records"}), ("COMMERCIAL_SHORTLIST", {"report_id", "entries"}),
                ("SAM_EVIDENCE", {"report_id", "verified_items"}), ("PRD", {"prd_id", "design_constraints"}),
                ("DESIGN_RELEASE", {"release_id", "scope", "files"}), ("BOM_RELEASE", {"release_id", "items"}),
-               ("VERIFICATION_RELEASE", {"release_id", "verification_status", "traceability"})]
+               ("VERIFICATION_RELEASE", {"release_id", "verification_status", "traceability"}),
+               ("SOURCING_HANDOFF", {"handoff_id", "lines", "indicative_scope"})]
 
 
 def classify(payload: dict) -> Optional[str]:
@@ -813,6 +827,158 @@ def verification_checks(artifact: Artifact, f: Findings) -> None:
                                           "include design_revision", "payload.design_refs")
 
 
+# ----------------------------------------------------------------------------------------------
+# sourcing math, shared by N5 (which computes) and N0 (which recomputes)
+# ----------------------------------------------------------------------------------------------
+UNIT_COST_QUANTUM = Decimal("0.0001")
+RIGHTS_DEPENDENCY_FIELDS = {"SOURCING_HANDOFF": "quote_source_ids"}
+
+
+def normalize_mpn(mpn: Any) -> str:
+    """Exact-MPN comparison key: whitespace removed and upper-cased, nothing else. Packaging / grade
+    suffixes stay significant, so ``-TR`` or ``/NOPB`` variants are different parts."""
+    return re.sub(r"\s+", "", str(mpn or "")).upper()
+
+
+def order_quantity(q_required: int, moq: int, pack_multiple: int) -> int:
+    """Q_order = ceil(max(Q_required, MOQ) / pack multiple) × pack multiple, in exact integers."""
+    if q_required < 1 or moq < 1 or pack_multiple < 1:
+        raise ValueError("Q_required, MOQ and the pack multiple must all be ≥ 1")
+    base = max(q_required, moq)
+    return -(-base // pack_multiple) * pack_multiple
+
+
+def applicable_break(breaks: Iterable[tuple[int, Decimal]], q_order: int) -> Optional[tuple[int, Decimal]]:
+    """The price break with the largest minimum quantity that q_order reaches (None if none does)."""
+    reached = [b for b in breaks if b[0] <= q_order]
+    return max(reached, key=lambda b: b[0]) if reached else None
+
+
+def extended_cost(q_order: int, unit_price: Decimal, charges: Iterable[Decimal] = ()) -> Decimal:
+    return Decimal(q_order) * unit_price + sum(charges, Decimal(0))
+
+
+def unit_cost(total: Decimal, build_quantity: int) -> Decimal:
+    return (total / Decimal(build_quantity)).quantize(UNIT_COST_QUANTUM, rounding=ROUND_HALF_UP)
+
+
+def rights_dependencies(artifact_type: str, payload: Any) -> list[str]:
+    """Sources (besides the artifact's own) whose rights a release depends on."""
+    key = RIGHTS_DEPENDENCY_FIELDS.get(artifact_type)
+    vals = payload.get(key) if key and isinstance(payload, dict) else None
+    return [str(v) for v in vals] if isinstance(vals, list) else []
+
+
+def sourcing_checks(artifact: Artifact, f: Findings, now: datetime, bom_payload: Optional[dict],
+                    source_status: Callable[[str], Optional[str]]) -> None:
+    """N0 release policy for N5 sourcing handoffs: quantities, price breaks, costs and the total are
+    recomputed with exact Decimal arithmetic; MPNs and quantities are compared with the pinned N3 BOM."""
+    if artifact.artifact_type != "SOURCING_HANDOFF":
+        return
+    from .models import EXCLUDED_COST_CATEGORIES, INDICATIVE_MATERIAL_LABEL
+    f.ran("sourcing_policy")
+    p = artifact.payload
+    build = p.get("build_quantity")
+    build = build if isinstance(build, int) and build >= 1 else None
+    base_ccy = p.get("base_currency")
+    fx = {x.get("fx_id"): x for x in p.get("fx_assumptions") or [] if isinstance(x, dict)}
+    total = Decimal(0)
+    sourced: dict[int, dict] = {}
+    for i, ln in enumerate(p.get("lines") or []):
+        if not isinstance(ln, dict):
+            continue
+        where = f"payload.lines[{i}]"
+        sourced[ln.get("line")] = ln
+        try:
+            qpu, q_req, q_order = int(ln["qty_per_unit"]), int(ln["q_required"]), int(ln["q_order"])
+            moq, pack = int(ln["moq"]), int(ln["pack_multiple"])
+            expect = order_quantity(q_req, moq, pack)
+        except (KeyError, TypeError, ValueError):
+            f.add("ORDER_QUANTITY_MISMATCH", f"line {ln.get('line')}: quantities are missing or invalid", where)
+            continue
+        if build is not None and q_req != qpu * build:
+            f.add("ORDER_QUANTITY_MISMATCH", f"line {ln.get('line')}: q_required {q_req} ≠ {qpu} × {build}", where)
+        if q_order != expect:
+            f.add("ORDER_QUANTITY_MISMATCH", f"line {ln.get('line')}: q_order {q_order}, recomputed {expect} "
+                                             f"(Q_required {q_req}, MOQ {moq}, pack {pack})", where)
+        breaks = [(int(b.get("min_qty")), _dec(b.get("unit_price"))) for b in ln.get("price_breaks") or []
+                  if isinstance(b, dict) and _dec(b.get("unit_price")) is not None]
+        brk = applicable_break(breaks, expect)
+        price = _dec(ln.get("unit_price"))
+        if brk is None or price is None or price != brk[1]:
+            f.add("PRICE_BREAK_MISMATCH", f"line {ln.get('line')}: unit price {ln.get('unit_price')}, applicable "
+                                          f"break at {expect} is {brk[1] if brk else 'none'}", where)
+        charges = [_dec(c.get("amount")) or Decimal(0) for c in ln.get("line_charges") or [] if isinstance(c, dict)]
+        ext = extended_cost(expect, brk[1], charges) if brk else None
+        if ext is None or _dec(ln.get("extended_cost")) != ext:
+            f.add("EXTENDED_COST_MISMATCH", f"line {ln.get('line')}: extended cost {ln.get('extended_cost')}, "
+                                            f"recomputed {ext}", where)
+        ccy = ln.get("currency")
+        if ccy == base_ccy:
+            rate = Decimal(1)
+            if ln.get("fx_id") is not None:
+                f.add("FX_ASSUMPTION_MISSING", f"line {ln.get('line')} is in {ccy}; no FX assumption applies", where)
+        else:
+            a = fx.get(ln.get("fx_id"))
+            rate = _dec(a.get("rate")) if a and a.get("from_currency") == ccy and a.get("to_currency") == base_ccy                 else None
+            if rate is None or _dec(ln.get("fx_rate")) != rate:
+                f.add("FX_ASSUMPTION_MISSING", f"line {ln.get('line')}: {ccy} → {base_ccy} has no matching FX "
+                                               "assumption", where)
+        base = ext * rate if ext is not None and rate is not None else None
+        if base is None or _dec(ln.get("extended_cost_base")) != base:
+            f.add("EXTENDED_COST_MISMATCH", f"line {ln.get('line')}: base-currency cost {ln.get('extended_cost_base')}"
+                                            f", recomputed {base}", where)
+        total += base if base is not None else (_dec(ln.get("extended_cost_base")) or Decimal(0))
+        vu = _as_dt(ln.get("valid_until"))
+        if vu is None or vu.tzinfo is None or vu <= now:
+            f.add("QUOTE_EXPIRED", f"line {ln.get('line')}: quote {ln.get('quote_id')} valid until "
+                                   f"{ln.get('valid_until')}", where)
+        if normalize_mpn(ln.get("quoted_mpn")) != normalize_mpn(ln.get("mpn")):
+            f.add("MPN_NOT_EXACT", f"line {ln.get('line')}: quoted {ln.get('quoted_mpn')!r}, BOM {ln.get('mpn')!r}; "
+                                   "alternates need an N3 engineering change", where)
+        if ln.get("supplier_qualification") != "APPROVED":
+            f.add("SUPPLIER_NOT_APPROVED", f"line {ln.get('line')}: supplier {ln.get('supplier_id')} is "
+                                           f"{ln.get('supplier_qualification')}", where)
+    if build is not None and (_dec(p.get("indicative_total")) != total
+                              or _dec(p.get("indicative_unit_cost")) != unit_cost(total, build)):
+        f.add("EXTENDED_COST_MISMATCH", f"indicative total {p.get('indicative_total')} / unit "
+                                        f"{p.get('indicative_unit_cost')}, recomputed {total} / "
+                                        f"{unit_cost(total, build)}", "payload.indicative_total")
+    if p.get("indicative_scope") != INDICATIVE_MATERIAL_LABEL or \
+            not set(EXCLUDED_COST_CATEGORIES) <= set(p.get("excluded_cost_categories") or []):
+        f.add("INDICATIVE_SCOPE_MISSING", "the total must carry the indicative-material label and every excluded "
+                                          f"category {list(EXCLUDED_COST_CATEGORIES)}", "payload.indicative_scope")
+    for sid in p.get("quote_source_ids") or []:
+        status = source_status(str(sid))
+        if status != "APPROVED":
+            f.add("SOURCE_RIGHTS_REVOKED", f"quotation source {sid} is {status or 'not registered'}",
+                  "payload.quote_source_ids")
+    if not p.get("approved_by") or p.get("approved_by") in (p.get("submitters") or []):
+        f.add("SEPARATION_OF_DUTIES", "the approver must be a separate person from every submitter",
+              "payload.approved_by")
+    ref = p.get("bom_ref")
+    if not isinstance(ref, str) or ref not in artifact.source_artifact_ids or bom_payload is None:
+        f.add("BOM_REVISION_UNLOCKED", f"bom_ref {ref!r} must be a pinned, resolvable BOM_RELEASE in "
+                                       "source_artifact_ids", "payload.bom_ref")
+        return
+    if bom_payload.get("design_revision") != p.get("design_revision"):
+        f.add("BOM_REVISION_UNLOCKED", f"BOM {ref} is design revision {bom_payload.get('design_revision')}, the "
+                                       f"handoff says {p.get('design_revision')}", "payload.design_revision")
+    for item in bom_payload.get("items") or []:
+        if not isinstance(item, dict) or item.get("dnp"):
+            continue
+        ln = sourced.get(item.get("line"))
+        if ln is None:
+            f.add("LINE_UNSOURCED", f"BOM line {item.get('line')} ({item.get('mpn')}) is not sourced", "payload.lines")
+        elif normalize_mpn(ln.get("mpn")) != normalize_mpn(item.get("mpn")) or \
+                ln.get("qty_per_unit") != item.get("qty"):
+            f.add("MPN_NOT_EXACT", f"line {item.get('line')}: handoff has {ln.get('mpn')} × {ln.get('qty_per_unit')}, "
+                                   f"BOM has {item.get('mpn')} × {item.get('qty')}", "payload.lines")
+    bom_lines = {i.get("line") for i in bom_payload.get("items") or [] if isinstance(i, dict) and not i.get("dnp")}
+    for extra in sorted(set(sourced) - bom_lines, key=str):
+        f.add("MPN_NOT_EXACT", f"handoff line {extra} is not a sourcing line of BOM {ref}", "payload.lines")
+
+
 def _num(v: Any) -> Optional[float]:
     d = _dec(v)
     return float(d) if d is not None else None
@@ -922,6 +1088,7 @@ TYPE_DESTINATIONS = {
     "FINANCE_RECORD": ["N7"], "TELEMETRY": ["N4", "N8"], "MODEL_OUTPUT": ["N2", "N3"],
     "MARKET_BATCH": ["N1"], "BUYER_RECORD": ["N1"], "COMMERCIAL_SHORTLIST": ["N6"], "SAM_EVIDENCE": ["N7"],
     "PRD": ["N3"], "DESIGN_RELEASE": ["N4"], "BOM_RELEASE": ["N5"], "VERIFICATION_RELEASE": ["N6", "N7", "N8"],
+    "SOURCING_HANDOFF": ["N6", "N7"],
 }
 PURPOSE_DESTINATIONS = {
     "RFQ_ANALYSIS": ["N1", "N2", "N6"], "PRODUCT_DEFINITION": ["N2", "N3"], "DESIGN_ENGINEERING": ["N3", "N4", "N5"],

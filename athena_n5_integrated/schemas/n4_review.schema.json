@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n4_review",
+  "additionalProperties": false,
+  "properties": {
+    "review_id": {
+      "title": "Review Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "assessment_id": {
+      "title": "Assessment Id",
+      "type": "string"
+    },
+    "plan_id": {
+      "title": "Plan Id",
+      "type": "string"
+    },
+    "reviewer": {
+      "title": "Reviewer",
+      "type": "string"
+    },
+    "reviewer_role": {
+      "title": "Reviewer Role",
+      "type": "string"
+    },
+    "decision": {
+      "enum": [
+        "APPROVED",
+        "REJECTED"
+      ],
+      "title": "Decision",
+      "type": "string"
+    },
+    "reason": {
+      "title": "Reason",
+      "type": "string"
+    },
+    "evidence_sha256": {
+      "title": "Evidence Sha256",
+      "type": "string"
+    },
+    "design_revision": {
+      "title": "Design Revision",
+      "type": "string"
+    },
+    "approval_event_id": {
+      "title": "Approval Event Id",
+      "type": "string"
+    },
+    "reviewed_at": {
+      "format": "date-time",
+      "title": "Reviewed At",
+      "type": "string"
+    },
+    "approval_scope": {
+      "default": "N4 verification release means the listed requirements were verified, for the stated design revision, by the recorded and calibrated evidence. It feeds the next controlled lifecycle step (N8 genealogy and monitoring, N6 / N7 planning). It is NOT product safety certification or a regulatory approval, except where an accredited laboratory certificate in the package states so for its own scope.",
+      "title": "Approval Scope",
+      "type": "string"
+    }
+  },
+  "required": [
+    "review_id",
+    "tenant_id",
+    "assessment_id",
+    "plan_id",
+    "reviewer",
+    "reviewer_role",
+    "decision",
+    "reason",
+    "evidence_sha256",
+    "design_revision",
+    "approval_event_id",
+    "reviewed_at"
+  ],
+  "title": "N4Review",
+  "type": "object"
+}

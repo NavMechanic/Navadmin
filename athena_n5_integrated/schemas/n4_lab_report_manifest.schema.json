@@ -1,0 +1,240 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n4_lab_report_manifest",
+  "$defs": {
+    "LabBlock": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "accreditation_body": {
+          "title": "Accreditation Body",
+          "type": "string"
+        },
+        "accreditation_number": {
+          "title": "Accreditation Number",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "accreditation_body",
+        "accreditation_number"
+      ],
+      "title": "LabBlock",
+      "type": "object"
+    },
+    "LabResult": {
+      "additionalProperties": false,
+      "properties": {
+        "test_id": {
+          "title": "Test Id",
+          "type": "string"
+        },
+        "characteristic": {
+          "pattern": "^[a-z][a-z0-9_]{0,63}$",
+          "title": "Characteristic",
+          "type": "string"
+        },
+        "unit_serial": {
+          "title": "Unit Serial",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Value"
+        },
+        "unit": {
+          "title": "Unit",
+          "type": "string"
+        },
+        "expanded_uncertainty": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Expanded Uncertainty"
+        },
+        "k": {
+          "default": 2.0,
+          "exclusiveMinimum": 0,
+          "title": "K",
+          "type": "number"
+        },
+        "instrument_id": {
+          "title": "Instrument Id",
+          "type": "string"
+        },
+        "calibration_id": {
+          "title": "Calibration Id",
+          "type": "string"
+        },
+        "calibration_due": {
+          "format": "date-time",
+          "title": "Calibration Due",
+          "type": "string"
+        },
+        "captured_at": {
+          "format": "date-time",
+          "title": "Captured At",
+          "type": "string"
+        },
+        "method_ref": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MethodRef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "standard_clause": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Standard Clause"
+        }
+      },
+      "required": [
+        "test_id",
+        "characteristic",
+        "unit_serial",
+        "value",
+        "unit",
+        "expanded_uncertainty",
+        "instrument_id",
+        "calibration_id",
+        "calibration_due",
+        "captured_at"
+      ],
+      "title": "LabResult",
+      "type": "object"
+    },
+    "MethodRef": {
+      "additionalProperties": false,
+      "properties": {
+        "method_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+          "title": "Method Id",
+          "type": "string"
+        },
+        "revision": {
+          "maxLength": 16,
+          "minLength": 1,
+          "title": "Revision",
+          "type": "string"
+        }
+      },
+      "required": [
+        "method_id",
+        "revision"
+      ],
+      "title": "MethodRef",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": "athena-lab-report/1",
+      "default": "athena-lab-report/1",
+      "title": "Format",
+      "type": "string"
+    },
+    "lab": {
+      "$ref": "#/$defs/LabBlock"
+    },
+    "certificate_number": {
+      "minLength": 3,
+      "title": "Certificate Number",
+      "type": "string"
+    },
+    "report_revision": {
+      "default": "1",
+      "title": "Report Revision",
+      "type": "string"
+    },
+    "issued_at": {
+      "format": "date-time",
+      "title": "Issued At",
+      "type": "string"
+    },
+    "product": {
+      "title": "Product",
+      "type": "string"
+    },
+    "pcb_revision": {
+      "maxLength": 16,
+      "minLength": 1,
+      "title": "Pcb Revision",
+      "type": "string"
+    },
+    "design_artifact": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Design Artifact"
+    },
+    "report_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Report Sha256",
+      "type": "string"
+    },
+    "results": {
+      "items": {
+        "$ref": "#/$defs/LabResult"
+      },
+      "minItems": 1,
+      "title": "Results",
+      "type": "array"
+    },
+    "claimed_provenance": {
+      "default": "PHYSICAL",
+      "enum": [
+        "PHYSICAL",
+        "SYNTHETIC"
+      ],
+      "title": "Claimed Provenance",
+      "type": "string"
+    }
+  },
+  "required": [
+    "lab",
+    "certificate_number",
+    "issued_at",
+    "product",
+    "pcb_revision",
+    "report_sha256",
+    "results"
+  ],
+  "title": "N4LabReportManifest",
+  "type": "object"
+}

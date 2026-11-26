@@ -1,0 +1,258 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n4_measurement",
+  "$defs": {
+    "MethodRef": {
+      "additionalProperties": false,
+      "properties": {
+        "method_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+          "title": "Method Id",
+          "type": "string"
+        },
+        "revision": {
+          "maxLength": 16,
+          "minLength": 1,
+          "title": "Revision",
+          "type": "string"
+        }
+      },
+      "required": [
+        "method_id",
+        "revision"
+      ],
+      "title": "MethodRef",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "measurement_id": {
+      "title": "Measurement Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "plan_id": {
+      "title": "Plan Id",
+      "type": "string"
+    },
+    "evidence_id": {
+      "title": "Evidence Id",
+      "type": "string"
+    },
+    "test_id": {
+      "title": "Test Id",
+      "type": "string"
+    },
+    "characteristic": {
+      "title": "Characteristic",
+      "type": "string"
+    },
+    "unit_serial": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Unit Serial"
+    },
+    "value": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "title": "Value"
+    },
+    "unit": {
+      "title": "Unit",
+      "type": "string"
+    },
+    "expanded_uncertainty": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Expanded Uncertainty"
+    },
+    "coverage_factor": {
+      "default": 2.0,
+      "title": "Coverage Factor",
+      "type": "number"
+    },
+    "instrument_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Instrument Id"
+    },
+    "instrument_serial": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Instrument Serial"
+    },
+    "instrument_firmware": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Instrument Firmware"
+    },
+    "calibration_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Calibration Id"
+    },
+    "calibration_due": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "ACCREDITED_LAB: as stated by the lab",
+      "title": "Calibration Due"
+    },
+    "calibration_source": {
+      "default": "N4_REGISTER",
+      "enum": [
+        "N4_REGISTER",
+        "ACCREDITED_LAB",
+        "NOT_APPLICABLE"
+      ],
+      "title": "Calibration Source",
+      "type": "string"
+    },
+    "captured_at": {
+      "format": "date-time",
+      "title": "Captured At",
+      "type": "string"
+    },
+    "provenance": {
+      "enum": [
+        "PHYSICAL_ATE",
+        "PHYSICAL_BENCH",
+        "PHYSICAL_INSPECTION",
+        "ACCREDITED_LAB",
+        "SIMULATION",
+        "SYNTHETIC",
+        "MOCK_FIXTURE"
+      ],
+      "title": "Provenance",
+      "type": "string"
+    },
+    "method": {
+      "enum": [
+        "SIM",
+        "BENCH_ATE",
+        "ACCREDITED_LAB",
+        "INSPECTION"
+      ],
+      "title": "Method",
+      "type": "string"
+    },
+    "method_ref": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/MethodRef"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "operator": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Operator"
+    },
+    "raw_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Raw Sha256",
+      "type": "string"
+    },
+    "source_command": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Source Command"
+    }
+  },
+  "required": [
+    "measurement_id",
+    "tenant_id",
+    "plan_id",
+    "evidence_id",
+    "test_id",
+    "characteristic",
+    "value",
+    "unit",
+    "captured_at",
+    "provenance",
+    "method",
+    "raw_sha256"
+  ],
+  "title": "N4Measurement",
+  "type": "object"
+}

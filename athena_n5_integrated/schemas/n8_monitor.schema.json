@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n8_monitor",
+  "additionalProperties": false,
+  "properties": {
+    "monitor_id": {
+      "title": "Monitor Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "characteristic": {
+      "title": "Characteristic",
+      "type": "string"
+    },
+    "unit": {
+      "title": "Unit",
+      "type": "string"
+    },
+    "lower_limit": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Lower Limit"
+    },
+    "upper_limit": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Upper Limit"
+    },
+    "guard_band": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "expanded uncertainty used at verification",
+      "title": "Guard Band"
+    },
+    "source_test_id": {
+      "title": "Source Test Id",
+      "type": "string"
+    },
+    "design_revision": {
+      "title": "Design Revision",
+      "type": "string"
+    },
+    "verification_artifact": {
+      "title": "Verification Artifact",
+      "type": "string"
+    },
+    "reaction_plan": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Reaction Plan"
+    }
+  },
+  "required": [
+    "monitor_id",
+    "tenant_id",
+    "characteristic",
+    "unit",
+    "source_test_id",
+    "design_revision",
+    "verification_artifact"
+  ],
+  "title": "N8Monitor",
+  "type": "object"
+}

@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n1_market_batch",
+  "additionalProperties": false,
+  "description": "A batch as N1 ingested it, pinned to the N0 artifact revision and decision that admitted it.",
+  "properties": {
+    "schema_version": {
+      "const": "MarketBatch.v1",
+      "default": "MarketBatch.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "kind": {
+      "enum": [
+        "MARKET_BATCH",
+        "BUYER_RECORD"
+      ],
+      "title": "Kind",
+      "type": "string"
+    },
+    "batch_id": {
+      "title": "Batch Id",
+      "type": "string"
+    },
+    "connector": {
+      "title": "Connector",
+      "type": "string"
+    },
+    "source_id": {
+      "title": "Source Id",
+      "type": "string"
+    },
+    "retrieved_at": {
+      "format": "date-time",
+      "title": "Retrieved At",
+      "type": "string"
+    },
+    "synthetic": {
+      "title": "Synthetic",
+      "type": "boolean"
+    },
+    "n0_artifact_id": {
+      "title": "N0 Artifact Id",
+      "type": "string"
+    },
+    "n0_revision": {
+      "title": "N0 Revision",
+      "type": "string"
+    },
+    "n0_decision_id": {
+      "title": "N0 Decision Id",
+      "type": "string"
+    },
+    "payload_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Payload Sha256",
+      "type": "string"
+    },
+    "raw_payload_sha256": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Raw Payload Sha256"
+    },
+    "evidence_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Evidence Ids",
+      "type": "array"
+    },
+    "ingested_by": {
+      "title": "Ingested By",
+      "type": "string"
+    },
+    "ingested_at": {
+      "format": "date-time",
+      "title": "Ingested At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "tenant_id",
+    "kind",
+    "batch_id",
+    "connector",
+    "source_id",
+    "retrieved_at",
+    "synthetic",
+    "n0_artifact_id",
+    "n0_revision",
+    "n0_decision_id",
+    "payload_sha256",
+    "evidence_ids",
+    "ingested_by",
+    "ingested_at"
+  ],
+  "title": "MarketBatch.v1",
+  "type": "object"
+}

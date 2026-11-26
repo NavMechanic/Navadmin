@@ -1,0 +1,80 @@
+{
+  "tenant_id": "demo",
+  "project_id": "PRJ-DEMO-PSU-120W",
+  "artifact_id": "RFQ-DEMO-PSU-120W",
+  "artifact_type": "RFQ",
+  "source_id": "SRC-RFQ",
+  "processing_purpose": "RFQ_ANALYSIS",
+  "release_stage": "CONCEPT",
+  "revision": "A",
+  "synthetic": true,
+  "source_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "payload": {
+    "rfq_id": "RFQ-DEMO-PSU-120W",
+    "customer_name": "Demo Industrial Controls (fictional)",
+    "product_category": "power_supply",
+    "quantity": 2500,
+    "target_unit_price": {
+      "amount": "18.50",
+      "currency": "USD"
+    },
+    "requested_delivery_date": "2027-03-31",
+    "compliance_standards": [
+      "IEC 62368-1"
+    ],
+    "requirements": [
+      {
+        "req_id": "R-001",
+        "parameter": "input_voltage_v",
+        "value": 48,
+        "unit": "V",
+        "value_origin": "CUSTOMER",
+        "tolerance": {
+          "kind": "PCT",
+          "plus": 10,
+          "minus": 10
+        }
+      },
+      {
+        "req_id": "R-002",
+        "parameter": "output_voltage_v",
+        "value": 24,
+        "unit": "V",
+        "value_origin": "CUSTOMER",
+        "tolerance": {
+          "kind": "PCT",
+          "plus": 1,
+          "minus": 1
+        }
+      },
+      {
+        "req_id": "R-003",
+        "parameter": "output_current_a",
+        "value": 5,
+        "unit": "A",
+        "value_origin": "CUSTOMER"
+      },
+      {
+        "req_id": "R-004",
+        "parameter": "output_power_w",
+        "value": 120,
+        "unit": "W",
+        "value_origin": "CUSTOMER"
+      },
+      {
+        "req_id": "R-006",
+        "parameter": "operating_temp_min_c",
+        "value": -40,
+        "unit": "degC",
+        "value_origin": "CUSTOMER"
+      },
+      {
+        "req_id": "R-007",
+        "parameter": "operating_temp_max_c",
+        "value": 85,
+        "unit": "degC",
+        "value_origin": "CUSTOMER"
+      }
+    ]
+  }
+}

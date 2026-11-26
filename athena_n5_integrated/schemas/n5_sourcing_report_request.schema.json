@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n5_sourcing_report_request",
+  "additionalProperties": false,
+  "properties": {
+    "bom_intake_id": {
+      "title": "Bom Intake Id",
+      "type": "string"
+    },
+    "quote_ids": {
+      "anyOf": [
+        {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "default: every accepted quote of the intake",
+      "title": "Quote Ids"
+    }
+  },
+  "required": [
+    "bom_intake_id"
+  ],
+  "title": "N5SourcingReportRequest",
+  "type": "object"
+}

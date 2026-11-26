@@ -34,7 +34,9 @@ ArtifactType = Literal["RFQ", "DATASHEET", "EDA_PACKAGE", "SUPPLIER_QUOTE", "TES
                        # product & design digital thread (N2 → N3 → N4 / N5)
                        "PRD", "DESIGN_RELEASE", "BOM_RELEASE",
                        # verification thread (N4 → N6 / N7 / N8)
-                       "VERIFICATION_RELEASE"]
+                       "VERIFICATION_RELEASE",
+                       # sourcing thread (N5 → N6 / N7)
+                       "SOURCING_HANDOFF"]
 ProcessingPurpose = Literal[
     "RFQ_ANALYSIS", "PRODUCT_DEFINITION", "DESIGN_ENGINEERING", "VERIFICATION", "SOURCING", "COMMERCIAL",
     "FINANCE", "LIFECYCLE", "MARKET_INTELLIGENCE", "EVALUATION",
@@ -684,6 +686,107 @@ class VerificationReleasePayload(_Strict):
     approval_scope: str
 
 
+# ----------------------------------------------------------------------------------------------
+# sourcing thread (N5 → N6 commercial / N7 finance)
+# ----------------------------------------------------------------------------------------------
+INDICATIVE_MATERIAL_LABEL = (
+    "INDICATIVE MATERIAL QUOTE: quoted component material only (order quantity × applicable price break + "
+    "quoted line charges). It excludes GST and other taxes, tooling / NRE, financing, complete freight and "
+    "duties, production labour and warranty, which belong to N7 Finance.")
+EXCLUDED_COST_CATEGORIES = ("GST_AND_TAXES", "TOOLING_NRE", "FINANCING", "FREIGHT_AND_DUTIES", "PRODUCTION_LABOR",
+                            "WARRANTY")
+LineChargeKind = Literal["HANDLING", "REELING", "CUT_TAPE", "PACKAGING", "MIN_ORDER_SURCHARGE"]
+SupplierKind = Literal["MANUFACTURER", "DISTRIBUTOR", "EMS", "ODM"]
+Availability = Literal["STOCK", "FACTORY_ORDER"]
+
+
+class PriceBreak(_Strict):
+    min_qty: int = Field(ge=1)
+    unit_price: Decimal = Field(gt=0)
+
+
+class LineCharge(_Strict):
+    kind: LineChargeKind
+    amount: Decimal = Field(ge=0)
+
+
+class FxAssumption(_Strict):
+    fx_id: str
+    from_currency: str = Field(pattern=r"^[A-Z]{3}$")
+    to_currency: str = Field(pattern=r"^[A-Z]{3}$")
+    rate: Decimal = Field(gt=0, description="1 unit of from_currency = rate units of to_currency")
+    as_of: date
+    source: str = Field(min_length=3)
+    valid_until: Optional[date] = None
+
+
+class SourcedLine(_Strict):
+    """One BOM line with the eligible offer that ranked first by extended material cost."""
+    line: int = Field(ge=1)
+    mpn: str
+    manufacturer: Optional[str] = None
+    qty_per_unit: int = Field(ge=1)
+    q_required: int = Field(ge=1)
+    critical: bool = False
+    supplier_id: str
+    supplier_kind: SupplierKind
+    supplier_qualification: str
+    quote_id: str
+    quote_sha256: str = Field(pattern=_SHA)
+    quote_source_id: str
+    quoted_mpn: str
+    moq: int = Field(ge=1)
+    pack_multiple: int = Field(ge=1)
+    q_order: int = Field(ge=1)
+    price_breaks: list[PriceBreak] = Field(min_length=1)
+    unit_price: Decimal = Field(gt=0)
+    currency: str = Field(pattern=r"^[A-Z]{3}$")
+    line_charges: list[LineCharge] = Field(default_factory=list)
+    extended_cost: Decimal = Field(ge=0, description="q_order × unit_price + line charges, quote currency")
+    fx_id: Optional[str] = None
+    fx_rate: Optional[Decimal] = Field(default=None, gt=0)
+    extended_cost_base: Decimal = Field(ge=0)
+    availability: Availability
+    stock_qty: Optional[int] = Field(default=None, ge=0)
+    lead_time_days: int = Field(ge=0)
+    valid_until: datetime
+    eligible_offers: int = Field(ge=1)
+    risk_flags: list[str] = Field(default_factory=list)
+
+
+class SourcingHandoffPayload(_Strict):
+    """N5 → N6 / N7: an indicative material quote for one engineering BOM revision. A draft input for
+    commercial bidding (N6) and costing (N7), never a purchase order or a full product cost."""
+    model_config = ConfigDict(extra="forbid", title="SourcingHandoffPayload.v1")
+    handoff_id: str = Field(pattern=_ID)
+    target: Literal["N6", "N7"]
+    prd_ref: str
+    bom_ref: str = Field(description="N3 BOM_RELEASE ARTIFACT_ID@REVISION")
+    design_revision: str = Field(min_length=1, max_length=16)
+    pcb_revision: Optional[str] = Field(default=None, max_length=16)
+    build_quantity: int = Field(ge=1)
+    report_id: str
+    report_sha256: str = Field(pattern=_SHA)
+    quote_hashes: list[str] = Field(min_length=1)
+    review_id: str
+    approved_by: str
+    submitters: list[str] = Field(default_factory=list)
+    quote_source_ids: list[str] = Field(min_length=1)
+    base_currency: str = Field(pattern=r"^[A-Z]{3}$")
+    lines: list[SourcedLine] = Field(min_length=1)
+    fx_assumptions: list[FxAssumption] = Field(default_factory=list)
+    indicative_total: Decimal = Field(ge=0, description="Σ extended_cost_base")
+    indicative_unit_cost: Decimal = Field(ge=0, description="indicative_total / build_quantity, 4 decimals")
+    indicative_scope: str
+    excluded_cost_categories: list[str]
+    excluded_items_reported: list[dict[str, Any]] = Field(default_factory=list,
+                                                          description="quoted NRE / freight etc., not in the total")
+    verification_ref: Optional[str] = Field(default=None, description="N4 VERIFICATION_RELEASE for this revision")
+    commercial: Optional[dict[str, Any]] = None
+    finance: Optional[dict[str, Any]] = None
+    approval_scope: str
+
+
 PAYLOAD_MODELS: dict[str, type[BaseModel]] = {
     "RFQ": RFQPayload, "DATASHEET": DatasheetPayload, "EDA_PACKAGE": EDAPackagePayload,
     "SUPPLIER_QUOTE": SupplierQuotePayload, "TEST_MEASUREMENT": TestMeasurementPayload,
@@ -691,7 +794,7 @@ PAYLOAD_MODELS: dict[str, type[BaseModel]] = {
     "MODEL_OUTPUT": ModelOutputPayload, "MARKET_BATCH": MarketBatchPayload, "BUYER_RECORD": BuyerRecordPayload,
     "COMMERCIAL_SHORTLIST": CommercialShortlistPayload, "SAM_EVIDENCE": SamEvidencePayload,
     "PRD": PRDPayload, "DESIGN_RELEASE": DesignReleasePayload, "BOM_RELEASE": BomReleasePayload,
-    "VERIFICATION_RELEASE": VerificationReleasePayload,
+    "VERIFICATION_RELEASE": VerificationReleasePayload, "SOURCING_HANDOFF": SourcingHandoffPayload,
 }
 REQUIREMENT_LISTS = {"RFQ": "requirements", "DATASHEET": "requirements", "TEST_MEASUREMENT": "measurements",
                      "TELEMETRY": "readings", "MODEL_OUTPUT": "requirements", "PRD": "requirements"}

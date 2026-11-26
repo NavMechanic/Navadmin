@@ -1,0 +1,201 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n5_eco_proposal",
+  "$defs": {
+    "EquivalenceEvidence": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "DATASHEET",
+            "PARAMETRIC_COMPARISON",
+            "QUALIFICATION_REPORT",
+            "MANUFACTURER_PCN",
+            "CROSS_REFERENCE"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "reference": {
+          "minLength": 3,
+          "title": "Reference",
+          "type": "string"
+        },
+        "sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sha256"
+        },
+        "summary": {
+          "minLength": 3,
+          "title": "Summary",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "reference",
+        "summary"
+      ],
+      "title": "EquivalenceEvidence",
+      "type": "object"
+    },
+    "ParameterComparison": {
+      "additionalProperties": false,
+      "properties": {
+        "parameter": {
+          "title": "Parameter",
+          "type": "string"
+        },
+        "approved_value": {
+          "title": "Approved Value",
+          "type": "string"
+        },
+        "proposed_value": {
+          "title": "Proposed Value",
+          "type": "string"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit"
+        }
+      },
+      "required": [
+        "parameter",
+        "approved_value",
+        "proposed_value"
+      ],
+      "title": "ParameterComparison",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "bom_intake_id": {
+      "title": "Bom Intake Id",
+      "type": "string"
+    },
+    "line": {
+      "minimum": 1,
+      "title": "Line",
+      "type": "integer"
+    },
+    "proposed_mpn": {
+      "minLength": 1,
+      "title": "Proposed Mpn",
+      "type": "string"
+    },
+    "proposed_manufacturer": {
+      "minLength": 2,
+      "title": "Proposed Manufacturer",
+      "type": "string"
+    },
+    "offer_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Offer Id"
+    },
+    "reason": {
+      "minLength": 10,
+      "title": "Reason",
+      "type": "string"
+    },
+    "equivalence_evidence": {
+      "items": {
+        "$ref": "#/$defs/EquivalenceEvidence"
+      },
+      "minItems": 1,
+      "title": "Equivalence Evidence",
+      "type": "array"
+    },
+    "parametric_comparison": {
+      "items": {
+        "$ref": "#/$defs/ParameterComparison"
+      },
+      "minItems": 1,
+      "title": "Parametric Comparison",
+      "type": "array"
+    },
+    "eco_id": {
+      "title": "Eco Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "approved_mpn": {
+      "title": "Approved Mpn",
+      "type": "string"
+    },
+    "design_revision": {
+      "title": "Design Revision",
+      "type": "string"
+    },
+    "bom_ref": {
+      "title": "Bom Ref",
+      "type": "string"
+    },
+    "status": {
+      "const": "PENDING_N3_ECO",
+      "default": "PENDING_N3_ECO",
+      "title": "Status",
+      "type": "string"
+    },
+    "raised_by": {
+      "title": "Raised By",
+      "type": "string"
+    },
+    "raised_at": {
+      "format": "date-time",
+      "title": "Raised At",
+      "type": "string"
+    },
+    "note": {
+      "default": "Pending N3 engineering change. N5 never substitutes a part: the alternate becomes eligible only after N3 releases a new BOM revision that contains it.",
+      "title": "Note",
+      "type": "string"
+    }
+  },
+  "required": [
+    "bom_intake_id",
+    "line",
+    "proposed_mpn",
+    "proposed_manufacturer",
+    "reason",
+    "equivalence_evidence",
+    "parametric_comparison",
+    "eco_id",
+    "tenant_id",
+    "approved_mpn",
+    "design_revision",
+    "bom_ref",
+    "raised_by",
+    "raised_at"
+  ],
+  "title": "N5EcoProposal",
+  "type": "object"
+}

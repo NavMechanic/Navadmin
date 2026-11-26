@@ -89,7 +89,7 @@ def create_app(settings: Optional[Settings] = None, *, provider: Optional[Provid
                   description=DESCRIPTION)
     for k, v in dict(settings=settings, db=db, store=store, scanner=scanner, docling=docling, presidio=presidio,
                      llm=llm, pipeline=pipeline, extraction=extraction, tokens=build_authenticator(settings),
-                     clock=clock).items():
+                     clock=clock, source_rights_listeners=[]).items():
         setattr(app.state, k, v)
 
     @app.exception_handler(N0Error)
@@ -188,7 +188,20 @@ def create_app(settings: Optional[Settings] = None, *, provider: Optional[Provid
                                   details={"decision": body.decision, "approval_id": event.approval_id,
                                            "version": version})
                 return SourceApprovalResponse(source=new, approval_event=event)
-        return guarded(p, "SOURCE_APPROVE", f"source:{source_id}", go)
+        out = guarded(p, "SOURCE_APPROVE", f"source:{source_id}", go)
+        notify_rights_listeners(p, tenant_id, source_id, out.source.approval_status)
+        return out
+
+    def notify_rights_listeners(p: Principal, tenant_id: str, source_id: str, status: str) -> None:
+        """Nodes register ``(tenant_id, source_id, status)`` callbacks on ``app.state.source_rights_listeners``
+        to react to a committed rights decision, e.g. N5 blocking handoffs that used a revoked source. A
+        failing listener is audited; the decision itself stands, and nodes re-check rights lazily too."""
+        for listener in app.state.source_rights_listeners:
+            try:
+                listener(tenant_id, source_id, status)
+            except Exception as exc:  # noqa: BLE001 - a listener must never undo a committed decision
+                audit(p, "SOURCE_RIGHTS_LISTENER_FAILED", f"source:{source_id}",
+                      {"status": status, "error": f"{type(exc).__name__}: {exc}"[:500]})
 
     # ------------------------------------------------------------------ N0.1 upload (quarantine-first)
     @app.post("/v1/artifacts/upload", status_code=201, response_model=BlobRecord, tags=["artifacts"])

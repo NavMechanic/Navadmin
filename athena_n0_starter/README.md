@@ -26,7 +26,7 @@ models and vendors that the source's rights and the tenant's ACLs allow.
 |---|---|---|
 | **N0.1 intake & permissions** | role/node attribute, tenant isolation, SourceRecord.v1 rights (approval, purpose, licence, expiry), clearance, revision control (format, superseded, immutable), SHA-256 of files and payload | BLOCK |
 | **N0.2 parsing & normalization** | Docling parsing of referenced files, Presidio PII detection, SI normalization of every requirement | REWORK (units, parse), REVIEW (PII) |
-| **N0.3 context** | payload classification vs `artifact_type` (17 types), upstream `ID@REV` resolution, model-run linkage, evidence-in-source, critical-spec completeness → `missing_fields` | BLOCK (upstream), REWORK, REVIEW |
+| **N0.3 context** | payload classification vs `artifact_type` (18 types), upstream `ID@REV` resolution, model-run linkage, evidence-in-source, critical-spec completeness → `missing_fields` | BLOCK (upstream), REWORK, REVIEW |
 | **N0.4 data quality** | JSON Schema 2020-12, V × I power balance, efficiency, ranges, tolerance, 80 % derating, duplicates, contradictions, freshness, `value_origin` truthfulness | REWORK, BLOCK (mislabelled origin) |
 | **N0.5 hard policy** | synthetic-as-real, synthetic beyond CONCEPT, calibration, > 60 V without a safety standard, EDA DRC/ERC and model output stage gates | BLOCK, REVIEW |
 | **N0.6 release** | decision precedence BLOCK > REWORK > REVIEW > PASS, `allowed_destinations`, canonical artifact, release manifest, lineage, audit event | — |
@@ -123,7 +123,7 @@ Errors are `{"detail": {"code": ..., "message": ...}}`. Refusals are audited as 
 - the eight families: SourceRecord, Artifact, Requirement, ModelRun, VendorWorkPackage, VendorResult,
   GatewayDecision, ApprovalEvent (`*.v1`)
 - RFQDraft, ReleaseManifest and EvaluationResult
-- the seventeen payload schemas under `schemas/payloads/`, including the market-intelligence types
+- the eighteen payload schemas under `schemas/payloads/`, including the market-intelligence types
   `MARKET_BATCH` and `BUYER_RECORD` (inputs to N1), plus `COMMERCIAL_SHORTLIST` (N1 → N6) and
   `SAM_EVIDENCE` (N1 → N7). N0 recomputes SAM totals (N0-SAM-001) and blocks synthetic or unattested
   spend presented as verified (N0-SAM-002).
@@ -145,6 +145,22 @@ Errors are `{"detail": {"code": ..., "message": ...}}`. Refusals are audited as 
   - It pins the design references.
   PRDs carry hazards whose linked requirements become safety-critical, and N0 checks those
   references (`N0-PRD-001`).
+- the sourcing type `SOURCING_HANDOFF` (N5 → N6 commercial, N7 finance). N0 recomputes every line with
+  the shared exact-`Decimal` helpers in `app.rules` (`order_quantity`, `applicable_break`,
+  `extended_cost`, `unit_cost`) and checks it (`N0-PRC-001..011`):
+  - Q_order = ceil(max(Q_required, MOQ) / pack) × pack, the applicable price break, the extended
+    cost, the FX conversion and the indicative total;
+  - quote expiry;
+  - exact MPNs and quantities against the pinned N3 BOM_RELEASE, with every BOM line sourced;
+  - supplier qualification;
+  - the indicative-material label and its six excluded cost categories;
+  - separation of duties;
+  - quote-source rights.
+
+  Nodes can subscribe to committed source-rights decisions (`app.state.source_rights_listeners`).
+  Every handoff release re-checks the artifact's own source and its rights dependencies
+  (`SOURCE_RIGHTS_REVOKED`). Uploads also recognise X12 (`application/edi-x12`) and EDIFACT
+  interchanges.
 - `openapi.json`
 
 ```bash
@@ -217,6 +233,7 @@ python -m pytest -q
 | `tests/test_market_and_jwt.py` | MARKET_BATCH routes only to N1; one synthetic observation taints a batch; SAM_EVIDENCE totals recomputed, unattested spend blocked; JWT signature / expiry / issuer / role checks; role implications; `none` algorithm refused |
 | `tests/test_design_artifacts.py` | DESIGN_RELEASE for all three scopes passes and routes to N4; the hard design policies BLOCK; CAE rework cases; unversioned files; BOM revision drift and line checks; EDA MIME sniffing; PRD checks from N2 |
 | `tests/test_verification_artifacts.py` | guard-band cases incl. 24.48 ± 0.05 V vs 24.5 V → INDETERMINATE; VERIFICATION_RELEASE routes to N8 / N6 / N7 by purpose; every N0-VER block; synthetic-as-physical; attribute inspections; research-only reliability and licensed AP accepted; PRD hazard references; Parquet sniffing |
+| `tests/test_sourcing_artifacts.py` | Q_order ceiling / MOQ / pack cases; price-break selection; exact Decimal (₹142 + ₹102 = ₹244); MPN normalisation; SOURCING_HANDOFF routes to N6 / N7; every N0-PRC block; FX assumptions; DNP lines; source-rights revocation (listeners, release refusal, failing listener); EDI sniffing |
 
 ## Not verified here
 

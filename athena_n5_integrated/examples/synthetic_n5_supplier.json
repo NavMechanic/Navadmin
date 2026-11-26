@@ -1,0 +1,65 @@
+[
+  {
+    "supplier_id": "SUP-DEMO-DIST",
+    "kind": "DISTRIBUTOR",
+    "legal_name": "Demo Components Distribution Pvt Ltd",
+    "country": "IN",
+    "registration_ids": {
+      "GSTIN": "29AAAAA0000A1Z5"
+    },
+    "channel_proofs": [
+      {
+        "manufacturer": "Murata",
+        "proof_type": "MANUFACTURER_AUTHORIZED_LIST",
+        "reference": "https://example.test/murata/authorized-distributors",
+        "valid_until": "2030-12-31"
+      },
+      {
+        "manufacturer": "Bourns",
+        "proof_type": "MANUFACTURER_AUTHORIZED_LIST",
+        "reference": "https://example.test/bourns/authorized-distributors",
+        "valid_until": "2030-12-31"
+      }
+    ]
+  },
+  {
+    "supplier_id": "SUP-DEMO-DIST2",
+    "kind": "DISTRIBUTOR",
+    "legal_name": "Second Demo Electronics Pvt Ltd",
+    "country": "IN",
+    "registration_ids": {
+      "GSTIN": "27BBBBB1111B1Z5"
+    },
+    "channel_proofs": [
+      {
+        "manufacturer": "Murata",
+        "proof_type": "MANUFACTURER_AUTHORIZED_LIST",
+        "reference": "https://example.test/murata/authorized-distributors",
+        "valid_until": "2030-12-31"
+      },
+      {
+        "manufacturer": "Bourns",
+        "proof_type": "MANUFACTURER_AUTHORIZED_LIST",
+        "reference": "https://example.test/bourns/authorized-distributors",
+        "valid_until": "2030-12-31"
+      }
+    ]
+  },
+  {
+    "supplier_id": "SUP-DEMO-BROKER",
+    "kind": "DISTRIBUTOR",
+    "legal_name": "Demo Spot Market Traders",
+    "country": "IN",
+    "registration_ids": {
+      "GSTIN": "07CCCCC2222C1Z5"
+    },
+    "channel_proofs": [
+      {
+        "manufacturer": "Yageo",
+        "proof_type": "MANUFACTURER_AUTHORIZED_LIST",
+        "reference": "https://example.test/yageo/authorized-distributors",
+        "valid_until": "2030-12-31"
+      }
+    ]
+  }
+]

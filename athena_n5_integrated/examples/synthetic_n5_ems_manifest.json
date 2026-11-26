@@ -1,0 +1,63 @@
+{
+  "format": "athena-ems-quote/1",
+  "supplier_id": "SUP-DEMO-EMS",
+  "bom_intake_id": "N5I-DEMO",
+  "design_revision": "B",
+  "quote_ref": "EMS-Q-1",
+  "issued_at": "2026-11-25T09:00:00Z",
+  "valid_until": "2026-12-25T00:00:00Z",
+  "quote_document": "quote.pdf",
+  "quote_document_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "signature": {
+    "key_id": "EMS-KEY-1",
+    "algorithm": "ED25519",
+    "value": "<base64 Ed25519 signature over quote.pdf>"
+  },
+  "offers": [
+    {
+      "line": null,
+      "quoted_mpn": "GRM32ER72A475KA88",
+      "currency": "INR",
+      "moq": 1,
+      "pack_multiple": 1,
+      "availability": "FACTORY_ORDER",
+      "stock_qty": null,
+      "lead_time_days": 12,
+      "price_breaks": [
+        {
+          "min_qty": 1,
+          "unit_price": "7.10"
+        }
+      ],
+      "line_charges": [
+        {
+          "kind": "HANDLING",
+          "amount": "12"
+        }
+      ]
+    }
+  ],
+  "capacity": {
+    "allocated_qty": 50,
+    "period_start": "2026-11-25",
+    "period_end": "2027-01-31",
+    "site_id": "SITE-1",
+    "document_sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+  },
+  "nre": [
+    {
+      "kind": "NRE",
+      "amount": "15000",
+      "currency": "INR",
+      "note": "stencil and test fixture"
+    }
+  ],
+  "service_terms": "assembly per unit and workmanship warranty are quoted separately (N7)",
+  "attachments": [
+    {
+      "path": "capacity.pdf",
+      "sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+      "role": "CAPACITY_EVIDENCE"
+    }
+  ]
+}

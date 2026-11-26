@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n5_fx_assumption",
+  "additionalProperties": false,
+  "properties": {
+    "fx_id": {
+      "title": "Fx Id",
+      "type": "string"
+    },
+    "from_currency": {
+      "pattern": "^[A-Z]{3}$",
+      "title": "From Currency",
+      "type": "string"
+    },
+    "to_currency": {
+      "pattern": "^[A-Z]{3}$",
+      "title": "To Currency",
+      "type": "string"
+    },
+    "rate": {
+      "anyOf": [
+        {
+          "exclusiveMinimum": 0.0,
+          "type": "number"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "description": "1 unit of from_currency = rate units of to_currency",
+      "title": "Rate"
+    },
+    "as_of": {
+      "format": "date",
+      "title": "As Of",
+      "type": "string"
+    },
+    "source": {
+      "minLength": 3,
+      "title": "Source",
+      "type": "string"
+    },
+    "valid_until": {
+      "anyOf": [
+        {
+          "format": "date",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Valid Until"
+    }
+  },
+  "required": [
+    "fx_id",
+    "from_currency",
+    "to_currency",
+    "rate",
+    "as_of",
+    "source"
+  ],
+  "title": "N5FxAssumption",
+  "type": "object"
+}

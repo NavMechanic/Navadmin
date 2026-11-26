@@ -1,0 +1,206 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n5_handoff",
+  "$defs": {
+    "N5HandoffPackage": {
+      "additionalProperties": false,
+      "properties": {
+        "target": {
+          "enum": [
+            "N6",
+            "N7"
+          ],
+          "title": "Target",
+          "type": "string"
+        },
+        "artifact_id": {
+          "title": "Artifact Id",
+          "type": "string"
+        },
+        "revision": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Revision"
+        },
+        "status": {
+          "enum": [
+            "RELEASED",
+            "REFUSED"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "n0_decision": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "N0 Decision"
+        },
+        "n0_decision_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "N0 Decision Id"
+        },
+        "violated_codes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Violated Codes",
+          "type": "array"
+        },
+        "manifest_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Manifest Id"
+        },
+        "approval_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Approval Id"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "target",
+        "artifact_id",
+        "status",
+        "reason"
+      ],
+      "title": "N5HandoffPackage",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "handoff_id": {
+      "title": "Handoff Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "report_id": {
+      "title": "Report Id",
+      "type": "string"
+    },
+    "review_id": {
+      "title": "Review Id",
+      "type": "string"
+    },
+    "bom_intake_id": {
+      "title": "Bom Intake Id",
+      "type": "string"
+    },
+    "design_revision": {
+      "title": "Design Revision",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "RELEASED",
+        "PARTIAL",
+        "REFUSED"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "packages": {
+      "items": {
+        "$ref": "#/$defs/N5HandoffPackage"
+      },
+      "title": "Packages",
+      "type": "array"
+    },
+    "quote_source_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Quote Source Ids",
+      "type": "array"
+    },
+    "indicative_total": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "title": "Indicative Total"
+    },
+    "base_currency": {
+      "title": "Base Currency",
+      "type": "string"
+    },
+    "released_by": {
+      "title": "Released By",
+      "type": "string"
+    },
+    "released_at": {
+      "format": "date-time",
+      "title": "Released At",
+      "type": "string"
+    },
+    "approval_scope": {
+      "default": "N5 approval means the supplier selection and the indicative material quote were checked against the approved N3 BOM revision, current supplier qualifications, quotation validity and the deterministic guardrails. It is a draft input for N6 bidding and N7 costing: not a purchase order, a supplier contract, a complete product cost or an engineering approval of any alternate part.",
+      "title": "Approval Scope",
+      "type": "string"
+    }
+  },
+  "required": [
+    "handoff_id",
+    "tenant_id",
+    "report_id",
+    "review_id",
+    "bom_intake_id",
+    "design_revision",
+    "status",
+    "packages",
+    "quote_source_ids",
+    "indicative_total",
+    "base_currency",
+    "released_by",
+    "released_at"
+  ],
+  "title": "N5Handoff",
+  "type": "object"
+}
