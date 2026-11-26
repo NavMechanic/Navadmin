@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:bom_item.v1",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "bom_item.v1",
+      "default": "bom_item.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "line": {
+      "minimum": 1,
+      "title": "Line",
+      "type": "integer"
+    },
+    "mpn": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Mpn"
+    },
+    "manufacturer": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Manufacturer"
+    },
+    "refdes": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Refdes",
+      "type": "array"
+    },
+    "qty": {
+      "minimum": 0,
+      "title": "Qty",
+      "type": "integer"
+    },
+    "value": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Value"
+    },
+    "footprint": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Footprint"
+    },
+    "description": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Description"
+    },
+    "dnp": {
+      "default": false,
+      "title": "Dnp",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "line",
+    "refdes",
+    "qty"
+  ],
+  "title": "bom_item.v1",
+  "type": "object"
+}

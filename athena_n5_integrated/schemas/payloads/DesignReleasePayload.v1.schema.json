@@ -1,0 +1,581 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:DesignReleasePayload.v1",
+  "$defs": {
+    "CheckSummary": {
+      "additionalProperties": false,
+      "properties": {
+        "tool": {
+          "title": "Tool",
+          "type": "string"
+        },
+        "tool_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tool Version"
+        },
+        "critical": {
+          "minimum": 0,
+          "title": "Critical",
+          "type": "integer"
+        },
+        "errors": {
+          "minimum": 0,
+          "title": "Errors",
+          "type": "integer"
+        },
+        "warnings": {
+          "minimum": 0,
+          "title": "Warnings",
+          "type": "integer"
+        },
+        "report_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Report Sha256"
+        },
+        "waived": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Waived",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "tool",
+        "critical",
+        "errors",
+        "warnings"
+      ],
+      "title": "CheckSummary",
+      "type": "object"
+    },
+    "ClearanceCheck": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "clearance",
+            "creepage"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "required_mm": {
+          "exclusiveMinimum": 0,
+          "title": "Required Mm",
+          "type": "number"
+        },
+        "actual_mm": {
+          "minimum": 0,
+          "title": "Actual Mm",
+          "type": "number"
+        }
+      },
+      "required": [
+        "kind",
+        "required_mm",
+        "actual_mm"
+      ],
+      "title": "ClearanceCheck",
+      "type": "object"
+    },
+    "CornerResult": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "converged": {
+          "title": "Converged",
+          "type": "boolean"
+        },
+        "parameters": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "title": "Parameters",
+          "type": "object"
+        },
+        "measures": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "title": "Measures",
+          "type": "object"
+        },
+        "log_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Log Sha256"
+        }
+      },
+      "required": [
+        "name",
+        "converged"
+      ],
+      "title": "CornerResult",
+      "type": "object"
+    },
+    "DeratingCheck": {
+      "additionalProperties": false,
+      "properties": {
+        "refdes": {
+          "title": "Refdes",
+          "type": "string"
+        },
+        "parameter": {
+          "title": "Parameter",
+          "type": "string"
+        },
+        "stress": {
+          "title": "Stress",
+          "type": "number"
+        },
+        "rating": {
+          "exclusiveMinimum": 0,
+          "title": "Rating",
+          "type": "number"
+        },
+        "factor": {
+          "exclusiveMinimum": 0,
+          "maximum": 1,
+          "title": "Factor",
+          "type": "number"
+        }
+      },
+      "required": [
+        "refdes",
+        "parameter",
+        "stress",
+        "rating",
+        "factor"
+      ],
+      "title": "DeratingCheck",
+      "type": "object"
+    },
+    "DesignFile": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "maxLength": 512,
+          "minLength": 1,
+          "title": "Path",
+          "type": "string"
+        },
+        "role": {
+          "pattern": "^[A-Z][A-Z_]{1,31}$",
+          "title": "Role",
+          "type": "string"
+        },
+        "sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sha256"
+        },
+        "tool": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tool"
+        },
+        "tool_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tool Version"
+        },
+        "blob_uri": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Blob Uri"
+        }
+      },
+      "required": [
+        "path",
+        "role"
+      ],
+      "title": "DesignFile",
+      "type": "object"
+    },
+    "SimulationEvidence": {
+      "additionalProperties": false,
+      "properties": {
+        "solver": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Solver"
+        },
+        "solver_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Solver Version"
+        },
+        "required_corners": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Required Corners",
+          "type": "array"
+        },
+        "corners": {
+          "items": {
+            "$ref": "#/$defs/CornerResult"
+          },
+          "title": "Corners",
+          "type": "array"
+        }
+      },
+      "title": "SimulationEvidence",
+      "type": "object"
+    },
+    "TestLimit": {
+      "additionalProperties": false,
+      "properties": {
+        "parameter": {
+          "pattern": "^[a-z][a-z0-9_]{1,79}$",
+          "title": "Parameter",
+          "type": "string"
+        },
+        "min": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Min"
+        },
+        "max": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit"
+        },
+        "requirement_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Requirement Ref"
+        }
+      },
+      "required": [
+        "parameter"
+      ],
+      "title": "TestLimit",
+      "type": "object"
+    },
+    "ThermalEvidence": {
+      "additionalProperties": false,
+      "properties": {
+        "solver": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Solver"
+        },
+        "solver_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Solver Version"
+        },
+        "boundary_conditions": {
+          "additionalProperties": true,
+          "title": "Boundary Conditions",
+          "type": "object"
+        },
+        "ambient_c": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ambient C"
+        },
+        "load_w": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Load W"
+        },
+        "max_temps_c": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "title": "Max Temps C",
+          "type": "object"
+        },
+        "limits_c": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "title": "Limits C",
+          "type": "object"
+        },
+        "margin_c": {
+          "default": 10.0,
+          "minimum": 0,
+          "title": "Margin C",
+          "type": "number"
+        }
+      },
+      "title": "ThermalEvidence",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "N3 → N4: a design-authority-approved design package for the next controlled engineering step.\nIt is not safety certification, laboratory qualification or mass-manufacturing release.",
+  "properties": {
+    "release_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+      "title": "Release Id",
+      "type": "string"
+    },
+    "scope": {
+      "enum": [
+        "schematic_pcb",
+        "circuit_simulation",
+        "mechanical_thermal"
+      ],
+      "title": "Scope",
+      "type": "string"
+    },
+    "prd_ref": {
+      "description": "PRD ARTIFACT_ID@REVISION the design is locked to",
+      "title": "Prd Ref",
+      "type": "string"
+    },
+    "prd_payload_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Prd Payload Sha256",
+      "type": "string"
+    },
+    "design_revision": {
+      "maxLength": 16,
+      "minLength": 1,
+      "title": "Design Revision",
+      "type": "string"
+    },
+    "files": {
+      "items": {
+        "$ref": "#/$defs/DesignFile"
+      },
+      "minItems": 1,
+      "title": "Files",
+      "type": "array"
+    },
+    "erc": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/CheckSummary"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "drc": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/CheckSummary"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "simulation": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SimulationEvidence"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "thermal": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ThermalEvidence"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "derating": {
+      "items": {
+        "$ref": "#/$defs/DeratingCheck"
+      },
+      "title": "Derating",
+      "type": "array"
+    },
+    "clearance": {
+      "items": {
+        "$ref": "#/$defs/ClearanceCheck"
+      },
+      "title": "Clearance",
+      "type": "array"
+    },
+    "test_limits": {
+      "items": {
+        "$ref": "#/$defs/TestLimit"
+      },
+      "title": "Test Limits",
+      "type": "array"
+    },
+    "assessment_ids": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Assessment Ids",
+      "type": "array"
+    },
+    "review_ids": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Review Ids",
+      "type": "array"
+    },
+    "approval_scope": {
+      "title": "Approval Scope",
+      "type": "string"
+    }
+  },
+  "required": [
+    "release_id",
+    "scope",
+    "prd_ref",
+    "prd_payload_sha256",
+    "design_revision",
+    "files",
+    "assessment_ids",
+    "review_ids",
+    "approval_scope"
+  ],
+  "title": "DesignReleasePayload.v1",
+  "type": "object"
+}

@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n3_finding",
+  "additionalProperties": false,
+  "properties": {
+    "finding_id": {
+      "title": "Finding Id",
+      "type": "string"
+    },
+    "code": {
+      "title": "Code",
+      "type": "string"
+    },
+    "severity": {
+      "enum": [
+        "CRITICAL",
+        "MAJOR",
+        "MINOR",
+        "INFO"
+      ],
+      "title": "Severity",
+      "type": "string"
+    },
+    "outcome": {
+      "enum": [
+        "BLOCK",
+        "REWORK",
+        "INFO"
+      ],
+      "title": "Outcome",
+      "type": "string"
+    },
+    "category": {
+      "title": "Category",
+      "type": "string"
+    },
+    "message": {
+      "title": "Message",
+      "type": "string"
+    },
+    "evidence": {
+      "description": "file paths / SHA-256s the finding rests on",
+      "items": {
+        "type": "string"
+      },
+      "title": "Evidence",
+      "type": "array"
+    },
+    "refdes": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Refdes"
+    },
+    "corner": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Corner"
+    }
+  },
+  "required": [
+    "finding_id",
+    "code",
+    "severity",
+    "outcome",
+    "category",
+    "message"
+  ],
+  "title": "N3Finding",
+  "type": "object"
+}

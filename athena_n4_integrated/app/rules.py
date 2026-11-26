@@ -1,0 +1,1130 @@
+"""Deterministic N0 validation engine. No LLM is involved in anything in this module.
+
+Every check emits ``RuleViolation`` records from one catalog (rule id, error code, severity,
+category, pipeline stage). The decision is a pure function of the violations:
+
+    any BLOCK  → BLOCK     (hard policy: safety, IP/licensing, confidentiality, tenant isolation,
+                            calibration, authorization, integrity, revision control, provenance)
+    any REWORK → REWORK    (data defects the producer must fix)
+    any REVIEW → REVIEW    (a human must look; only REVIEW can be resolved by an approval)
+    otherwise  → PASS      (the declared type/stage checks passed — not product certification)
+
+The numeric ``quality_score`` is advisory and is never consulted by ``decide``.
+"""
+from __future__ import annotations
+
+import hashlib
+import json
+import math
+import re
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
+from typing import Any, Callable, Iterable, Optional
+
+from jsonschema import Draft202012Validator
+from pydantic import ValidationError
+
+from .models import (CONFIDENTIALITY_RANK, NATIVE_EXTENSIONS, NON_NATIVE_EXTENSIONS, PAYLOAD_MODELS,
+                     RELEASE_STAGE_ORDER, REQUIRED_CORNERS, REQUIREMENT_LISTS, Artifact, Derivation, Requirement,
+                     RightsDecision, RuleViolation, SourceRecord)
+from .units import UnitError, normalize, parameter_dimension
+
+# ----------------------------------------------------------------------------------------------
+# rule catalog
+# ----------------------------------------------------------------------------------------------
+@dataclass(frozen=True)
+class RuleSpec:
+    rule_id: str
+    code: str
+    severity: str
+    category: str
+    stage: str
+    description: str
+
+
+_CATALOG = [
+    # N0.1 intake & permissions
+    ("N0-AUTH-001", "UNAUTHORIZED_PRODUCER", "BLOCK", "AUTHORIZATION", "N0.1", "producer lacks the role or node attribute for this submission"),
+    ("N0-TEN-001", "CROSS_TENANT_REFERENCE", "BLOCK", "TENANT_ISOLATION", "N0.1", "artifact, source or upstream reference belongs to another tenant"),
+    ("N0-RIGHTS-001", "SOURCE_NOT_REGISTERED", "BLOCK", "RIGHTS", "N0.1", "source_id has no SourceRecord.v1 in this tenant"),
+    ("N0-RIGHTS-002", "SOURCE_NOT_APPROVED", "BLOCK", "RIGHTS", "N0.1", "SourceRecord.v1 is not APPROVED"),
+    ("N0-RIGHTS-003", "PURPOSE_NOT_PERMITTED", "BLOCK", "RIGHTS", "N0.1", "processing_purpose is not in the source's permitted_use"),
+    ("N0-RIGHTS-004", "LICENSE_RESTRICTED", "BLOCK", "IP_LICENSING", "N0.1", "license forbids this use"),
+    ("N0-RIGHTS-005", "RIGHTS_EXPIRED", "BLOCK", "RIGHTS", "N0.1", "source rights have expired"),
+    ("N0-RIGHTS-006", "SOURCE_MISMATCH", "BLOCK", "RIGHTS", "N0.1", "a referenced file was uploaded under a different source"),
+    ("N0-CONF-001", "CONFIDENTIALITY_CLEARANCE", "BLOCK", "CONFIDENTIALITY", "N0.1", "data classification exceeds the principal's clearance"),
+    ("N0-INT-001", "SHA256_MISMATCH", "BLOCK", "INTEGRITY", "N0.1", "declared SHA-256 does not match the stored bytes"),
+    ("N0-INT-002", "BLOB_NOT_CLEARED", "BLOCK", "INTEGRITY", "N0.1", "referenced file is missing, rejected or not yet scanned"),
+    ("N0-REV-001", "SUPERSEDED_REVISION", "BLOCK", "REVISION_CONTROL", "N0.1", "a newer revision of this artifact exists"),
+    ("N0-REV-002", "REVISION_IMMUTABLE", "BLOCK", "REVISION_CONTROL", "N0.1", "this revision was already submitted with different content"),
+    # N0.2 parsing & normalization
+    ("N0-REV-003", "REVISION_FORMAT", "REWORK", "REVISION_CONTROL", "N0.2", "revision is not A..ZZZ or a number"),
+    ("N0-PARSE-001", "PARSE_FAILED", "REWORK", "PARSING", "N0.2", "a referenced document could not be parsed"),
+    ("N0-PII-001", "PII_DETECTED", "REVIEW", "CONFIDENTIALITY", "N0.2", "personal data found without PERSONAL_DATA_PROCESSING rights"),
+    ("N0-UNIT-001", "UNIT_UNKNOWN", "REWORK", "UNITS", "N0.2", "unit is not in the SI registry"),
+    ("N0-UNIT-002", "UNIT_DIMENSION_MISMATCH", "REWORK", "UNITS", "N0.2", "unit dimension disagrees with the parameter suffix"),
+    ("N0-UNIT-003", "UNIT_MISSING", "REWORK", "UNITS", "N0.2", "numeric engineering value without a unit"),
+    # N0.3 context assembly
+    ("N0-CTX-001", "ARTIFACT_TYPE_MISMATCH", "REVIEW", "CLASSIFICATION", "N0.3", "payload shape does not match the declared artifact_type"),
+    ("N0-CTX-002", "UPSTREAM_NOT_FOUND", "BLOCK", "LINEAGE", "N0.3", "upstream artifact reference does not resolve"),
+    ("N0-CTX-003", "UPSTREAM_NOT_RELEASED", "BLOCK", "LINEAGE", "N0.3", "upstream artifact revision is not PASS"),
+    ("N0-CTX-004", "UPSTREAM_SUPERSEDED", "BLOCK", "REVISION_CONTROL", "N0.3", "upstream reference pins a superseded revision"),
+    ("N0-CTX-005", "EVIDENCE_NOT_FOUND", "REWORK", "PROVENANCE", "N0.3", "evidence snippet does not occur in the source document"),
+    ("N0-CTX-006", "MISSING_CRITICAL_FIELD", "REWORK", "COMPLETENESS", "N0.3", "a critical field or specification is missing"),
+    # N0.4 data quality & anomalies
+    ("N0-SCH-001", "SCHEMA_INVALID", "REWORK", "SCHEMA", "N0.4", "payload violates its JSON Schema 2020-12 contract"),
+    ("N0-PHY-001", "POWER_BALANCE_MISMATCH", "REWORK", "PHYSICS", "N0.4", "stated power disagrees with V × I"),
+    ("N0-PHY-002", "EFFICIENCY_OUT_OF_RANGE", "REWORK", "PHYSICS", "N0.4", "efficiency outside (0, 100] % or output exceeds input"),
+    ("N0-PHY-003", "RANGE_INVERTED", "REWORK", "PHYSICS", "N0.4", "a *_min value exceeds its *_max"),
+    ("N0-PHY-004", "TOLERANCE_OUT_OF_BOUNDS", "REWORK", "PHYSICS", "N0.4", "tolerance negative or beyond 100 %"),
+    ("N0-PHY-005", "DERATING_VIOLATION", "REWORK", "PHYSICS", "N0.4", "applied stress exceeds the derated rating"),
+    ("N0-PHY-006", "NEGATIVE_MAGNITUDE", "REWORK", "PHYSICS", "N0.4", "a magnitude that cannot be negative is negative"),
+    ("N0-DUP-001", "DUPLICATE_REQUIREMENT_ID", "REWORK", "DUPLICATES", "N0.4", "req_id used more than once"),
+    ("N0-DUP-002", "DUPLICATE_CONTENT", "REVIEW", "DUPLICATES", "N0.4", "identical content already submitted under another artifact_id"),
+    ("N0-FRESH-001", "STALE_DATA", "REWORK", "FRESHNESS", "N0.4", "data is outside its freshness window"),
+    ("N0-CON-001", "CONTRADICTORY_VALUES", "REWORK", "CONSISTENCY", "N0.4", "the same parameter is stated with different values"),
+    ("N0-PROV-001", "DERIVED_VALUE_MISMATCH", "REWORK", "PROVENANCE", "N0.4", "submitted DERIVED value disagrees with N0's computation"),
+    ("N0-PROV-002", "DERIVATION_UNVERIFIABLE", "REWORK", "PROVENANCE", "N0.4", "DERIVED value N0 cannot recompute"),
+    ("N0-PROV-003", "ORIGIN_MISLABELED", "BLOCK", "PROVENANCE", "N0.4", "value_origin misrepresents where a value came from"),
+    ("N0-PROV-004", "EVIDENCE_MISSING", "REWORK", "PROVENANCE", "N0.4", "MODEL_EXTRACTED value without evidence snippets"),
+    ("N0-PROV-005", "ORIGIN_INVALID_FOR_TYPE", "REWORK", "PROVENANCE", "N0.4", "value_origin not allowed for this artifact_type"),
+    ("N0-PROV-006", "HUMAN_CONFIRMATION_REQUIRED", "REVIEW", "PROVENANCE", "N0.4", "model-extracted values need human confirmation"),
+    ("N0-LLM-002", "MODEL_OUTPUT_SCHEMA_INVALID", "REWORK", "SCHEMA", "N0.4", "LLM output failed schema revalidation"),
+    ("N0-SAM-001", "SAM_TOTAL_MISMATCH", "REWORK", "ARITHMETIC", "N0.4", "verified SAM total or an item's FX conversion disagrees with N0's recomputation"),
+    ("N0-SAM-002", "UNVERIFIED_SPEND_AS_VERIFIED", "BLOCK", "SAM_INTEGRITY", "N0.5", "verified SAM includes synthetic, unattested or non-VERIFIED_BUDGET spend"),
+    # design releases (N3 → N4 / N5), all three design scopes
+    ("N0-DES-001", "NATIVE_FILES_MISSING", "BLOCK", "DESIGN_INTEGRITY", "N0.5", "required native editable design files are missing (PDF / screenshot-only)"),
+    ("N0-DES-002", "DESIGN_FILE_UNVERIFIED", "BLOCK", "DESIGN_INTEGRITY", "N0.5", "a native design file lacks a SHA-256 or a tool version"),
+    ("N0-DES-003", "CRITICAL_ERC_DRC", "BLOCK", "SAFETY", "N0.5", "unresolved critical ERC/DRC violations"),
+    ("N0-DES-004", "BOM_REVISION_MISMATCH", "BLOCK", "REVISION_CONTROL", "N0.5", "BOM and PCB/design revisions differ"),
+    ("N0-DES-005", "DERATING_BREACH", "BLOCK", "SAFETY", "N0.5", "component stress exceeds its derated rating"),
+    ("N0-DES-006", "CREEPAGE_CLEARANCE", "BLOCK", "SAFETY", "N0.5", "creepage or clearance below the required minimum"),
+    ("N0-DES-007", "SCOPE_EVIDENCE_MISSING", "BLOCK", "DESIGN_INTEGRITY", "N0.5", "release lacks the verification evidence its design scope requires"),
+    ("N0-SIM-001", "SOLVER_VERSION_MISSING", "REWORK", "SIMULATION", "N0.4", "simulation evidence lacks the solver name or version"),
+    ("N0-SIM-002", "SIMULATION_NOT_CONVERGED", "REWORK", "SIMULATION", "N0.4", "a simulation corner did not converge"),
+    ("N0-SIM-003", "WORST_CASE_CORNER_MISSING", "BLOCK", "SAFETY", "N0.5", "a required worst-case simulation corner is missing"),
+    ("N0-MTH-001", "NATIVE_GEOMETRY_MISSING", "BLOCK", "DESIGN_INTEGRITY", "N0.5", "no native STEP / CAD geometry"),
+    ("N0-MTH-002", "THERMAL_BOUNDARY_MISSING", "REWORK", "THERMAL", "N0.4", "thermal boundary conditions are missing"),
+    ("N0-MTH-003", "THERMAL_ASSUMPTIONS_MISSING", "REWORK", "THERMAL", "N0.4", "ambient / load assumptions or component limits are missing"),
+    ("N0-MTH-004", "THERMAL_LIMIT_EXCEEDED", "BLOCK", "SAFETY", "N0.5", "a component exceeds its temperature limit minus the margin"),
+    ("N0-BOM-001", "BOM_LINE_INVALID", "REWORK", "BOM", "N0.4", "BOM line without an MPN, or quantity ≠ number of refdes"),
+    ("N0-BOM-002", "DUPLICATE_REFDES", "REWORK", "BOM", "N0.4", "a refdes appears on more than one BOM line"),
+    ("N0-PRD-001", "CRITICAL_REFERENCE_INVALID", "REWORK", "COMPLETENESS", "N0.4", "a hazard or safety-critical id references no requirement of the PRD"),
+    # verification releases (N4 → N6 / N7 / N8)
+    ("N0-VER-001", "VERIFICATION_INCOMPLETE", "BLOCK", "VERIFICATION", "N0.5", "verification_status is not VERIFIED"),
+    ("N0-VER-002", "UNIT_NOT_SI", "BLOCK", "METROLOGY", "N0.5", "measurement unit is not in the SI registry"),
+    ("N0-VER-003", "UNCERTAINTY_MISSING", "BLOCK", "METROLOGY", "N0.5", "measurement without a positive expanded uncertainty"),
+    ("N0-VER-004", "MEASUREMENT_FAIL", "BLOCK", "METROLOGY", "N0.5", "value ± uncertainty lies entirely outside a limit"),
+    ("N0-VER-005", "GUARD_BAND_INDETERMINATE", "BLOCK", "METROLOGY", "N0.5", "value ± uncertainty crosses a specification limit"),
+    ("N0-VER-006", "VERDICT_MISMATCH", "BLOCK", "METROLOGY", "N0.5", "stated verdict disagrees with N0's guard-band recomputation"),
+    ("N0-VER-007", "CALIBRATION_MISSING", "BLOCK", "CALIBRATION", "N0.5", "physical measurement without instrument, calibration id and due date"),
+    ("N0-VER-008", "PROVENANCE_METHOD_MISMATCH", "BLOCK", "VERIFICATION", "N0.5", "evidence provenance cannot verify this method"),
+    ("N0-VER-009", "SYNTHETIC_AS_PHYSICAL", "BLOCK", "SYNTHETIC", "N0.5", "synthetic or mock measurements presented as qualification evidence"),
+    ("N0-VER-010", "EVIDENCE_HASH_MISSING", "BLOCK", "INTEGRITY", "N0.5", "measurement without the SHA-256 of its raw evidence"),
+    ("N0-VER-011", "UNMAPPED_SAFETY_CRITICAL", "BLOCK", "SAFETY", "N0.5", "a safety-critical requirement lacks passing physical verification"),
+    ("N0-VER-012", "SEPARATION_OF_DUTIES", "BLOCK", "AUTHORIZATION", "N0.5", "approver also submitted evidence, or no approver"),
+    ("N0-VER-013", "STANDARD_OVERCLAIM", "BLOCK", "CLAIMS", "N0.5", "AIAG-VDA Action Priority claimed without a licensed table reference"),
+    ("N0-VER-014", "RELIABILITY_OVERCLAIM", "BLOCK", "CLAIMS", "N0.5", "reliability figure not labelled research-only, or offered as a claim"),
+    ("N0-VER-015", "DESIGN_REVISION_UNLOCKED", "BLOCK", "REVISION_CONTROL", "N0.5", "design references are not the pinned upstream artifacts"),
+    ("N0-VER-016", "INSPECTION_NOT_ACCEPTED", "BLOCK", "VERIFICATION", "N0.5", "attribute inspection with confirmed defects, unadjudicated model calls or no human acceptance"),
+    # sourcing handoffs (N5 → N6 / N7): every quantity and cost is recomputed here
+    ("N0-PRC-001", "ORDER_QUANTITY_MISMATCH", "BLOCK", "SOURCING", "N0.5", "q_required or q_order disagrees with ceil(max(Q_required, MOQ) / pack) × pack"),
+    ("N0-PRC-002", "PRICE_BREAK_MISMATCH", "BLOCK", "SOURCING", "N0.5", "unit price is not the price break applicable at q_order"),
+    ("N0-PRC-003", "EXTENDED_COST_MISMATCH", "BLOCK", "SOURCING", "N0.5", "extended cost, FX conversion or indicative total disagrees with N0's recomputation"),
+    ("N0-PRC-004", "QUOTE_EXPIRED", "BLOCK", "SOURCING", "N0.5", "a selected quotation has expired"),
+    ("N0-PRC-005", "MPN_NOT_EXACT", "BLOCK", "SOURCING", "N0.5", "quoted MPN or quantity differs from the approved engineering BOM line"),
+    ("N0-PRC-006", "BOM_REVISION_UNLOCKED", "BLOCK", "REVISION_CONTROL", "N0.5", "the BOM reference is not the pinned, current N3 BOM_RELEASE revision"),
+    ("N0-PRC-007", "INDICATIVE_SCOPE_MISSING", "BLOCK", "CLAIMS", "N0.5", "material total not labelled as an indicative material quote with its exclusions"),
+    ("N0-PRC-008", "SOURCE_RIGHTS_REVOKED", "BLOCK", "RIGHTS", "N0.5", "a quotation source is no longer APPROVED"),
+    ("N0-PRC-009", "SUPPLIER_NOT_APPROVED", "BLOCK", "SOURCING", "N0.5", "a selected supplier lacks an APPROVED qualification"),
+    ("N0-PRC-010", "FX_ASSUMPTION_MISSING", "BLOCK", "SOURCING", "N0.5", "a foreign-currency line without a matching FX assumption"),
+    ("N0-PRC-011", "LINE_UNSOURCED", "BLOCK", "SOURCING", "N0.5", "a BOM line has no sourced offer in the handoff"),
+    # N0.5 hard policy
+    ("N0-SYN-001", "SYNTHETIC_AS_REAL", "BLOCK", "SYNTHETIC", "N0.5", "synthetic data presented as real"),
+    ("N0-SYN-002", "SYNTHETIC_STAGE_GATE", "BLOCK", "SYNTHETIC", "N0.5", "synthetic data beyond CONCEPT stage"),
+    ("N0-CAL-001", "CALIBRATION_EXPIRED", "BLOCK", "CALIBRATION", "N0.5", "instrument calibration expired before the measurement"),
+    ("N0-SAFE-001", "SAFETY_REVIEW_REQUIRED", "REVIEW", "SAFETY", "N0.5", "hazardous voltage without a declared safety standard"),
+    ("N0-STAGE-001", "STAGE_GATE_VIOLATION", "BLOCK", "STAGE_GATE", "N0.5", "artifact does not meet its release_stage gate"),
+    ("N0-STAGE-002", "MODEL_OUTPUT_UNREVIEWED", "REVIEW", "STAGE_GATE", "N0.5", "model output needs human review before release"),
+    ("N0-VEND-001", "VENDOR_TRANSMISSION_UNAPPROVED", "BLOCK", "AUTHORIZATION", "N0.5", "input not approved for transmission to this vendor"),
+    ("N0-LLM-001", "LLM_TRANSMISSION_UNAPPROVED", "BLOCK", "AUTHORIZATION", "N0.1", "source rights do not allow sending this data to an external model"),
+]
+RULES: dict[str, RuleSpec] = {code: RuleSpec(rid, code, sev, cat, stage, desc)
+                              for rid, code, sev, cat, stage, desc in _CATALOG}
+assert len(RULES) == len(_CATALOG)
+HARD_POLICY_CATEGORIES = {"AUTHORIZATION", "TENANT_ISOLATION", "RIGHTS", "IP_LICENSING", "CONFIDENTIALITY",
+                          "INTEGRITY", "REVISION_CONTROL", "SYNTHETIC", "CALIBRATION", "SAFETY", "STAGE_GATE",
+                          "SAM_INTEGRITY", "DESIGN_INTEGRITY", "METROLOGY", "VERIFICATION", "CLAIMS",
+                          "SOURCING"}
+_DIGEST = hashlib.sha256(json.dumps(_CATALOG).encode()).hexdigest()[:12]
+VALIDATOR_VERSION = f"n0-validator/1.0.0+rules.{_DIGEST}"
+
+
+class Findings:
+    def __init__(self) -> None:
+        self.items: list[RuleViolation] = []
+        self.checks: list[str] = []
+
+    def add(self, code: str, message: str, field: Optional[str] = None) -> None:
+        spec = RULES[code]
+        self.items.append(RuleViolation(rule_id=spec.rule_id, code=code, severity=spec.severity,
+                                        category=spec.category, stage=spec.stage, message=message, field=field))
+
+    def ran(self, name: str) -> None:
+        self.checks.append(name)
+
+    def extend(self, other: "Findings") -> None:
+        self.items += other.items
+        self.checks += other.checks
+
+    @property
+    def has_block(self) -> bool:
+        return any(v.severity == "BLOCK" for v in self.items)
+
+    @property
+    def codes(self) -> list[str]:
+        return sorted({v.code for v in self.items})
+
+
+def decide(violations: Iterable[RuleViolation]) -> str:
+    sev = {v.severity for v in violations}
+    for d in ("BLOCK", "REWORK", "REVIEW"):
+        if d in sev:
+            return d
+    return "PASS"
+
+
+def quality_score(violations: Iterable[RuleViolation]) -> float:
+    """Advisory 0–100. Deliberately not an input to ``decide``."""
+    s = 100.0
+    for v in violations:
+        s -= {"BLOCK": 100, "REWORK": 25, "REVIEW": 10}[v.severity]
+    return max(0.0, s)
+
+
+def explain(decision: str, violations: list[RuleViolation], missing: list[str]) -> str:
+    if decision == "PASS":
+        return ("All deterministic checks for the declared artifact_type and release_stage passed. "
+                "This is not product certification.")
+    head = {"BLOCK": "Blocked by hard policy", "REWORK": "Returned for rework",
+            "REVIEW": "Held for human review"}[decision]
+    worst = [v for v in violations if v.severity == decision] or violations
+    parts = [f"{v.rule_id} {v.code}: {v.message}" for v in worst[:6]]
+    if missing:
+        parts.append(f"missing: {', '.join(missing[:8])}")
+    return f"{head}. " + " | ".join(parts)
+
+
+# ----------------------------------------------------------------------------------------------
+# hashing / canonical JSON
+# ----------------------------------------------------------------------------------------------
+def canonical_json(obj: Any) -> bytes:
+    return json.dumps(obj, sort_keys=True, separators=(",", ":"), ensure_ascii=False, default=str).encode("utf-8")
+
+
+def sha256_hex(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
+_REV = re.compile(r"^(?:REV\.?\s*)?([A-Z]{1,3}|\d{1,6})$")
+
+
+def normalize_revision(rev: str) -> Optional[str]:
+    m = _REV.match(rev.strip().upper())
+    return m.group(1) if m else None
+
+
+def revision_order(rev: str) -> int:
+    if rev.isdigit():
+        return int(rev)
+    n = 0
+    for ch in rev:
+        n = n * 26 + (ord(ch) - 64)
+    return n
+
+
+# ----------------------------------------------------------------------------------------------
+# rights, licensing, confidentiality (N0.1)
+# ----------------------------------------------------------------------------------------------
+_PROHIBITED_LICENSES = {"PROHIBITED", "NONE", "LicenseRef-No-Use", "LicenseRef-All-Rights-Reserved-No-Use"}
+
+
+def evaluate_rights(artifact_purpose: str, source_id: str, source: Optional[SourceRecord], now: datetime,
+                    f: Findings) -> RightsDecision:
+    f.ran("rights")
+    reasons: list[str] = []
+    if source is None:
+        f.add("SOURCE_NOT_REGISTERED", f"source {source_id} is not registered for this tenant", "source_id")
+        return RightsDecision(status="DENIED", source_id=source_id, processing_purpose=artifact_purpose,
+                              purpose_permitted=False, llm_processing_allowed=False, vendor_transmission_allowed=False,
+                              training_allowed=False, reasons=["source not registered"])
+    approved = source.approval_status == "APPROVED"
+    if not approved:
+        f.add("SOURCE_NOT_APPROVED", f"source {source_id} is {source.approval_status}", "source_id")
+        reasons.append(f"approval_status {source.approval_status}")
+    if source.valid_until is not None and source.valid_until < now:
+        f.add("RIGHTS_EXPIRED", f"rights for {source_id} expired {source.valid_until.isoformat()}", "source_id")
+        reasons.append("rights expired")
+    permitted = artifact_purpose in source.permitted_use
+    if not permitted:
+        f.add("PURPOSE_NOT_PERMITTED", f"{artifact_purpose} is not in permitted_use {source.permitted_use}",
+              "processing_purpose")
+        reasons.append("purpose not permitted")
+    nc = "-NC" in source.license.upper()
+    if source.license in _PROHIBITED_LICENSES or (nc and artifact_purpose != "EVALUATION"):
+        f.add("LICENSE_RESTRICTED", f"license {source.license} does not allow {artifact_purpose}", "license")
+        reasons.append("license restricted")
+    ok = approved and not reasons
+    return RightsDecision(
+        status="GRANTED" if ok else "DENIED", source_id=source_id, approval_status=source.approval_status,
+        license=source.license, processing_purpose=artifact_purpose, purpose_permitted=permitted,
+        llm_processing_allowed=ok and "LLM_EXTRACTION" in source.permitted_use,
+        vendor_transmission_allowed=ok and "VENDOR_TRANSMISSION" in source.permitted_use,
+        training_allowed=ok and "MODEL_TRAINING" in source.permitted_use and not nc and source.data_origin == "REAL",
+        reasons=reasons)
+
+
+def check_clearance(classification: str, clearance: str, f: Findings) -> None:
+    f.ran("confidentiality")
+    if CONFIDENTIALITY_RANK[classification] > CONFIDENTIALITY_RANK[clearance]:
+        f.add("CONFIDENTIALITY_CLEARANCE", f"{classification} data, principal cleared for {clearance}")
+
+
+# ----------------------------------------------------------------------------------------------
+# requirement normalization, derivation, physics (N0.2 / N0.4)
+# ----------------------------------------------------------------------------------------------
+PARAMETER_ALIASES = {"vout_v": "output_voltage_v", "iout_a": "output_current_a", "vin_v": "input_voltage_v",
+                     "pout_w": "output_power_w", "eff_pct": "efficiency_pct", "tmin_c": "operating_temp_min_c",
+                     "tmax_c": "operating_temp_max_c"}
+_SIGNED_OK = {"voltage", "temperature", "ratio", None}
+
+
+def normalize_requirements(reqs: list[Requirement], list_field: str, f: Findings) -> list[Requirement]:
+    f.ran("units")
+    out = []
+    for i, r in enumerate(reqs):
+        where = f"payload.{list_field}[{i}]"
+        param = PARAMETER_ALIASES.get(r.parameter, r.parameter)
+        si_value = si_unit = None
+        numeric = isinstance(r.value, (int, float)) and not isinstance(r.value, bool)
+        dim = parameter_dimension(param)
+        if numeric:
+            unit = r.unit
+            if dim == "temperature" and unit is not None and unit.strip() == "C":
+                unit = "degC"               # "C" on a *_c parameter means degrees Celsius, not coulomb
+            if unit is None:
+                if dim not in (None, "count"):
+                    f.add("UNIT_MISSING", f"{param}={r.value} has no unit", where)
+            else:
+                try:
+                    si_value, si_unit, udim = normalize(float(r.value), unit)
+                    if dim and udim != dim:
+                        f.add("UNIT_DIMENSION_MISMATCH", f"{param} is {dim} but unit {unit!r} is {udim}", where)
+                        si_value = si_unit = None
+                except UnitError as exc:
+                    f.add("UNIT_UNKNOWN", str(exc), where)
+        out.append(r.model_copy(update={"parameter": param, "si_value": si_value, "si_unit": si_unit}))
+    return out
+
+
+@dataclass(frozen=True)
+class DerivationRule:
+    parameter: str
+    inputs: tuple[str, ...]
+    fn: Callable[..., float]
+    formula: str
+    unit: str
+
+
+DERIVATIONS = (
+    DerivationRule("nominal_output_power_w", ("output_voltage_v", "output_current_a"), lambda v, i: v * i,
+                   "nominal_output_power_w = output_voltage_v × output_current_a", "W"),
+    DerivationRule("nominal_input_power_w", ("nominal_output_power_w", "efficiency_pct"), lambda p, e: p / e,
+                   "nominal_input_power_w = nominal_output_power_w ÷ efficiency", "W"),
+    DerivationRule("max_output_power_w", ("output_voltage_v", "output_current_max_a"), lambda v, i: v * i,
+                   "max_output_power_w = output_voltage_v × output_current_max_a", "W"),
+)
+RESERVED_DERIVED = {d.parameter for d in DERIVATIONS}
+
+
+def _single_values(reqs: Iterable[Requirement]) -> dict[str, tuple[float, str]]:
+    """parameter → (si_value, req_id) for parameters stated exactly once (contradictions excluded)."""
+    seen: dict[str, set] = {}
+    first: dict[str, tuple[float, str]] = {}
+    for r in reqs:
+        if r.si_value is None or r.value_origin == "DERIVED":
+            continue
+        seen.setdefault(r.parameter, set()).add(round(r.si_value, 9))
+        first.setdefault(r.parameter, (r.si_value, r.req_id))
+    return {p: v for p, v in first.items() if len(seen[p]) == 1}
+
+
+def derive_values(reqs: list[Requirement]) -> list[Requirement]:
+    """Deterministic derived values, always tagged DERIVED with their formula and inputs."""
+    known = _single_values(reqs)
+    derived: list[Requirement] = []
+    for rule in DERIVATIONS:
+        if all(i in known for i in rule.inputs):
+            try:
+                value = rule.fn(*(known[i][0] for i in rule.inputs))
+            except ZeroDivisionError:
+                continue
+            value = float(f"{value:.10g}")
+            known[rule.parameter] = (value, f"DRV-{rule.parameter}")
+            derived.append(Requirement(
+                req_id=f"DRV-{rule.parameter}", parameter=rule.parameter, value=value, unit=rule.unit,
+                value_origin="DERIVED", si_value=value, si_unit=rule.unit,
+                derivation=Derivation(formula=rule.formula, inputs=[f"{i}:{known[i][1]}" for i in rule.inputs])))
+    return derived
+
+
+def _rel_tol(r: Requirement, default: float = 0.02) -> float:
+    if r.tolerance is not None and r.tolerance.kind == "PCT":
+        return max(r.tolerance.plus, r.tolerance.minus, 0.0) / 100.0 or default
+    return default
+
+
+def physics_checks(reqs: list[Requirement], derived: list[Requirement], list_field: str, f: Findings) -> None:
+    f.ran("physics")
+    by = {r.parameter: r for r in reqs if r.si_value is not None and r.value_origin != "DERIVED"}
+    d = {r.parameter: r for r in derived}
+    nominal = d.get("nominal_output_power_w")
+    stated = by.get("output_power_w")
+    if nominal and stated:
+        tol = _rel_tol(stated)
+        if abs(stated.si_value - nominal.si_value) > tol * max(abs(nominal.si_value), 1e-12):
+            f.add("POWER_BALANCE_MISMATCH",
+                  f"output_power_w={stated.si_value:g} W but output_voltage_v × output_current_a = "
+                  f"{nominal.si_value:g} W (tolerance {tol * 100:g} %)", stated.req_id)
+    eff = by.get("efficiency_pct")
+    if eff is not None and not (0 < eff.si_value <= 1):
+        f.add("EFFICIENCY_OUT_OF_RANGE", f"efficiency {eff.value} {eff.unit} is outside (0, 100] %", eff.req_id)
+    pin = by.get("input_power_w")
+    if pin is not None and nominal is not None and nominal.si_value > pin.si_value * (1 + _rel_tol(pin)):
+        f.add("EFFICIENCY_OUT_OF_RANGE", f"output power {nominal.si_value:g} W exceeds input power "
+                                         f"{pin.si_value:g} W (efficiency > 100 %)", pin.req_id)
+    for r in reqs:
+        m = re.match(r"^(.+)_min_([a-z]+)$", r.parameter)
+        if m and r.si_value is not None:
+            mx = by.get(f"{m.group(1)}_max_{m.group(2)}")
+            if mx is not None and r.si_value > mx.si_value:
+                f.add("RANGE_INVERTED", f"{r.parameter}={r.value} exceeds {mx.parameter}={mx.value}", r.req_id)
+        if r.tolerance is not None:
+            t = r.tolerance
+            bad = t.plus < 0 or t.minus < 0 or (t.kind == "PCT" and (t.plus > 100 or t.minus > 100))
+            if bad:
+                f.add("TOLERANCE_OUT_OF_BOUNDS", f"{r.parameter} tolerance +{t.plus}/-{t.minus} {t.kind}", r.req_id)
+        m = re.match(r"^(.+)_rated_([a-z]+)$", r.parameter)
+        if m and r.si_value is not None:
+            for kind in ("applied", "operating"):
+                ap = by.get(f"{m.group(1)}_{kind}_{m.group(2)}")
+                if ap is not None and abs(ap.si_value) > 0.8 * abs(r.si_value):
+                    f.add("DERATING_VIOLATION", f"{ap.parameter}={ap.value} exceeds 80 % of "
+                                                f"{r.parameter}={r.value}", ap.req_id)
+        dim = parameter_dimension(r.parameter)
+        if r.si_value is not None and r.si_value < 0 and dim not in _SIGNED_OK:
+            f.add("NEGATIVE_MAGNITUDE", f"{r.parameter}={r.value} cannot be negative", r.req_id)
+
+
+def consistency_checks(reqs: list[Requirement], list_field: str, f: Findings) -> None:
+    f.ran("duplicates")
+    f.ran("contradictions")
+    ids: dict[str, int] = {}
+    for r in reqs:
+        ids[r.req_id] = ids.get(r.req_id, 0) + 1
+    for rid, n in ids.items():
+        if n > 1:
+            f.add("DUPLICATE_REQUIREMENT_ID", f"req_id {rid} appears {n} times", f"payload.{list_field}")
+    groups: dict[tuple, set] = {}
+    for r in reqs:
+        if r.value_origin == "DERIVED" or r.value is None:
+            continue
+        key = (r.parameter, json.dumps(r.operating_conditions, sort_keys=True, default=str))
+        groups.setdefault(key, set()).add(round(r.si_value, 9) if r.si_value is not None else str(r.value))
+    for (param, cond), values in groups.items():
+        if len(values) > 1:
+            f.add("CONTRADICTORY_VALUES", f"{param} is stated as {sorted(map(str, values))}"
+                                          + (f" under {cond}" if cond != "{}" else ""), f"payload.{list_field}")
+
+
+def provenance_checks(artifact_type: str, payload: dict, reqs: list[Requirement], derived: list[Requirement],
+                      f: Findings) -> None:
+    """Value attribution: CUSTOMER vs MEASURED vs DERIVED vs MODEL_EXTRACTED must be truthful."""
+    f.ran("provenance")
+    computed = {r.parameter: r for r in derived}
+    from_model = bool(payload.get("extraction_model_run_id")) or artifact_type == "MODEL_OUTPUT"
+    extracted = 0
+    for r in reqs:
+        if r.parameter in RESERVED_DERIVED and r.value_origin != "DERIVED":
+            f.add("ORIGIN_MISLABELED", f"{r.parameter} is computed by N0 from other values; it cannot be "
+                                       f"{r.value_origin}", r.req_id)
+        if r.value_origin == "DERIVED":
+            if r.parameter not in RESERVED_DERIVED:
+                f.add("DERIVATION_UNVERIFIABLE", f"N0 has no deterministic derivation for {r.parameter}", r.req_id)
+            elif r.parameter not in computed:
+                f.add("DERIVATION_UNVERIFIABLE", f"inputs for {r.parameter} are missing or contradictory", r.req_id)
+            elif r.si_value is not None and abs(r.si_value - computed[r.parameter].si_value) > \
+                    0.005 * max(abs(computed[r.parameter].si_value), 1e-12):
+                f.add("DERIVED_VALUE_MISMATCH", f"{r.parameter}={r.si_value:g} but N0 computes "
+                                                f"{computed[r.parameter].si_value:g}", r.req_id)
+        if r.value_origin == "MEASURED" and artifact_type not in ("TEST_MEASUREMENT", "TELEMETRY"):
+            f.add("ORIGIN_INVALID_FOR_TYPE", f"MEASURED values belong in TEST_MEASUREMENT/TELEMETRY, not "
+                                             f"{artifact_type}", r.req_id)
+        if artifact_type in ("TEST_MEASUREMENT", "TELEMETRY") and r.value_origin not in ("MEASURED", "DERIVED"):
+            f.add("ORIGIN_INVALID_FOR_TYPE", f"{artifact_type} values must be MEASURED (got {r.value_origin})",
+                  r.req_id)
+        if from_model and r.value_origin in ("CUSTOMER", "MEASURED"):
+            f.add("ORIGIN_MISLABELED", f"{r.parameter} came from a model run but is labelled {r.value_origin}; "
+                                       "confirm it through /v1/gateway/feedback and submit a new revision", r.req_id)
+        if r.value_origin == "MODEL_EXTRACTED":
+            extracted += 1
+            if r.value is not None and not r.evidence_snippets:
+                f.add("EVIDENCE_MISSING", f"{r.parameter} was model-extracted without an evidence snippet", r.req_id)
+    if extracted:
+        f.add("HUMAN_CONFIRMATION_REQUIRED", f"{extracted} model-extracted value(s) await human confirmation")
+
+
+# ----------------------------------------------------------------------------------------------
+# schema, completeness, classification, freshness (N0.3 / N0.4)
+# ----------------------------------------------------------------------------------------------
+_VALIDATORS = {t: Draft202012Validator(m.model_json_schema()) for t, m in PAYLOAD_MODELS.items()}
+POWER_CATEGORIES = {"power_supply", "dc_dc_converter", "ac_dc_converter", "battery_charger", "led_driver",
+                    "motor_driver", "inverter"}
+CRITICAL_SPECS = {   # alternatives: any one tuple fully present satisfies the requirement
+    "input voltage": [("input_voltage_v",), ("input_voltage_min_v", "input_voltage_max_v")],
+    "output voltage": [("output_voltage_v",)],
+    "output current": [("output_current_a",), ("output_current_max_a",)],
+    "operating temperature range": [("operating_temp_min_c", "operating_temp_max_c")],
+}
+
+
+def schema_checks(artifact: Artifact, f: Findings) -> tuple[Optional[Any], list[str]]:
+    """JSON Schema 2020-12 on the payload; ``required`` errors become missing fields, not schema errors."""
+    f.ran("json_schema_2020_12")
+    missing: list[str] = []
+    errors = sorted(_VALIDATORS[artifact.artifact_type].iter_errors(artifact.payload), key=lambda e: list(e.path))
+    for e in errors:
+        where = "payload" + "".join(f"[{p}]" if isinstance(p, int) else f".{p}" for p in e.absolute_path)
+        if e.validator == "required":
+            for prop in e.validator_value:
+                if isinstance(e.instance, dict) and prop not in e.instance:
+                    missing.append(f"{where}.{prop}")
+        else:
+            f.add("SCHEMA_INVALID", e.message[:300], where)
+    model = None
+    if not errors:
+        try:
+            model = PAYLOAD_MODELS[artifact.artifact_type].model_validate(artifact.payload)
+        except ValidationError as exc:
+            for err in exc.errors(include_url=False)[:10]:
+                f.add("SCHEMA_INVALID", err["msg"], "payload." + ".".join(map(str, err["loc"])))
+    return model, missing
+
+
+def missing_specs(artifact_type: str, payload: dict, reqs: list[Requirement]) -> list[str]:
+    if artifact_type != "RFQ" or str(payload.get("product_category", "")).lower() not in POWER_CATEGORIES:
+        return []
+    present = {r.parameter for r in reqs if r.value is not None}
+    out = []
+    for name, alternatives in CRITICAL_SPECS.items():
+        if not any(all(p in present for p in alt) for alt in alternatives):
+            out.append(f"payload.requirements[parameter={'|'.join('+'.join(a) for a in alternatives)}]")
+    return out
+
+
+_SIGNATURES = [("RFQ", {"rfq_id", "requirements"}), ("DATASHEET", {"part_number", "manufacturer"}),
+               ("EDA_PACKAGE", {"design_id", "eda_tool"}), ("SUPPLIER_QUOTE", {"quote_id", "supplier_id"}),
+               ("TEST_MEASUREMENT", {"test_id", "instruments"}), ("MARKET_FEED", {"feed_id", "series"}),
+               ("FINANCE_RECORD", {"record_id", "period"}), ("TELEMETRY", {"device_id", "readings"}),
+               ("MODEL_OUTPUT", {"model_run_id", "task"}), ("MARKET_BATCH", {"batch_id", "observations"}),
+               ("BUYER_RECORD", {"batch_id", "records"}), ("COMMERCIAL_SHORTLIST", {"report_id", "entries"}),
+               ("SAM_EVIDENCE", {"report_id", "verified_items"}), ("PRD", {"prd_id", "design_constraints"}),
+               ("DESIGN_RELEASE", {"release_id", "scope", "files"}), ("BOM_RELEASE", {"release_id", "items"}),
+               ("VERIFICATION_RELEASE", {"release_id", "verification_status", "traceability"}),
+               ("SOURCING_HANDOFF", {"handoff_id", "lines", "indicative_scope"})]
+
+
+def classify(payload: dict) -> Optional[str]:
+    keys = set(payload)
+    return next((t for t, sig in _SIGNATURES if sig <= keys), None)
+
+
+def _as_dt(v: Any) -> Optional[datetime]:
+    if isinstance(v, datetime):
+        return v
+    try:
+        return datetime.fromisoformat(str(v).replace("Z", "+00:00"))
+    except ValueError:
+        return None
+
+
+FRESHNESS = {"MARKET_FEED": ("as_of", timedelta(hours=24)), "TELEMETRY": ("observed_at", timedelta(hours=1)),
+             "MARKET_BATCH": ("retrieved_at", timedelta(days=30)), "BUYER_RECORD": ("retrieved_at", timedelta(days=30))}
+
+
+def freshness_checks(artifact_type: str, payload: dict, now: datetime, f: Findings) -> None:
+    f.ran("freshness")
+    if artifact_type == "SUPPLIER_QUOTE":
+        vu = _as_dt(payload.get("valid_until"))
+        if vu is not None and vu.tzinfo is not None and vu < now:
+            f.add("STALE_DATA", f"quote expired {vu.isoformat()}", "payload.valid_until")
+    if artifact_type in FRESHNESS:
+        key, window = FRESHNESS[artifact_type]
+        t = _as_dt(payload.get(key))
+        if t is not None and t.tzinfo is not None:
+            if now - t > window:
+                f.add("STALE_DATA", f"{key} {t.isoformat()} is older than {window}", f"payload.{key}")
+            elif t - now > timedelta(minutes=5):
+                f.add("STALE_DATA", f"{key} {t.isoformat()} is in the future", f"payload.{key}")
+    if artifact_type == "TEST_MEASUREMENT":
+        t = _as_dt(payload.get("measured_at"))
+        if t is not None and t.tzinfo is not None and t - now > timedelta(minutes=5):
+            f.add("STALE_DATA", "measured_at is in the future", "payload.measured_at")
+
+
+# ----------------------------------------------------------------------------------------------
+# hard policy (N0.5)
+# ----------------------------------------------------------------------------------------------
+def _walk_keys(obj: Any) -> Iterable[tuple[str, Any]]:
+    if isinstance(obj, dict):
+        for k, v in obj.items():
+            yield k, v
+            yield from _walk_keys(v)
+    elif isinstance(obj, list):
+        for v in obj:
+            yield from _walk_keys(v)
+
+
+def hard_policy_checks(artifact: Artifact, source: Optional[SourceRecord], reqs: list[Requirement],
+                       now: datetime, f: Findings) -> None:
+    f.ran("synthetic")
+    f.ran("stage_gate")
+    f.ran("calibration")
+    f.ran("safety")
+    p, stage = artifact.payload, RELEASE_STAGE_ORDER[artifact.release_stage]
+    # a nested ``synthetic: true`` (e.g. one market observation in a batch) taints the whole artifact
+    marked = any(k in ("_synthetic", "synthetic") and v is True for k, v in _walk_keys(p))
+    if not artifact.synthetic and ((source is not None and source.data_origin == "SYNTHETIC") or marked):
+        f.add("SYNTHETIC_AS_REAL", "synthetic data (source data_origin SYNTHETIC or a synthetic marker in the "
+                                   "payload) submitted with synthetic=false", "synthetic")
+    if artifact.synthetic and stage > RELEASE_STAGE_ORDER["CONCEPT"]:
+        f.add("SYNTHETIC_STAGE_GATE", f"synthetic data cannot enter release_stage {artifact.release_stage}",
+              "release_stage")
+    if artifact.artifact_type == "TEST_MEASUREMENT":
+        measured = _as_dt(p.get("measured_at"))
+        for i, inst in enumerate(p.get("instruments") or []):
+            due = _as_dt(inst.get("calibration_due")) if isinstance(inst, dict) else None
+            if measured and due and due < measured:
+                f.add("CALIBRATION_EXPIRED", f"{inst.get('instrument_id')} calibration due {due.date()} before "
+                                             f"measurement {measured.date()}", f"payload.instruments[{i}]")
+    if artifact.artifact_type == "EDA_PACKAGE" and stage >= RELEASE_STAGE_ORDER["PILOT"]:
+        errs = int(p.get("drc_errors") or 0) + int(p.get("erc_errors") or 0)
+        if errs:
+            f.add("STAGE_GATE_VIOLATION", f"{errs} open DRC/ERC errors at {artifact.release_stage}", "payload")
+    if artifact.artifact_type == "MODEL_OUTPUT":
+        if stage >= RELEASE_STAGE_ORDER["PILOT"]:
+            f.add("STAGE_GATE_VIOLATION", f"model output cannot be released at {artifact.release_stage}",
+                  "release_stage")
+        else:
+            f.add("MODEL_OUTPUT_UNREVIEWED", "model output requires human review before downstream use")
+    if artifact.artifact_type in ("RFQ", "DATASHEET", "PRD"):
+        hazardous = [r for r in reqs if parameter_dimension(r.parameter) == "voltage" and r.si_value is not None
+                     and abs(r.si_value) > 60]
+        if hazardous and not p.get("compliance_standards"):
+            f.add("SAFETY_REVIEW_REQUIRED", f"{hazardous[0].parameter}={hazardous[0].value} {hazardous[0].unit} "
+                                            "exceeds the 60 V DC SELV limit and no safety standard is declared")
+
+
+def _dec(v: Any) -> Optional[Decimal]:
+    try:
+        d = Decimal(str(v))
+    except (InvalidOperation, ValueError, TypeError):
+        return None
+    return d if d.is_finite() else None
+
+
+def market_checks(artifact_type: str, payload: dict, synthetic: bool, f: Findings) -> None:
+    """SAM_EVIDENCE integrity, recomputed deterministically: N0 never trusts a submitted total."""
+    if artifact_type != "SAM_EVIDENCE":
+        return
+    f.ran("sam_integrity")
+    items = payload.get("verified_items") or []
+    total = Decimal(0)
+    for i, it in enumerate(items):
+        if not isinstance(it, dict):
+            continue
+        where = f"payload.verified_items[{i}]"
+        if it.get("synthetic") is True or it.get("spend_type") != "VERIFIED_BUDGET" or not it.get("attestation_id"):
+            f.add("UNVERIFIED_SPEND_AS_VERIFIED", f"{it.get('evidence_id')} is synthetic, unattested or "
+                                                  f"{it.get('spend_type')}; it cannot be verified SAM", where)
+        amount = _dec((it.get("original") or {}).get("amount"))
+        rate, base = _dec(it.get("fx_rate")), _dec(it.get("amount_base"))
+        if amount is not None and rate is not None and base is not None:
+            if abs(amount * rate - base) > Decimal("0.01"):
+                f.add("SAM_TOTAL_MISMATCH", f"{it.get('evidence_id')}: {amount} × {rate} ≠ {base}", where)
+            total += base
+    stated = _dec(payload.get("verified_real_sam"))
+    if stated is not None and abs(stated - total) > Decimal("0.01"):
+        f.add("SAM_TOTAL_MISMATCH", f"verified_real_sam {stated} ≠ Σ verified_items {total}",
+              "payload.verified_real_sam")
+    if synthetic and stated is not None and stated > 0:
+        f.add("UNVERIFIED_SPEND_AS_VERIFIED", "a synthetic artifact cannot carry verified real SAM",
+              "payload.verified_real_sam")
+
+
+def _ext(path: str) -> str:
+    p = str(path).lower()
+    i = p.rfind(".")
+    return p[i:] if i >= 0 else ""
+
+
+_SCOPE_NATIVE = {"schematic_pcb": {"SCHEMATIC", "PCB"}, "circuit_simulation": {"NETLIST"},
+                 "mechanical_thermal": {"GEOMETRY"}}
+
+
+def design_checks(artifact_type: str, payload: dict, f: Findings) -> None:
+    """N0 release policy for N3 design releases (all three scopes) and engineering BOMs. N0 re-derives
+    nativeness from file extensions and re-checks every number; nothing in the payload is trusted."""
+    if artifact_type == "DESIGN_RELEASE":
+        _design_release_checks(payload, f)
+    elif artifact_type == "BOM_RELEASE":
+        _bom_release_checks(payload, f)
+    elif artifact_type == "PRD":
+        _prd_reference_checks(payload, f)
+
+
+def _prd_reference_checks(p: dict, f: Findings) -> None:
+    f.ran("prd_safety_references")
+    ids = {r.get("req_id") for r in p.get("requirements") or [] if isinstance(r, dict)}
+    for i, h in enumerate(p.get("hazards") or []):
+        for rid in (h.get("requirement_ids") or []) if isinstance(h, dict) else []:
+            if rid not in ids:
+                f.add("CRITICAL_REFERENCE_INVALID", f"hazard {h.get('hazard_id')} links unknown requirement {rid}",
+                      f"payload.hazards[{i}]")
+    for rid in p.get("safety_critical_requirement_ids") or []:
+        if rid not in ids:
+            f.add("CRITICAL_REFERENCE_INVALID", f"safety-critical id {rid} is not a requirement",
+                  "payload.safety_critical_requirement_ids")
+
+
+def guard_band_verdict(value: Decimal, uncertainty: Decimal, lower: Optional[Decimal],
+                       upper: Optional[Decimal]) -> str:
+    """ILAC-G8-style decision with a guard band equal to the expanded uncertainty U:
+    PASS only if [value − U, value + U] lies inside the limits; FAIL if it lies entirely outside a
+    limit; INDETERMINATE whenever value ± U crosses a limit (never PASS). Exact Decimal arithmetic."""
+    lo, hi = value - uncertainty, value + uncertainty
+    if (upper is not None and lo > upper) or (lower is not None and hi < lower):
+        return "FAIL"
+    if (upper is not None and hi > upper) or (lower is not None and lo < lower):
+        return "INDETERMINATE"
+    return "PASS"
+
+
+def verification_checks(artifact: Artifact, f: Findings) -> None:
+    """N0 release policy for N4 verification packages. Every verdict is recomputed here."""
+    if artifact.artifact_type != "VERIFICATION_RELEASE":
+        return
+    from .models import METHOD_PROVENANCE, PHYSICAL_PROVENANCE, RELIABILITY_RESEARCH_LABEL
+    from .units import UnitError, lookup
+    f.ran("verification_policy")
+    p = artifact.payload
+    if p.get("verification_status") != "VERIFIED":
+        f.add("VERIFICATION_INCOMPLETE", f"verification_status is {p.get('verification_status')}",
+              "payload.verification_status")
+    if artifact.synthetic and p.get("verification_status") == "VERIFIED":
+        f.add("SYNTHETIC_AS_PHYSICAL", "a synthetic package can never be VERIFIED qualification evidence",
+              "payload.verification_status")
+    passed: dict[str, bool] = {}
+    for i, m in enumerate(p.get("measurements") or []):
+        if not isinstance(m, dict):
+            continue
+        where, tid = f"payload.measurements[{i}]", m.get("test_id")
+        ok = True
+        try:
+            lookup(str(m.get("unit")))
+        except UnitError:
+            f.add("UNIT_NOT_SI", f"{m.get('measurement_id')}: unit {m.get('unit')!r} is not SI", where)
+            ok = False
+        value, u = _dec(m.get("value")), _dec(m.get("expanded_uncertainty"))
+        if u is None or u <= 0:
+            f.add("UNCERTAINTY_MISSING", f"{m.get('measurement_id')} has no positive expanded uncertainty", where)
+            ok = False
+        elif value is not None:
+            verdict = guard_band_verdict(value, u, _dec(m.get("lower_limit")), _dec(m.get("upper_limit")))
+            if verdict == "FAIL":
+                f.add("MEASUREMENT_FAIL", f"{m.get('measurement_id')}: {value} ± {u} outside the limits", where)
+            elif verdict == "INDETERMINATE":
+                f.add("GUARD_BAND_INDETERMINATE", f"{m.get('measurement_id')}: {value} ± {u} crosses "
+                                                  f"[{m.get('lower_limit')}, {m.get('upper_limit')}]", where)
+            if verdict != m.get("verdict"):
+                f.add("VERDICT_MISMATCH", f"{m.get('measurement_id')}: stated {m.get('verdict')}, recomputed "
+                                          f"{verdict}", where)
+            ok = ok and verdict == "PASS"
+        prov, method = m.get("provenance"), m.get("method")
+        if prov in PHYSICAL_PROVENANCE:
+            due, at = _as_dt(m.get("calibration_due")), _as_dt(m.get("captured_at"))
+            if not m.get("instrument_id") or not m.get("calibration_id") or due is None:
+                f.add("CALIBRATION_MISSING", f"{m.get('measurement_id')} lacks instrument / calibration", where)
+                ok = False
+            elif at is None or due <= at:
+                f.add("CALIBRATION_EXPIRED", f"{m.get('measurement_id')}: calibration due {due} not after capture "
+                                             f"{at}", where)
+                ok = False
+        if prov in ("SYNTHETIC", "MOCK_FIXTURE"):
+            f.add("SYNTHETIC_AS_PHYSICAL", f"{m.get('measurement_id')} is {prov}", where)
+            ok = False
+        elif prov not in METHOD_PROVENANCE.get(str(method), ()):
+            f.add("PROVENANCE_METHOD_MISMATCH", f"{m.get('measurement_id')}: {prov} cannot verify {method}", where)
+            ok = False
+        if not m.get("raw_sha256"):
+            f.add("EVIDENCE_HASH_MISSING", f"{m.get('measurement_id')} has no raw evidence hash", where)
+            ok = False
+        passed[tid] = passed.get(tid, True) and ok
+    by_test_method = {m.get("test_id"): m.get("method") for m in p.get("measurements") or [] if isinstance(m, dict)}
+    for i, a in enumerate(p.get("attribute_inspections") or []):
+        if not isinstance(a, dict):
+            continue
+        ok = (a.get("human_verdict") == "ACCEPT" and not a.get("defects_confirmed") and not a.get("unadjudicated")
+              and bool(a.get("adjudicator")) and a.get("adjudicator") not in (p.get("evidence_submitters") or []))
+        if a.get("provenance") in ("SYNTHETIC", "MOCK_FIXTURE"):
+            f.add("SYNTHETIC_AS_PHYSICAL", f"inspection {a.get('test_id')} is {a.get('provenance')}",
+                  f"payload.attribute_inspections[{i}]")
+            ok = False
+        if not ok:
+            f.add("INSPECTION_NOT_ACCEPTED", f"inspection {a.get('test_id')} / {a.get('unit_serial')}: "
+                                             f"{a.get('defects_confirmed')} confirmed, {a.get('unadjudicated')} "
+                                             f"unadjudicated, human verdict {a.get('human_verdict')}",
+                  f"payload.attribute_inspections[{i}]")
+        tid = a.get("test_id")
+        passed[tid] = passed.get(tid, True) and ok
+        by_test_method.setdefault(tid, "INSPECTION")
+    for i, t in enumerate(p.get("traceability") or []):
+        if not isinstance(t, dict) or not t.get("safety_critical"):
+            continue
+        physical = [x for x in t.get("test_ids") or [] if passed.get(x) and by_test_method.get(x) != "SIM"]
+        if t.get("verdict") != "VERIFIED" or not physical:
+            f.add("UNMAPPED_SAFETY_CRITICAL", f"{t.get('requirement_id')} has no passing physical verification",
+                  f"payload.traceability[{i}]")
+    if not p.get("approved_by") or p.get("approved_by") in (p.get("evidence_submitters") or []):
+        f.add("SEPARATION_OF_DUTIES", "the approver must be a separate person from every evidence submitter",
+              "payload.approved_by")
+    if p.get("prioritization_method") == "AIAG_VDA_AP_LICENSED" and not p.get("ap_license_ref"):
+        f.add("STANDARD_OVERCLAIM", "AIAG-VDA Action Priority needs a licensed lookup-table reference",
+              "payload.prioritization_method")
+    rel = p.get("reliability")
+    if isinstance(rel, dict) and (rel.get("label") != RELIABILITY_RESEARCH_LABEL or rel.get("release_eligible")):
+        f.add("RELIABILITY_OVERCLAIM", "reliability figures are research-only statistical illustrations",
+              "payload.reliability")
+    if isinstance(p.get("commercial"), dict) and any("mtbf" in str(c).lower() or "reliab" in str(c).lower()
+                                                     for c in p["commercial"].get("claims") or []):
+        f.add("RELIABILITY_OVERCLAIM", "commercial claims cannot cite research-only reliability figures",
+              "payload.commercial.claims")
+    pinned = set(artifact.source_artifact_ids)
+    refs = list(p.get("design_refs") or [])
+    if not refs or not set(refs) <= pinned or p.get("design_revision") not in {r.rsplit("@", 1)[-1] for r in refs}:
+        f.add("DESIGN_REVISION_UNLOCKED", "design_refs must be the pinned upstream DESIGN_RELEASE revisions and "
+                                          "include design_revision", "payload.design_refs")
+
+
+# ----------------------------------------------------------------------------------------------
+# sourcing math, shared by N5 (which computes) and N0 (which recomputes)
+# ----------------------------------------------------------------------------------------------
+UNIT_COST_QUANTUM = Decimal("0.0001")
+RIGHTS_DEPENDENCY_FIELDS = {"SOURCING_HANDOFF": "quote_source_ids"}
+
+
+def normalize_mpn(mpn: Any) -> str:
+    """Exact-MPN comparison key: whitespace removed and upper-cased, nothing else. Packaging / grade
+    suffixes stay significant, so ``-TR`` or ``/NOPB`` variants are different parts."""
+    return re.sub(r"\s+", "", str(mpn or "")).upper()
+
+
+def order_quantity(q_required: int, moq: int, pack_multiple: int) -> int:
+    """Q_order = ceil(max(Q_required, MOQ) / pack multiple) × pack multiple, in exact integers."""
+    if q_required < 1 or moq < 1 or pack_multiple < 1:
+        raise ValueError("Q_required, MOQ and the pack multiple must all be ≥ 1")
+    base = max(q_required, moq)
+    return -(-base // pack_multiple) * pack_multiple
+
+
+def applicable_break(breaks: Iterable[tuple[int, Decimal]], q_order: int) -> Optional[tuple[int, Decimal]]:
+    """The price break with the largest minimum quantity that q_order reaches (None if none does)."""
+    reached = [b for b in breaks if b[0] <= q_order]
+    return max(reached, key=lambda b: b[0]) if reached else None
+
+
+def extended_cost(q_order: int, unit_price: Decimal, charges: Iterable[Decimal] = ()) -> Decimal:
+    return Decimal(q_order) * unit_price + sum(charges, Decimal(0))
+
+
+def unit_cost(total: Decimal, build_quantity: int) -> Decimal:
+    return (total / Decimal(build_quantity)).quantize(UNIT_COST_QUANTUM, rounding=ROUND_HALF_UP)
+
+
+def rights_dependencies(artifact_type: str, payload: Any) -> list[str]:
+    """Sources (besides the artifact's own) whose rights a release depends on."""
+    key = RIGHTS_DEPENDENCY_FIELDS.get(artifact_type)
+    vals = payload.get(key) if key and isinstance(payload, dict) else None
+    return [str(v) for v in vals] if isinstance(vals, list) else []
+
+
+def sourcing_checks(artifact: Artifact, f: Findings, now: datetime, bom_payload: Optional[dict],
+                    source_status: Callable[[str], Optional[str]]) -> None:
+    """N0 release policy for N5 sourcing handoffs: quantities, price breaks, costs and the total are
+    recomputed with exact Decimal arithmetic; MPNs and quantities are compared with the pinned N3 BOM."""
+    if artifact.artifact_type != "SOURCING_HANDOFF":
+        return
+    from .models import EXCLUDED_COST_CATEGORIES, INDICATIVE_MATERIAL_LABEL
+    f.ran("sourcing_policy")
+    p = artifact.payload
+    build = p.get("build_quantity")
+    build = build if isinstance(build, int) and build >= 1 else None
+    base_ccy = p.get("base_currency")
+    fx = {x.get("fx_id"): x for x in p.get("fx_assumptions") or [] if isinstance(x, dict)}
+    total = Decimal(0)
+    sourced: dict[int, dict] = {}
+    for i, ln in enumerate(p.get("lines") or []):
+        if not isinstance(ln, dict):
+            continue
+        where = f"payload.lines[{i}]"
+        sourced[ln.get("line")] = ln
+        try:
+            qpu, q_req, q_order = int(ln["qty_per_unit"]), int(ln["q_required"]), int(ln["q_order"])
+            moq, pack = int(ln["moq"]), int(ln["pack_multiple"])
+            expect = order_quantity(q_req, moq, pack)
+        except (KeyError, TypeError, ValueError):
+            f.add("ORDER_QUANTITY_MISMATCH", f"line {ln.get('line')}: quantities are missing or invalid", where)
+            continue
+        if build is not None and q_req != qpu * build:
+            f.add("ORDER_QUANTITY_MISMATCH", f"line {ln.get('line')}: q_required {q_req} ≠ {qpu} × {build}", where)
+        if q_order != expect:
+            f.add("ORDER_QUANTITY_MISMATCH", f"line {ln.get('line')}: q_order {q_order}, recomputed {expect} "
+                                             f"(Q_required {q_req}, MOQ {moq}, pack {pack})", where)
+        breaks = [(int(b.get("min_qty")), _dec(b.get("unit_price"))) for b in ln.get("price_breaks") or []
+                  if isinstance(b, dict) and _dec(b.get("unit_price")) is not None]
+        brk = applicable_break(breaks, expect)
+        price = _dec(ln.get("unit_price"))
+        if brk is None or price is None or price != brk[1]:
+            f.add("PRICE_BREAK_MISMATCH", f"line {ln.get('line')}: unit price {ln.get('unit_price')}, applicable "
+                                          f"break at {expect} is {brk[1] if brk else 'none'}", where)
+        charges = [_dec(c.get("amount")) or Decimal(0) for c in ln.get("line_charges") or [] if isinstance(c, dict)]
+        ext = extended_cost(expect, brk[1], charges) if brk else None
+        if ext is None or _dec(ln.get("extended_cost")) != ext:
+            f.add("EXTENDED_COST_MISMATCH", f"line {ln.get('line')}: extended cost {ln.get('extended_cost')}, "
+                                            f"recomputed {ext}", where)
+        ccy = ln.get("currency")
+        if ccy == base_ccy:
+            rate = Decimal(1)
+            if ln.get("fx_id") is not None:
+                f.add("FX_ASSUMPTION_MISSING", f"line {ln.get('line')} is in {ccy}; no FX assumption applies", where)
+        else:
+            a = fx.get(ln.get("fx_id"))
+            rate = _dec(a.get("rate")) if a and a.get("from_currency") == ccy and a.get("to_currency") == base_ccy                 else None
+            if rate is None or _dec(ln.get("fx_rate")) != rate:
+                f.add("FX_ASSUMPTION_MISSING", f"line {ln.get('line')}: {ccy} → {base_ccy} has no matching FX "
+                                               "assumption", where)
+        base = ext * rate if ext is not None and rate is not None else None
+        if base is None or _dec(ln.get("extended_cost_base")) != base:
+            f.add("EXTENDED_COST_MISMATCH", f"line {ln.get('line')}: base-currency cost {ln.get('extended_cost_base')}"
+                                            f", recomputed {base}", where)
+        total += base if base is not None else (_dec(ln.get("extended_cost_base")) or Decimal(0))
+        vu = _as_dt(ln.get("valid_until"))
+        if vu is None or vu.tzinfo is None or vu <= now:
+            f.add("QUOTE_EXPIRED", f"line {ln.get('line')}: quote {ln.get('quote_id')} valid until "
+                                   f"{ln.get('valid_until')}", where)
+        if normalize_mpn(ln.get("quoted_mpn")) != normalize_mpn(ln.get("mpn")):
+            f.add("MPN_NOT_EXACT", f"line {ln.get('line')}: quoted {ln.get('quoted_mpn')!r}, BOM {ln.get('mpn')!r}; "
+                                   "alternates need an N3 engineering change", where)
+        if ln.get("supplier_qualification") != "APPROVED":
+            f.add("SUPPLIER_NOT_APPROVED", f"line {ln.get('line')}: supplier {ln.get('supplier_id')} is "
+                                           f"{ln.get('supplier_qualification')}", where)
+    if build is not None and (_dec(p.get("indicative_total")) != total
+                              or _dec(p.get("indicative_unit_cost")) != unit_cost(total, build)):
+        f.add("EXTENDED_COST_MISMATCH", f"indicative total {p.get('indicative_total')} / unit "
+                                        f"{p.get('indicative_unit_cost')}, recomputed {total} / "
+                                        f"{unit_cost(total, build)}", "payload.indicative_total")
+    if p.get("indicative_scope") != INDICATIVE_MATERIAL_LABEL or \
+            not set(EXCLUDED_COST_CATEGORIES) <= set(p.get("excluded_cost_categories") or []):
+        f.add("INDICATIVE_SCOPE_MISSING", "the total must carry the indicative-material label and every excluded "
+                                          f"category {list(EXCLUDED_COST_CATEGORIES)}", "payload.indicative_scope")
+    for sid in p.get("quote_source_ids") or []:
+        status = source_status(str(sid))
+        if status != "APPROVED":
+            f.add("SOURCE_RIGHTS_REVOKED", f"quotation source {sid} is {status or 'not registered'}",
+                  "payload.quote_source_ids")
+    if not p.get("approved_by") or p.get("approved_by") in (p.get("submitters") or []):
+        f.add("SEPARATION_OF_DUTIES", "the approver must be a separate person from every submitter",
+              "payload.approved_by")
+    ref = p.get("bom_ref")
+    if not isinstance(ref, str) or ref not in artifact.source_artifact_ids or bom_payload is None:
+        f.add("BOM_REVISION_UNLOCKED", f"bom_ref {ref!r} must be a pinned, resolvable BOM_RELEASE in "
+                                       "source_artifact_ids", "payload.bom_ref")
+        return
+    if bom_payload.get("design_revision") != p.get("design_revision"):
+        f.add("BOM_REVISION_UNLOCKED", f"BOM {ref} is design revision {bom_payload.get('design_revision')}, the "
+                                       f"handoff says {p.get('design_revision')}", "payload.design_revision")
+    for item in bom_payload.get("items") or []:
+        if not isinstance(item, dict) or item.get("dnp"):
+            continue
+        ln = sourced.get(item.get("line"))
+        if ln is None:
+            f.add("LINE_UNSOURCED", f"BOM line {item.get('line')} ({item.get('mpn')}) is not sourced", "payload.lines")
+        elif normalize_mpn(ln.get("mpn")) != normalize_mpn(item.get("mpn")) or \
+                ln.get("qty_per_unit") != item.get("qty"):
+            f.add("MPN_NOT_EXACT", f"line {item.get('line')}: handoff has {ln.get('mpn')} × {ln.get('qty_per_unit')}, "
+                                   f"BOM has {item.get('mpn')} × {item.get('qty')}", "payload.lines")
+    bom_lines = {i.get("line") for i in bom_payload.get("items") or [] if isinstance(i, dict) and not i.get("dnp")}
+    for extra in sorted(set(sourced) - bom_lines, key=str):
+        f.add("MPN_NOT_EXACT", f"handoff line {extra} is not a sourcing line of BOM {ref}", "payload.lines")
+
+
+def _num(v: Any) -> Optional[float]:
+    d = _dec(v)
+    return float(d) if d is not None else None
+
+
+def _design_release_checks(p: dict, f: Findings) -> None:
+    f.ran("design_release_policy")
+    scope = p.get("scope")
+    files = [x for x in p.get("files") or [] if isinstance(x, dict)]
+    roles = set()
+    for i, x in enumerate(files):
+        role = NATIVE_EXTENSIONS.get(_ext(x.get("path", "")))
+        if role:
+            roles.add(role)
+            if not x.get("sha256") or not x.get("tool_version"):
+                f.add("DESIGN_FILE_UNVERIFIED", f"{x.get('path')} lacks a SHA-256 or tool version", f"payload.files[{i}]")
+    missing = _SCOPE_NATIVE.get(scope, set()) - roles
+    if missing:
+        only = files and all(_ext(x.get("path", "")) in NON_NATIVE_EXTENSIONS for x in files)
+        f.add("NATIVE_GEOMETRY_MISSING" if scope == "mechanical_thermal" else "NATIVE_FILES_MISSING",
+              f"{scope} release needs native {sorted(missing)}" + (" but contains only PDF/image files" if only else ""),
+              "payload.files")
+    if scope == "schematic_pcb":
+        for key in ("erc", "drc"):
+            s = p.get(key)
+            if not isinstance(s, dict):
+                f.add("SCOPE_EVIDENCE_MISSING", f"schematic_pcb release has no {key.upper()} summary", f"payload.{key}")
+            elif int(s.get("critical") or 0) > 0:
+                f.add("CRITICAL_ERC_DRC", f"{s['critical']} unresolved critical {key.upper()} violation(s)",
+                      f"payload.{key}")
+    elif scope == "circuit_simulation":
+        sim = p.get("simulation")
+        if not isinstance(sim, dict):
+            f.add("SCOPE_EVIDENCE_MISSING", "circuit_simulation release has no simulation evidence", "payload.simulation")
+        else:
+            if not sim.get("solver") or not sim.get("solver_version"):
+                f.add("SOLVER_VERSION_MISSING", "simulation evidence must name the solver and its version",
+                      "payload.simulation")
+            corners = [c for c in sim.get("corners") or [] if isinstance(c, dict)]
+            names = {c.get("name") for c in corners}
+            for c in sorted(set(REQUIRED_CORNERS) | set(sim.get("required_corners") or [])):
+                if c not in names:
+                    f.add("WORST_CASE_CORNER_MISSING", f"worst-case corner {c} was not simulated",
+                          "payload.simulation.corners")
+            for c in corners:
+                if c.get("converged") is not True:
+                    f.add("SIMULATION_NOT_CONVERGED", f"corner {c.get('name')} did not converge",
+                          "payload.simulation.corners")
+    elif scope == "mechanical_thermal":
+        th = p.get("thermal")
+        if not isinstance(th, dict):
+            f.add("SCOPE_EVIDENCE_MISSING", "mechanical_thermal release has no thermal evidence", "payload.thermal")
+        else:
+            if not th.get("boundary_conditions"):
+                f.add("THERMAL_BOUNDARY_MISSING", "thermal boundary conditions are empty", "payload.thermal")
+            if th.get("ambient_c") is None or th.get("load_w") is None:
+                f.add("THERMAL_ASSUMPTIONS_MISSING", "ambient temperature and load assumptions are required",
+                      "payload.thermal")
+            margin = _num(th.get("margin_c")) or 0.0
+            limits = th.get("limits_c") or {}
+            for ref, t in sorted((th.get("max_temps_c") or {}).items()):
+                lim = _num(limits.get(ref))
+                if lim is None:
+                    f.add("THERMAL_ASSUMPTIONS_MISSING", f"no temperature limit for {ref}", "payload.thermal.limits_c")
+                elif (_num(t) or 0) > lim - margin:
+                    f.add("THERMAL_LIMIT_EXCEEDED", f"{ref} reaches {t} °C; limit {lim} °C minus {margin} °C margin",
+                          "payload.thermal.max_temps_c")
+    for i, d in enumerate(p.get("derating") or []):
+        stress, rating, factor = _num(d.get("stress")), _num(d.get("rating")), _num(d.get("factor"))
+        if None not in (stress, rating, factor) and abs(stress) > factor * abs(rating):
+            f.add("DERATING_BREACH", f"{d.get('refdes')} {d.get('parameter')}: {stress} > {factor} × {rating}",
+                  f"payload.derating[{i}]")
+    for i, c in enumerate(p.get("clearance") or []):
+        actual, required = _num(c.get("actual_mm")), _num(c.get("required_mm"))
+        if None not in (actual, required) and actual < required:
+            f.add("CREEPAGE_CLEARANCE", f"{c.get('kind')} {actual} mm < required {required} mm",
+                  f"payload.clearance[{i}]")
+
+
+def _bom_release_checks(p: dict, f: Findings) -> None:
+    f.ran("bom_policy")
+    if p.get("pcb_revision") is not None and p.get("pcb_revision") != p.get("design_revision"):
+        f.add("BOM_REVISION_MISMATCH", f"BOM is for design revision {p.get('design_revision')} but the PCB is "
+                                       f"revision {p.get('pcb_revision')}", "payload.pcb_revision")
+    seen: dict[str, int] = {}
+    for i, it in enumerate(p.get("items") or []):
+        if not isinstance(it, dict):
+            continue
+        refs = it.get("refdes") or []
+        if not it.get("dnp") and not it.get("mpn"):
+            f.add("BOM_LINE_INVALID", f"line {it.get('line')} ({', '.join(refs)}) has no MPN", f"payload.items[{i}]")
+        if not it.get("dnp") and it.get("qty") != len(refs):
+            f.add("BOM_LINE_INVALID", f"line {it.get('line')}: qty {it.get('qty')} ≠ {len(refs)} refdes",
+                  f"payload.items[{i}]")
+        for r in refs:
+            if r in seen:
+                f.add("DUPLICATE_REFDES", f"{r} is on lines {seen[r]} and {it.get('line')}", f"payload.items[{i}]")
+            seen.setdefault(r, it.get("line"))
+
+
+# ----------------------------------------------------------------------------------------------
+# routing (N0.6)
+# ----------------------------------------------------------------------------------------------
+TYPE_DESTINATIONS = {
+    "RFQ": ["N1", "N2", "N6"], "DATASHEET": ["N2", "N3", "N5"], "EDA_PACKAGE": ["N3", "N4", "N5"],
+    "SUPPLIER_QUOTE": ["N5", "N7"], "TEST_MEASUREMENT": ["N3", "N4", "N8"], "MARKET_FEED": ["N1", "N6", "N7"],
+    "FINANCE_RECORD": ["N7"], "TELEMETRY": ["N4", "N8"], "MODEL_OUTPUT": ["N2", "N3"],
+    "MARKET_BATCH": ["N1"], "BUYER_RECORD": ["N1"], "COMMERCIAL_SHORTLIST": ["N6"], "SAM_EVIDENCE": ["N7"],
+    "PRD": ["N3"], "DESIGN_RELEASE": ["N4"], "BOM_RELEASE": ["N5"], "VERIFICATION_RELEASE": ["N6", "N7", "N8"],
+    "SOURCING_HANDOFF": ["N6", "N7"],
+}
+PURPOSE_DESTINATIONS = {
+    "RFQ_ANALYSIS": ["N1", "N2", "N6"], "PRODUCT_DEFINITION": ["N2", "N3"], "DESIGN_ENGINEERING": ["N3", "N4", "N5"],
+    "VERIFICATION": ["N3", "N4", "N8"], "SOURCING": ["N5", "N7"], "COMMERCIAL": ["N6", "N7"], "FINANCE": ["N7"],
+    "LIFECYCLE": ["N4", "N8"], "MARKET_INTELLIGENCE": ["N1", "N6", "N7"], "EVALUATION": [],
+}
+
+
+def allowed_destinations(decision: str, artifact_type: str, purpose: str, origin_node: str,
+                         requested: Optional[list[str]]) -> list[str]:
+    if decision != "PASS":
+        return []
+    nodes = [n for n in TYPE_DESTINATIONS[artifact_type] if n in PURPOSE_DESTINATIONS.get(purpose, [])
+             and n != origin_node]
+    if requested is not None:
+        nodes = [n for n in nodes if n in requested]
+    return nodes
+
+
+# ----------------------------------------------------------------------------------------------
+# LLM output revalidation
+# ----------------------------------------------------------------------------------------------
+def _norm_text(s: str) -> str:
+    return re.sub(r"\s+", " ", s).strip().lower()
+
+
+def evidence_checks(reqs: list[Requirement], document_text: Optional[str], f: Findings) -> None:
+    """Every MODEL_EXTRACTED value must quote text that really occurs in the parsed source."""
+    f.ran("evidence")
+    if document_text is None:
+        return
+    hay = _norm_text(document_text)
+    for r in reqs:
+        if r.value_origin != "MODEL_EXTRACTED":
+            continue
+        for s in r.evidence_snippets:
+            if _norm_text(s.text) not in hay:
+                f.add("EVIDENCE_NOT_FOUND", f"evidence for {r.parameter} ({s.text[:80]!r}) is not in the source "
+                                            "document", r.req_id)

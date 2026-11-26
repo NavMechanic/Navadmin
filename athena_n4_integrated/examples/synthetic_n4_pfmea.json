@@ -1,0 +1,85 @@
+{
+  "entries": [
+    {
+      "entry_id": "FM-01",
+      "process_step": "transformer winding",
+      "function": "primary-secondary insulation",
+      "failure_mode": "insulation breakdown",
+      "effect": "electric shock hazard at the output",
+      "cause": "damaged triple-insulated wire",
+      "prevention_controls": [
+        "incoming TIW inspection"
+      ],
+      "detection_controls": [
+        {
+          "description": "100 % hipot",
+          "test_id": "T-09"
+        }
+      ],
+      "severity": 10,
+      "occurrence": 2,
+      "detection": 2,
+      "hazard_ids": [
+        "H-1"
+      ],
+      "special_characteristic": true
+    },
+    {
+      "entry_id": "FM-02",
+      "process_step": "Y-capacitor placement",
+      "function": "limit touch current",
+      "failure_mode": "wrong Y-capacitor value",
+      "effect": "touch current above limit",
+      "cause": "feeder mix-up",
+      "detection_controls": [
+        {
+          "description": "touch current test",
+          "test_id": "T-11"
+        }
+      ],
+      "severity": 9,
+      "occurrence": 2,
+      "detection": 3,
+      "hazard_ids": [
+        "H-2"
+      ]
+    },
+    {
+      "entry_id": "FM-03",
+      "process_step": "thermal pad assembly",
+      "function": "MOSFET heat transfer",
+      "failure_mode": "missing thermal pad",
+      "effect": "overheating at 85 °C ambient",
+      "cause": "operator omission",
+      "detection_controls": [
+        {
+          "description": "85 °C run",
+          "test_id": "T-08"
+        }
+      ],
+      "severity": 9,
+      "occurrence": 3,
+      "detection": 4,
+      "hazard_ids": [
+        "H-3"
+      ]
+    },
+    {
+      "entry_id": "FM-04",
+      "process_step": "reflow",
+      "function": "solder joints",
+      "failure_mode": "solder bridge",
+      "effect": "short on the feedback divider",
+      "cause": "stencil wear",
+      "detection_controls": [
+        {
+          "description": "AOI + human adjudication",
+          "test_id": "T-13"
+        }
+      ],
+      "severity": 6,
+      "occurrence": 4,
+      "detection": 3
+    }
+  ]
+}

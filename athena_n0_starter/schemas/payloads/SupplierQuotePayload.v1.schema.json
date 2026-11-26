@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:n0:schema:SupplierQuotePayload.v1",
+  "$defs": {
+    "Money": {
+      "additionalProperties": false,
+      "properties": {
+        "amount": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Amount"
+        },
+        "currency": {
+          "pattern": "^[A-Z]{3}$",
+          "title": "Currency",
+          "type": "string"
+        }
+      },
+      "required": [
+        "amount",
+        "currency"
+      ],
+      "title": "Money",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "quote_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+      "title": "Quote Id",
+      "type": "string"
+    },
+    "supplier_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+      "title": "Supplier Id",
+      "type": "string"
+    },
+    "mpn": {
+      "title": "Mpn",
+      "type": "string"
+    },
+    "quantity": {
+      "exclusiveMinimum": 0,
+      "title": "Quantity",
+      "type": "integer"
+    },
+    "unit_price": {
+      "$ref": "#/$defs/Money"
+    },
+    "valid_until": {
+      "format": "date-time",
+      "title": "Valid Until",
+      "type": "string"
+    },
+    "lead_time_days": {
+      "minimum": 0,
+      "title": "Lead Time Days",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "quote_id",
+    "supplier_id",
+    "mpn",
+    "quantity",
+    "unit_price",
+    "valid_until",
+    "lead_time_days"
+  ],
+  "title": "SupplierQuotePayload.v1",
+  "type": "object"
+}

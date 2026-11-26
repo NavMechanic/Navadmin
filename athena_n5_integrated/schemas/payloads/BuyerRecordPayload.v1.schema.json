@@ -1,0 +1,228 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:BuyerRecordPayload.v1",
+  "$defs": {
+    "BuyerRecord": {
+      "additionalProperties": false,
+      "description": "A named-buyer fact from the CRM or a customer interview.",
+      "properties": {
+        "record_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+          "title": "Record Id",
+          "type": "string"
+        },
+        "record_type": {
+          "enum": [
+            "CRM_ACCOUNT",
+            "INTERVIEW"
+          ],
+          "title": "Record Type",
+          "type": "string"
+        },
+        "buyer_name": {
+          "maxLength": 512,
+          "minLength": 1,
+          "title": "Buyer Name",
+          "type": "string"
+        },
+        "buyer_identifiers": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Buyer Identifiers",
+          "type": "object"
+        },
+        "buyer_country": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Z]{2}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Buyer Country"
+        },
+        "buyer_type": {
+          "anyOf": [
+            {
+              "enum": [
+                "PUBLIC",
+                "PRIVATE"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Buyer Type"
+        },
+        "relationship_stage": {
+          "default": "NONE",
+          "enum": [
+            "NONE",
+            "COLD",
+            "WARM",
+            "ACTIVE"
+          ],
+          "title": "Relationship Stage",
+          "type": "string"
+        },
+        "recorded_at": {
+          "format": "date-time",
+          "title": "Recorded At",
+          "type": "string"
+        },
+        "service_categories": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Service Categories",
+          "type": "array"
+        },
+        "stated_need": {
+          "anyOf": [
+            {
+              "maxLength": 4000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Stated Need"
+        },
+        "stated_budget": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MarketAmount"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "budget_status": {
+          "anyOf": [
+            {
+              "enum": [
+                "APPROVED",
+                "PLANNED",
+                "EXPLORATORY"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Budget Status"
+        },
+        "do_not_contact": {
+          "default": false,
+          "title": "Do Not Contact",
+          "type": "boolean"
+        },
+        "source_url": {
+          "anyOf": [
+            {
+              "maxLength": 2048,
+              "pattern": "^(https?|n0)://",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Url"
+        },
+        "synthetic": {
+          "default": false,
+          "title": "Synthetic",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "record_id",
+        "record_type",
+        "buyer_name",
+        "recorded_at"
+      ],
+      "title": "BuyerRecord",
+      "type": "object"
+    },
+    "MarketAmount": {
+      "additionalProperties": false,
+      "description": "Amount as stated by the source. Deliberately unconstrained in sign: N1.4 guardrails exclude\nnegative or malformed values per observation instead of rejecting the whole batch.",
+      "properties": {
+        "amount": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Amount"
+        },
+        "currency": {
+          "pattern": "^[A-Z]{3}$",
+          "title": "Currency",
+          "type": "string"
+        }
+      },
+      "required": [
+        "amount",
+        "currency"
+      ],
+      "title": "MarketAmount",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "batch_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+      "title": "Batch Id",
+      "type": "string"
+    },
+    "connector": {
+      "enum": [
+        "CRM",
+        "INTERVIEW"
+      ],
+      "title": "Connector",
+      "type": "string"
+    },
+    "retrieved_at": {
+      "format": "date-time",
+      "title": "Retrieved At",
+      "type": "string"
+    },
+    "records": {
+      "items": {
+        "$ref": "#/$defs/BuyerRecord"
+      },
+      "minItems": 1,
+      "title": "Records",
+      "type": "array"
+    }
+  },
+  "required": [
+    "batch_id",
+    "connector",
+    "retrieved_at",
+    "records"
+  ],
+  "title": "BuyerRecordPayload.v1",
+  "type": "object"
+}

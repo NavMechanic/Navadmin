@@ -1,0 +1,38 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: pilot
+      POSTGRES_PASSWORD: pilot
+      POSTGRES_DB: pilot
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pilot"]
+      interval: 5s
+      retries: 10
+
+  api:
+    build: .
+    ports: ["8000:8000"]
+    environment: &env
+      DATABASE_URL: postgresql+psycopg://pilot:pilot@db:5432/pilot
+      PILOT_ENV: development
+      PILOT_SEED_DEMO: "true"
+      PILOT_JWT_SECRET: ${PILOT_JWT_SECRET:-dev-only-change-me}
+      LLM_PROVIDER: ${LLM_PROVIDER:-local}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      PILOT_VENDOR_OUTBOX: /srv/var/vendor_outbox
+    depends_on:
+      db: {condition: service_healthy}
+
+  worker:
+    build: .
+    command: ["python", "-m", "app.orchestration.worker"]
+    environment:
+      <<: *env
+      PILOT_SEED_DEMO: "false"
+    depends_on:
+      api: {condition: service_started}
+
+volumes:
+  pgdata:

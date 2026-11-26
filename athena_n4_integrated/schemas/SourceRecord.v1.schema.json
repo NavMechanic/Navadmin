@@ -1,0 +1,160 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:SourceRecord.v1",
+  "additionalProperties": false,
+  "description": "Rights and permitted use of one data source, per tenant. Nothing flows until APPROVED.",
+  "properties": {
+    "schema_version": {
+      "const": "SourceRecord.v1",
+      "default": "SourceRecord.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "source_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+      "title": "Source Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "publisher": {
+      "maxLength": 256,
+      "minLength": 1,
+      "title": "Publisher",
+      "type": "string"
+    },
+    "license": {
+      "description": "SPDX id, LicenseRef-* or customer contract reference",
+      "maxLength": 128,
+      "minLength": 1,
+      "title": "License",
+      "type": "string"
+    },
+    "permitted_use": {
+      "items": {
+        "enum": [
+          "RFQ_ANALYSIS",
+          "PRODUCT_DEFINITION",
+          "DESIGN_ENGINEERING",
+          "VERIFICATION",
+          "SOURCING",
+          "COMMERCIAL",
+          "FINANCE",
+          "LIFECYCLE",
+          "MARKET_INTELLIGENCE",
+          "EVALUATION",
+          "LLM_EXTRACTION",
+          "VENDOR_TRANSMISSION",
+          "MODEL_TRAINING",
+          "PERSONAL_DATA_PROCESSING"
+        ],
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Permitted Use",
+      "type": "array"
+    },
+    "approval_status": {
+      "default": "PENDING",
+      "enum": [
+        "PENDING",
+        "APPROVED",
+        "REJECTED",
+        "REVOKED"
+      ],
+      "title": "Approval Status",
+      "type": "string"
+    },
+    "approved_by": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Approved By"
+    },
+    "approved_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Approved At"
+    },
+    "data_origin": {
+      "default": "REAL",
+      "enum": [
+        "REAL",
+        "SYNTHETIC",
+        "MIXED"
+      ],
+      "title": "Data Origin",
+      "type": "string"
+    },
+    "confidentiality": {
+      "default": "CONFIDENTIAL",
+      "enum": [
+        "PUBLIC",
+        "INTERNAL",
+        "CONFIDENTIAL",
+        "RESTRICTED"
+      ],
+      "title": "Confidentiality",
+      "type": "string"
+    },
+    "allowed_vendor_ids": {
+      "description": "vendors this source may be transmitted to; empty = none",
+      "items": {
+        "type": "string"
+      },
+      "title": "Allowed Vendor Ids",
+      "type": "array"
+    },
+    "valid_until": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Valid Until"
+    },
+    "registered_by": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Registered By"
+    }
+  },
+  "required": [
+    "source_id",
+    "tenant_id",
+    "publisher",
+    "license",
+    "permitted_use"
+  ],
+  "title": "SourceRecord.v1",
+  "type": "object"
+}

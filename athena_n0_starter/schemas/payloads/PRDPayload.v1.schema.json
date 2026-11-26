@@ -1,0 +1,615 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:n0:schema:PRDPayload.v1",
+  "$defs": {
+    "Derivation": {
+      "additionalProperties": false,
+      "properties": {
+        "formula": {
+          "title": "Formula",
+          "type": "string"
+        },
+        "inputs": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Inputs",
+          "type": "array"
+        },
+        "computed_by": {
+          "default": "n0-deterministic",
+          "title": "Computed By",
+          "type": "string"
+        }
+      },
+      "required": [
+        "formula",
+        "inputs"
+      ],
+      "title": "Derivation",
+      "type": "object"
+    },
+    "DesignConstraints": {
+      "additionalProperties": false,
+      "description": "Engineering constraints N2 locks into the PRD; N3 verifies designs against them.",
+      "properties": {
+        "input_voltage_min_v": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Input Voltage Min V"
+        },
+        "input_voltage_max_v": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Input Voltage Max V"
+        },
+        "ambient_min_c": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ambient Min C"
+        },
+        "ambient_max_c": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ambient Max C"
+        },
+        "load_max_a": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Load Max A"
+        },
+        "load_max_w": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Load Max W"
+        },
+        "derating_factor": {
+          "default": 0.8,
+          "exclusiveMinimum": 0,
+          "maximum": 1,
+          "title": "Derating Factor",
+          "type": "number"
+        },
+        "min_clearance_mm": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Min Clearance Mm"
+        },
+        "min_creepage_mm": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Min Creepage Mm"
+        },
+        "thermal_margin_c": {
+          "default": 10.0,
+          "minimum": 0,
+          "title": "Thermal Margin C",
+          "type": "number"
+        },
+        "max_pcb_layers": {
+          "anyOf": [
+            {
+              "maximum": 64,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max Pcb Layers"
+        }
+      },
+      "title": "DesignConstraints",
+      "type": "object"
+    },
+    "EvidenceSnippet": {
+      "additionalProperties": false,
+      "properties": {
+        "source_ref": {
+          "description": "blob_id, file URI or 'payload'",
+          "minLength": 1,
+          "title": "Source Ref",
+          "type": "string"
+        },
+        "text": {
+          "maxLength": 2000,
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        },
+        "page": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Page"
+        },
+        "char_start": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Char Start"
+        },
+        "char_end": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Char End"
+        }
+      },
+      "required": [
+        "source_ref",
+        "text"
+      ],
+      "title": "EvidenceSnippet",
+      "type": "object"
+    },
+    "Hazard": {
+      "additionalProperties": false,
+      "description": "A product hazard from the N2 risk analysis. Every requirement it links becomes safety-critical\nfor N4: 100 % physical verification coverage before release.",
+      "properties": {
+        "hazard_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+          "title": "Hazard Id",
+          "type": "string"
+        },
+        "description": {
+          "minLength": 3,
+          "title": "Description",
+          "type": "string"
+        },
+        "severity": {
+          "maximum": 10,
+          "minimum": 1,
+          "title": "Severity",
+          "type": "integer"
+        },
+        "requirement_ids": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Requirement Ids",
+          "type": "array"
+        },
+        "standard_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "e.g. IEC 62368-1 clause 5.4.9",
+          "title": "Standard Ref"
+        }
+      },
+      "required": [
+        "hazard_id",
+        "description",
+        "severity",
+        "requirement_ids"
+      ],
+      "title": "Hazard",
+      "type": "object"
+    },
+    "Requirement": {
+      "additionalProperties": false,
+      "description": "One value. ``value_origin`` says who stated it: the customer, a measurement, N0's own\ndeterministic derivation, or a model extraction awaiting human confirmation.",
+      "properties": {
+        "schema_version": {
+          "const": "Requirement.v1",
+          "default": "Requirement.v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "req_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+          "title": "Req Id",
+          "type": "string"
+        },
+        "parameter": {
+          "description": "snake_case with a unit suffix, e.g. output_voltage_v",
+          "pattern": "^[a-z][a-z0-9_]{1,79}$",
+          "title": "Parameter",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Value"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit"
+        },
+        "tolerance": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Tolerance"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "operating_conditions": {
+          "additionalProperties": true,
+          "title": "Operating Conditions",
+          "type": "object"
+        },
+        "value_origin": {
+          "enum": [
+            "CUSTOMER",
+            "MEASURED",
+            "DERIVED",
+            "MODEL_EXTRACTED"
+          ],
+          "title": "Value Origin",
+          "type": "string"
+        },
+        "evidence_snippets": {
+          "items": {
+            "$ref": "#/$defs/EvidenceSnippet"
+          },
+          "title": "Evidence Snippets",
+          "type": "array"
+        },
+        "derivation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Derivation"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "si_value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Si Value"
+        },
+        "si_unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Si Unit"
+        }
+      },
+      "required": [
+        "req_id",
+        "parameter",
+        "value",
+        "value_origin"
+      ],
+      "title": "Requirement.v1",
+      "type": "object"
+    },
+    "TestLimit": {
+      "additionalProperties": false,
+      "properties": {
+        "parameter": {
+          "pattern": "^[a-z][a-z0-9_]{1,79}$",
+          "title": "Parameter",
+          "type": "string"
+        },
+        "min": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Min"
+        },
+        "max": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit"
+        },
+        "requirement_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Requirement Ref"
+        }
+      },
+      "required": [
+        "parameter"
+      ],
+      "title": "TestLimit",
+      "type": "object"
+    },
+    "Tolerance": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "ABS",
+            "PCT"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "plus": {
+          "title": "Plus",
+          "type": "number"
+        },
+        "minus": {
+          "title": "Minus",
+          "type": "number"
+        }
+      },
+      "required": [
+        "kind",
+        "plus",
+        "minus"
+      ],
+      "title": "Tolerance",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "prd_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+      "title": "Prd Id",
+      "type": "string"
+    },
+    "product_name": {
+      "minLength": 1,
+      "title": "Product Name",
+      "type": "string"
+    },
+    "customer_name": {
+      "minLength": 1,
+      "title": "Customer Name",
+      "type": "string"
+    },
+    "product_category": {
+      "minLength": 1,
+      "title": "Product Category",
+      "type": "string"
+    },
+    "quantity": {
+      "exclusiveMinimum": 0,
+      "title": "Quantity",
+      "type": "integer"
+    },
+    "source_rfq": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "ARTIFACT_ID@REVISION of the N1 RFQ seed",
+      "title": "Source Rfq"
+    },
+    "requirements": {
+      "items": {
+        "$ref": "#/$defs/Requirement"
+      },
+      "minItems": 1,
+      "title": "Requirements",
+      "type": "array"
+    },
+    "design_constraints": {
+      "$ref": "#/$defs/DesignConstraints"
+    },
+    "design_scopes": {
+      "items": {
+        "enum": [
+          "schematic_pcb",
+          "circuit_simulation",
+          "mechanical_thermal"
+        ],
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Design Scopes",
+      "type": "array"
+    },
+    "test_limits": {
+      "items": {
+        "$ref": "#/$defs/TestLimit"
+      },
+      "title": "Test Limits",
+      "type": "array"
+    },
+    "compliance_standards": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Compliance Standards",
+      "type": "array"
+    },
+    "hazards": {
+      "items": {
+        "$ref": "#/$defs/Hazard"
+      },
+      "title": "Hazards",
+      "type": "array"
+    },
+    "safety_critical_requirement_ids": {
+      "description": "in addition to every requirement a hazard links",
+      "items": {
+        "type": "string"
+      },
+      "title": "Safety Critical Requirement Ids",
+      "type": "array"
+    },
+    "authored_by": {
+      "title": "Authored By",
+      "type": "string"
+    }
+  },
+  "required": [
+    "prd_id",
+    "product_name",
+    "customer_name",
+    "product_category",
+    "quantity",
+    "requirements",
+    "design_constraints",
+    "design_scopes",
+    "authored_by"
+  ],
+  "title": "PRDPayload.v1",
+  "type": "object"
+}

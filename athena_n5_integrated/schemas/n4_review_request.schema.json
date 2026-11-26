@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n4_review_request",
+  "additionalProperties": false,
+  "properties": {
+    "assessment_id": {
+      "title": "Assessment Id",
+      "type": "string"
+    },
+    "evidence_sha256": {
+      "description": "must equal the assessment's evidence hash",
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Evidence Sha256",
+      "type": "string"
+    },
+    "design_revision": {
+      "title": "Design Revision",
+      "type": "string"
+    },
+    "decision": {
+      "enum": [
+        "APPROVED",
+        "REJECTED"
+      ],
+      "title": "Decision",
+      "type": "string"
+    },
+    "reason": {
+      "minLength": 5,
+      "title": "Reason",
+      "type": "string"
+    }
+  },
+  "required": [
+    "assessment_id",
+    "evidence_sha256",
+    "design_revision",
+    "decision",
+    "reason"
+  ],
+  "title": "N4ReviewRequest",
+  "type": "object"
+}

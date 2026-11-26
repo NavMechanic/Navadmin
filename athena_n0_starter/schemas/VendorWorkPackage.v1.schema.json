@@ -1,0 +1,138 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:n0:schema:VendorWorkPackage.v1",
+  "$defs": {
+    "ExpectedOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "format": {
+          "title": "Format",
+          "type": "string"
+        },
+        "schema_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Schema Ref"
+        }
+      },
+      "required": [
+        "name",
+        "format"
+      ],
+      "title": "ExpectedOutput",
+      "type": "object"
+    },
+    "Money": {
+      "additionalProperties": false,
+      "properties": {
+        "amount": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Amount"
+        },
+        "currency": {
+          "pattern": "^[A-Z]{3}$",
+          "title": "Currency",
+          "type": "string"
+        }
+      },
+      "required": [
+        "amount",
+        "currency"
+      ],
+      "title": "Money",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "VendorWorkPackage.v1",
+      "default": "VendorWorkPackage.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "work_package_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+      "title": "Work Package Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "project_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+      "title": "Project Id",
+      "type": "string"
+    },
+    "vendor_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+      "title": "Vendor Id",
+      "type": "string"
+    },
+    "connector_type": {
+      "enum": [
+        "REST_GRAPHQL",
+        "CLI_SDK",
+        "FILE_PORTAL",
+        "SCPI_VISA",
+        "MES_ERP",
+        "MQTT_OPCUA"
+      ],
+      "title": "Connector Type",
+      "type": "string"
+    },
+    "approved_input_ids": {
+      "description": "ARTIFACT_ID@REVISION, each must be PASS",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Approved Input Ids",
+      "type": "array"
+    },
+    "budget_cap": {
+      "$ref": "#/$defs/Money"
+    },
+    "expected_outputs": {
+      "items": {
+        "$ref": "#/$defs/ExpectedOutput"
+      },
+      "minItems": 1,
+      "title": "Expected Outputs",
+      "type": "array"
+    }
+  },
+  "required": [
+    "work_package_id",
+    "tenant_id",
+    "project_id",
+    "vendor_id",
+    "connector_type",
+    "approved_input_ids",
+    "budget_cap",
+    "expected_outputs"
+  ],
+  "title": "VendorWorkPackage.v1",
+  "type": "object"
+}

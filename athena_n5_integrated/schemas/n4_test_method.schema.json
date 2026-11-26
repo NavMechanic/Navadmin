@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n4_test_method",
+  "additionalProperties": false,
+  "properties": {
+    "method_id": {
+      "title": "Method Id",
+      "type": "string"
+    },
+    "revision": {
+      "title": "Revision",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "title": {
+      "title": "Title",
+      "type": "string"
+    },
+    "method": {
+      "enum": [
+        "SIM",
+        "BENCH_ATE",
+        "ACCREDITED_LAB",
+        "INSPECTION"
+      ],
+      "title": "Method",
+      "type": "string"
+    },
+    "characteristics": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Characteristics",
+      "type": "array"
+    },
+    "summary": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Summary"
+    },
+    "document_sha256": {
+      "anyOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Document Sha256"
+    },
+    "document_uri": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Document Uri"
+    },
+    "status": {
+      "enum": [
+        "DRAFT",
+        "APPROVED",
+        "WITHDRAWN"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "authored_by": {
+      "title": "Authored By",
+      "type": "string"
+    },
+    "approved_by": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Approved By"
+    },
+    "approved_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Approved At"
+    }
+  },
+  "required": [
+    "method_id",
+    "revision",
+    "tenant_id",
+    "title",
+    "method",
+    "characteristics",
+    "status",
+    "authored_by"
+  ],
+  "title": "N4TestMethod",
+  "type": "object"
+}

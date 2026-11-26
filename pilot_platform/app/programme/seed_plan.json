@@ -1,0 +1,738 @@
+{
+  "name": "Pilot Programme",
+  "source": "Pilot CPM Network \u2013 Gates, Layers & Logic (HTML)",
+  "activities": [
+    {
+      "code": "A",
+      "layer": "Discovery",
+      "name": "Customer discovery & baseline",
+      "predecessors": [],
+      "optimistic": 3.0,
+      "most_likely": 5.0,
+      "pessimistic": 8.0,
+      "owner": "Founder/N1",
+      "owner_role": "founder",
+      "technical_execution": "Interview buyers; capture RFQ baselines, hours and existing cost",
+      "output_artifact": "Customer interviews + baseline register",
+      "gate_criteria": "10 buyer interviews; 1 bounded use case",
+      "gate_spec": {
+        "evidence": [
+          {
+            "field": "buyer_interviews",
+            "op": "min",
+            "value": 10
+          },
+          {
+            "field": "bounded_use_cases",
+            "op": "eq",
+            "value": 1
+          }
+        ]
+      },
+      "planned_start_week": 1,
+      "planned_finish_week": 2,
+      "risk_note": "Illustrative; revise after pilot scoping"
+    },
+    {
+      "code": "B",
+      "layer": "Governance",
+      "name": "Pilot scope, NDA, data/IP permission",
+      "predecessors": [
+        "A"
+      ],
+      "optimistic": 3.0,
+      "most_likely": 5.0,
+      "pessimistic": 8.0,
+      "owner": "Founder/Legal",
+      "owner_role": "founder",
+      "technical_execution": "Agree artifact ownership, scope, access, pricing and approvals",
+      "output_artifact": "Signed scope + permissions matrix",
+      "gate_criteria": "Permitted datasets and customer sign-off",
+      "gate_spec": {
+        "evidence": [
+          {
+            "field": "permitted_datasets",
+            "op": "nonempty"
+          },
+          {
+            "field": "customer_signoff",
+            "op": "true"
+          }
+        ]
+      },
+      "planned_start_week": 2,
+      "planned_finish_week": 3,
+      "risk_note": "Illustrative; revise after pilot scoping"
+    },
+    {
+      "code": "C",
+      "layer": "Platform",
+      "name": "Architecture and threat model",
+      "predecessors": [
+        "B"
+      ],
+      "optimistic": 4.0,
+      "most_likely": 6.0,
+      "pessimistic": 9.0,
+      "owner": "Architect",
+      "owner_role": "engineer",
+      "technical_execution": "Define multi-tenant isolation, execution boundaries, vendor contract",
+      "output_artifact": "ADR + threat model",
+      "gate_criteria": "Trust boundaries and system design approved",
+      "gate_spec": {
+        "evidence": [
+          {
+            "field": "adr_ref",
+            "op": "nonempty"
+          },
+          {
+            "field": "threat_model_ref",
+            "op": "nonempty"
+          },
+          {
+            "field": "design_approved",
+            "op": "true"
+          }
+        ]
+      },
+      "planned_start_week": 3,
+      "planned_finish_week": 4,
+      "risk_note": "Illustrative; revise after pilot scoping"
+    },
+    {
+      "code": "D",
+      "layer": "Platform",
+      "name": "Deploy auth/API/DB infrastructure",
+      "predecessors": [
+        "C"
+      ],
+      "optimistic": 5.0,
+      "most_likely": 8.0,
+      "pessimistic": 12.0,
+      "owner": "Backend",
+      "owner_role": "engineer",
+      "technical_execution": "FastAPI, RBAC, PostgreSQL, object storage, audit events",
+      "output_artifact": "Working secure backend",
+      "gate_criteria": "Role tests pass; unauthorized access denied",
+      "gate_spec": {
+        "evidence": [
+          {
+            "field": "role_test_report",
+            "op": "nonempty"
+          }
+        ],
+        "automated": [
+          "rbac_enforced"
+        ]
+      },
+      "planned_start_week": 4,
+      "planned_finish_week": 5,
+      "risk_note": "Illustrative; revise after pilot scoping"
+    },
+    {
+      "code": "E",
+      "layer": "Platform",
+      "name": "Digital thread & artifact schemas",
+      "predecessors": [
+        "C"
+      ],
+      "optimistic": 5.0,
+      "most_likely": 8.0,
+      "pessimistic": 13.0,
+      "owner": "Data engineer",
+      "owner_role": "engineer",
+      "technical_execution": "Immutable revisions: RFQ, PRD, BOM, SIM, TEST, QUOTE, BUILD",
+      "output_artifact": "Versioned artifact model",
+      "gate_criteria": "100% pilot artifacts revision-linked",
+      "gate_spec": {
+        "automated": [
+          "thread_lineage_complete"
+        ]
+      },
+      "planned_start_week": 4,
+      "planned_finish_week": 5,
+      "risk_note": "Illustrative; revise after pilot scoping"
+    },
+    {
+      "code": "F",
+      "layer": "Data",
+      "name": "RFQ/PRD JSON schemas & gold corpus",
+      "predecessors": [
+        "B",
+        "E"
+      ],
+      "optimistic": 4.0,
+      "most_likely": 7.0,
+      "pessimistic": 12.0,
+      "owner": "Data/SME",
+      "owner_role": "engineer",
+      "technical_execution": "Normalize units, spec dependencies, labeled examples and validation",
+      "output_artifact": "Typed schemas + gold test cases",
+      "gate_criteria": "Defined fields, conflicts and provenance",
+      "gate_spec": {
+        "evidence": [
+          {
+            "field": "schema_version",
+            "op": "nonempty"
+          }
+        ],
+        "automated": [
+          "rfq_schema_contract"
+        ]
+      },
+      "planned_start_week": 5,
+      "planned_finish_week": 7,
+      "risk_note": "Illustrative; revise after pilot scoping"
+    },
+    {
+      "code": "G",
+      "layer": "LLMOps",
+      "name": "LLM gateway + secure RAG",
+      "predecessors": [
+        "D",
+        "E"
+      ],
+      "optimistic": 5.0,
+      "most_likely": 8.0,
+      "pessimistic": 13.0,
+      "owner": "AI engineer",
+      "owner_role": "engineer",
+      "technical_execution": "Model router, retrieval ACL, budget limits and trace capture",
+      "output_artifact": "RAG gateway + trace logs",
+      "gate_criteria": "No cross-tenant retrieval; capped spend",
+      "gate_spec": {
+        "automated": [
+          "tenant_isolation",
+          "budget_capped"
+        ]
+      },
+      "planned_start_week": 5,
+      "planned_finish_week": 7,
+      "risk_note": "Illustrative; revise after pilot scoping"
+    },
+    {
+      "code": "H",
+      "layer": "SLMOps",
+      "name": "SLM extraction & evaluation",
+      "predecessors": [
+        "F",
+        "G"
+      ],
+      "optimistic": 5.0,
+      "most_likely": 8.0,
+      "pessimistic": 12.0,
+      "owner": "AI engineer",
+      "owner_role": "engineer",
+      "technical_execution": "RFQ/BOM extraction, confidence flags, schema checks",
+      "output_artifact": "SLM extraction endpoint",
+      "gate_criteria": "Meets acceptance accuracy on held-out cases",
+      "gate_spec": {
+        "automated": [
+          "extraction_accuracy"
+        ]
+      },
+      "planned_start_week": 7,
+      "planned_finish_week": 9,
+      "risk_note": "Illustrative; revise after pilot scoping"
+    },
+    {
+      "code": "I",
+      "layer": "Orchestration",
+      "name": "Durable DAG & human approvals",
+      "predecessors": [
+        "D",
+        "E",
+        "G"
+      ],
+      "optimistic": 5.0,
+      "most_likely": 9.0,
+      "pessimistic": 14.0,
+      "owner": "Backend/AI",
+      "owner_role": "engineer",
+      "technical_execution": "Idempotent task engine, retries, compensations, approval wait states",
+      "output_artifact": "Execution DAG",
+      "gate_criteria": "Resumes failures; approvals enforced",
+      "gate_spec": {
+        "automated": [
+          "orchestration_selftest"
+        ]
+      },
+      "planned_start_week": 7,
+      "planned_finish_week": 9,
+      "risk_note": "Illustrative; revise after pilot scoping"
+    },
+    {
+      "code": "J",
+      "layer": "N1 Market",
+      "name": "Evidence-based SAM and opportunity engine",
+      "predecessors": [
+        "H",
+        "G"
+      ],
+      "optimistic": 4.0,
+      "most_likely": 7.0,
+      "pessimistic": 11.0,
+      "owner": "N1 analyst",
+      "owner_role": "analyst",
+      "technical_execution": "Named-account evidence, market/tender feeds, source citations",
+      "output_artifact": "Demand + SAM shortlist",
+      "gate_criteria": "No unsupported TAM\u2192SAM conversion",
+      "gate_spec": {
+        "automated": [
+          "market_sam_supported"
+        ]
+      },
+      "planned_start_week": 9,
+      "planned_finish_week": 10,
+      "risk_note": "Illustrative; revise after pilot scoping"
+    },
+    {
+      "code": "K",
+      "layer": "N2 Product",
+      "name": "PRD and engineering constraint validation",
+      "predecessors": [
+        "H"
+      ],
+      "optimistic": 5.0,
+      "most_likely": 8.0,
+      "pessimistic": 13.0,
+      "owner": "N2 engineer",
+      "owner_role": "engineer",
+      "technical_execution": "SLM extract, LLM PRD, deterministic power/units/derating checks",
+      "output_artifact": "Signed PRD",
+      "gate_criteria": "Critical requirements traceable to tests",
+      "gate_spec": {
+        "automated": [
+          "prd_traceability"
+        ]
+      },
+      "planned_start_week": 9,
+      "planned_finish_week": 10,
+      "risk_note": "Illustrative; revise after pilot scoping"
+    },
+    {
+      "code": "L",
+      "layer": "Vendor layer",
+      "name": "Specialist AI/vendor access & adapters",
+      "predecessors": [
+        "B"
+      ],
+      "optimistic": 5.0,
+      "most_likely": 9.0,
+      "pessimistic": 15.0,
+      "owner": "Vendor lead",
+      "owner_role": "vendor_lead",
+      "technical_execution": "Verify API/license; manual file-handoff fallback; data terms",
+      "output_artifact": "Qualified adapter registry",
+      "gate_criteria": "At least 2 usable vendor handoffs",
+      "gate_spec": {
+        "automated": [
+          "vendors_qualified"
+        ]
+      },
+      "planned_start_week": 3,
+      "planned_finish_week": 4,
+      "risk_note": "Illustrative; revise after pilot scoping"
+    },
+    {
+      "code": "M",
+      "layer": "N3 Design",
+      "name": "EDA/CAE design package & simulations",
+      "predecessors": [
+        "K",
+        "L",
+        "I"
+      ],
+      "optimistic": 8.0,
+      "most_likely": 13.0,
+      "pessimistic": 21.0,
+      "owner": "N3 engineer",
+      "owner_role": "engineer",
+      "technical_execution": "KiCad/SPICE/thermal/DFM adapter; ERC/DRC; reviewer loop",
+      "output_artifact": "Rev-controlled design pack",
+      "gate_criteria": "Simulation assumptions + engineer review",
+      "gate_spec": {
+        "automated": [
+          "design_reviewed"
+        ]
+      },
+      "planned_start_week": 10,
+      "planned_finish_week": 13,
+      "risk_note": "Illustrative; revise after pilot scoping"
+    },
+    {
+      "code": "N",
+      "layer": "N4 Quality",
+      "name": "PFMEA, test plan & verification matrix",
+      "predecessors": [
+        "K",
+        "M"
+      ],
+      "optimistic": 6.0,
+      "most_likely": 10.0,
+      "pessimistic": 16.0,
+      "owner": "N4 test lead",
+      "owner_role": "qa",
+      "technical_execution": "Risk-ranked tests, limits, coverage links, independent review",
+      "output_artifact": "PFMEA + verification pack",
+      "gate_criteria": "Safety-critical gaps block release",
+      "gate_spec": {
+        "automated": [
+          "quality_release_ready"
+        ]
+      },
+      "planned_start_week": 13,
+      "planned_finish_week": 15,
+      "risk_note": "Illustrative; revise after pilot scoping"
+    },
+    {
+      "code": "O",
+      "layer": "N5 Sourcing",
+      "name": "BOM normalization & supplier RFQs",
+      "predecessors": [
+        "K",
+        "M",
+        "L"
+      ],
+      "optimistic": 5.0,
+      "most_likely": 9.0,
+      "pessimistic": 14.0,
+      "owner": "N5 procurement",
+      "owner_role": "procurement",
+      "technical_execution": "Normalize MPNs, compare lead times, cost, alternatives and risk",
+      "output_artifact": "Costed BOM + supplier bids",
+      "gate_criteria": "2 comparable valid bids where attainable",
+      "gate_spec": {
+        "automated": [
+          "sourcing_bids"
+        ]
+      },
+      "planned_start_week": 13,
+      "planned_finish_week": 15,
+      "risk_note": "Illustrative; revise after pilot scoping"
+    },
+    {
+      "code": "P",
+      "layer": "N6 Commercial",
+      "name": "Customer RFQ + bid portal",
+      "predecessors": [
+        "I",
+        "J"
+      ],
+      "optimistic": 5.0,
+      "most_likely": 8.0,
+      "pessimistic": 13.0,
+      "owner": "N6 product/backend",
+      "owner_role": "engineer",
+      "technical_execution": "Single node, bundle, full-chain bids, approvals, status tracking",
+      "output_artifact": "Customer/vendor bid workflow",
+      "gate_criteria": "End-to-end bid with no auto-award",
+      "gate_spec": {
+        "automated": [
+          "bid_awarded_by_human"
+        ]
+      },
+      "planned_start_week": 10,
+      "planned_finish_week": 12,
+      "risk_note": "Illustrative; revise after pilot scoping"
+    },
+    {
+      "code": "Q",
+      "layer": "N7 Finance",
+      "name": "Cost, margin & working-capital engine",
+      "predecessors": [
+        "O",
+        "P"
+      ],
+      "optimistic": 4.0,
+      "most_likely": 7.0,
+      "pessimistic": 12.0,
+      "owner": "N7 finance",
+      "owner_role": "finance",
+      "technical_execution": "BOM+NRE+labor+AI+tests+finance; ex-GST; break-even rules",
+      "output_artifact": "Auditable project P&L",
+      "gate_criteria": "Deterministic calculations, no LLM math",
+      "gate_spec": {
+        "automated": [
+          "finance_deterministic"
+        ]
+      },
+      "planned_start_week": 15,
+      "planned_finish_week": 16,
+      "risk_note": "Illustrative; revise after pilot scoping"
+    },
+    {
+      "code": "R",
+      "layer": "N8 Lifecycle",
+      "name": "Telemetry event schema & sample replay",
+      "predecessors": [
+        "E",
+        "N"
+      ],
+      "optimistic": 4.0,
+      "most_likely": 7.0,
+      "pessimistic": 12.0,
+      "owner": "N8 data engineer",
+      "owner_role": "engineer",
+      "technical_execution": "Define build/lot/test/warranty events; synthetic replay initially",
+      "output_artifact": "Telemetry event store/dashboard",
+      "gate_criteria": "No synthetic data presented as actual",
+      "gate_spec": {
+        "automated": [
+          "telemetry_synthetic_labelled"
+        ]
+      },
+      "planned_start_week": 15,
+      "planned_finish_week": 17,
+      "risk_note": "Illustrative; revise after pilot scoping"
+    },
+    {
+      "code": "S",
+      "layer": "Cross-cutting QA",
+      "name": "Model evaluations + security harness",
+      "predecessors": [
+        "G",
+        "H",
+        "I"
+      ],
+      "optimistic": 5.0,
+      "most_likely": 9.0,
+      "pessimistic": 15.0,
+      "owner": "QA/Security",
+      "owner_role": "qa",
+      "technical_execution": "Golden cases, jailbreak/data leakage tests, model cost + rollback",
+      "output_artifact": "Evaluation test reports",
+      "gate_criteria": "Critical policy and isolation tests pass",
+      "gate_spec": {
+        "automated": [
+          "security_harness"
+        ]
+      },
+      "planned_start_week": 9,
+      "planned_finish_week": 11,
+      "risk_note": "Illustrative; revise after pilot scoping"
+    },
+    {
+      "code": "T",
+      "layer": "Vendor QA",
+      "name": "Specialist vendor POC QA",
+      "predecessors": [
+        "L",
+        "M",
+        "O"
+      ],
+      "optimistic": 4.0,
+      "most_likely": 7.0,
+      "pessimistic": 13.0,
+      "owner": "QA/Vendor",
+      "owner_role": "qa",
+      "technical_execution": "Check output formats, acceptance, IP rights, charges",
+      "output_artifact": "Vendor scorecards",
+      "gate_criteria": "Accepted or rejected with evidence",
+      "gate_spec": {
+        "automated": [
+          "vendor_scorecards",
+          "vendor_results_decided"
+        ]
+      },
+      "planned_start_week": 15,
+      "planned_finish_week": 16,
+      "risk_note": "Illustrative; revise after pilot scoping"
+    },
+    {
+      "code": "U",
+      "layer": "Integration",
+      "name": "Connect N1\u2013N8 and all artifact gates",
+      "predecessors": [
+        "N",
+        "O",
+        "P",
+        "Q",
+        "R",
+        "S",
+        "T"
+      ],
+      "optimistic": 5.0,
+      "most_likely": 9.0,
+      "pessimistic": 15.0,
+      "owner": "Tech lead",
+      "owner_role": "engineer",
+      "technical_execution": "Workflow integration, retries, revision diff, reviewer checkpoints",
+      "output_artifact": "Integrated MVP release candidate",
+      "gate_criteria": "One RFQ spans nodes with lineage",
+      "gate_spec": {
+        "automated": [
+          "rfq_end_to_end_lineage"
+        ]
+      },
+      "planned_start_week": 17,
+      "planned_finish_week": 19,
+      "risk_note": "Illustrative; revise after pilot scoping"
+    },
+    {
+      "code": "V",
+      "layer": "Verification",
+      "name": "End-to-end tests & regression",
+      "predecessors": [
+        "U"
+      ],
+      "optimistic": 6.0,
+      "most_likely": 10.0,
+      "pessimistic": 16.0,
+      "owner": "QA/SMEs",
+      "owner_role": "qa",
+      "technical_execution": "Failure injection, schema tests, concurrency, role tests, budgets",
+      "output_artifact": "Signed E2E test summary",
+      "gate_criteria": "Critical scenarios and abuse tests pass",
+      "gate_spec": {
+        "evidence": [
+          {
+            "field": "e2e_report_ref",
+            "op": "nonempty"
+          },
+          {
+            "field": "critical_failures",
+            "op": "eq",
+            "value": 0
+          }
+        ],
+        "automated": [
+          "security_harness"
+        ]
+      },
+      "planned_start_week": 19,
+      "planned_finish_week": 21,
+      "risk_note": "Illustrative; revise after pilot scoping"
+    },
+    {
+      "code": "W",
+      "layer": "Pilot",
+      "name": "Controlled real customer RFQ pilot",
+      "predecessors": [
+        "V"
+      ],
+      "optimistic": 4.0,
+      "most_likely": 7.0,
+      "pessimistic": 12.0,
+      "owner": "Founder/Sales",
+      "owner_role": "founder",
+      "technical_execution": "Run real permitted RFQ, supplier handoffs, measure effort/cost",
+      "output_artifact": "Pilot engineering package",
+      "gate_criteria": "Customer receives scoped deliverables",
+      "gate_spec": {
+        "evidence": [
+          {
+            "field": "deliverables_sent",
+            "op": "nonempty"
+          },
+          {
+            "field": "customer_receipt_confirmed",
+            "op": "true"
+          }
+        ]
+      },
+      "planned_start_week": 21,
+      "planned_finish_week": 22,
+      "risk_note": "Illustrative; revise after pilot scoping"
+    },
+    {
+      "code": "X",
+      "layer": "Acceptance",
+      "name": "Independent technical acceptance",
+      "predecessors": [
+        "W"
+      ],
+      "optimistic": 4.0,
+      "most_likely": 7.0,
+      "pessimistic": 12.0,
+      "owner": "External SME",
+      "owner_role": "external_reviewer",
+      "technical_execution": "Customer/engineer review of electrical, DFM, test and quotation",
+      "output_artifact": "Acceptance + punch list",
+      "gate_criteria": "No unaccepted safety-critical item",
+      "gate_spec": {
+        "evidence": [
+          {
+            "field": "acceptance_ref",
+            "op": "nonempty"
+          },
+          {
+            "field": "open_safety_critical_items",
+            "op": "eq",
+            "value": 0
+          }
+        ]
+      },
+      "planned_start_week": 22,
+      "planned_finish_week": 24,
+      "risk_note": "Illustrative; revise after pilot scoping"
+    },
+    {
+      "code": "Y",
+      "layer": "Commercial proof",
+      "name": "Reconcile actual costs and KPIs",
+      "predecessors": [
+        "X"
+      ],
+      "optimistic": 3.0,
+      "most_likely": 5.0,
+      "pessimistic": 9.0,
+      "owner": "Founder/Finance",
+      "owner_role": "founder",
+      "technical_execution": "Engineering hours, supplier charges, latency, defects, margin",
+      "output_artifact": "Pilot P&L + KPI scorecard",
+      "gate_criteria": "Project contribution measured",
+      "gate_spec": {
+        "evidence": [
+          {
+            "field": "pilot_pnl_ref",
+            "op": "nonempty"
+          },
+          {
+            "field": "contribution_margin",
+            "op": "number"
+          }
+        ]
+      },
+      "planned_start_week": 24,
+      "planned_finish_week": 25,
+      "risk_note": "Illustrative; revise after pilot scoping"
+    },
+    {
+      "code": "Z",
+      "layer": "Decision",
+      "name": "Founder scale / pivot / stop gate",
+      "predecessors": [
+        "Y"
+      ],
+      "optimistic": 2.0,
+      "most_likely": 4.0,
+      "pessimistic": 7.0,
+      "owner": "Founder",
+      "owner_role": "founder",
+      "technical_execution": "Decide scale based on paid demand, technical acceptance and cash",
+      "output_artifact": "Board/founder decision",
+      "gate_criteria": "Go/no-go with supporting evidence",
+      "gate_spec": {
+        "evidence": [
+          {
+            "field": "decision",
+            "op": "in",
+            "value": [
+              "scale",
+              "pivot",
+              "stop"
+            ]
+          },
+          {
+            "field": "evidence_refs",
+            "op": "nonempty"
+          }
+        ]
+      },
+      "planned_start_week": 25,
+      "planned_finish_week": 25,
+      "risk_note": "Illustrative; revise after pilot scoping"
+    }
+  ]
+}

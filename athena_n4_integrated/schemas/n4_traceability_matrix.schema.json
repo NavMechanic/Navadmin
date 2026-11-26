@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n4_traceability_matrix",
+  "$defs": {
+    "TraceRow": {
+      "additionalProperties": false,
+      "properties": {
+        "requirement_id": {
+          "title": "Requirement Id",
+          "type": "string"
+        },
+        "parameter": {
+          "title": "Parameter",
+          "type": "string"
+        },
+        "safety_critical": {
+          "title": "Safety Critical",
+          "type": "boolean"
+        },
+        "hazard_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Hazard Ids",
+          "type": "array"
+        },
+        "test_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Test Ids",
+          "type": "array"
+        },
+        "methods": {
+          "items": {
+            "enum": [
+              "SIM",
+              "BENCH_ATE",
+              "ACCREDITED_LAB",
+              "INSPECTION"
+            ],
+            "type": "string"
+          },
+          "title": "Methods",
+          "type": "array"
+        },
+        "owners": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Owners",
+          "type": "array"
+        },
+        "gaps": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Gaps",
+          "type": "array"
+        }
+      },
+      "required": [
+        "requirement_id",
+        "parameter",
+        "safety_critical",
+        "hazard_ids",
+        "test_ids",
+        "methods",
+        "owners",
+        "gaps"
+      ],
+      "title": "TraceRow",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "plan_id": {
+      "title": "Plan Id",
+      "type": "string"
+    },
+    "rows": {
+      "items": {
+        "$ref": "#/$defs/TraceRow"
+      },
+      "title": "Rows",
+      "type": "array"
+    },
+    "safety_critical_total": {
+      "title": "Safety Critical Total",
+      "type": "integer"
+    },
+    "safety_critical_covered": {
+      "title": "Safety Critical Covered",
+      "type": "integer"
+    },
+    "safety_critical_coverage_pct": {
+      "title": "Safety Critical Coverage Pct",
+      "type": "string"
+    },
+    "uncovered_safety_critical": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Uncovered Safety Critical",
+      "type": "array"
+    },
+    "uncovered_other": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Uncovered Other",
+      "type": "array"
+    },
+    "unknown_requirement_refs": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Unknown Requirement Refs",
+      "type": "array"
+    },
+    "complete": {
+      "title": "Complete",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "plan_id",
+    "rows",
+    "safety_critical_total",
+    "safety_critical_covered",
+    "safety_critical_coverage_pct",
+    "uncovered_safety_critical",
+    "uncovered_other",
+    "unknown_requirement_refs",
+    "complete"
+  ],
+  "title": "N4TraceabilityMatrix",
+  "type": "object"
+}

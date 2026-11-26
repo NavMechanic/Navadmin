@@ -1,0 +1,247 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n1_opportunity_assessment",
+  "$defs": {
+    "ScoreComponent": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "points": {
+          "title": "Points",
+          "type": "number"
+        },
+        "max_points": {
+          "title": "Max Points",
+          "type": "number"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "points",
+        "max_points",
+        "reason"
+      ],
+      "title": "ScoreComponent",
+      "type": "object"
+    },
+    "TenderDeadline": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence_id": {
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "deadline_at": {
+          "format": "date-time",
+          "title": "Deadline At",
+          "type": "string"
+        },
+        "source_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Url"
+        }
+      },
+      "required": [
+        "evidence_id",
+        "deadline_at"
+      ],
+      "title": "TenderDeadline",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "OpportunityAssessment.v1",
+      "default": "OpportunityAssessment.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "opportunity_id": {
+      "title": "Opportunity Id",
+      "type": "string"
+    },
+    "account_id": {
+      "title": "Account Id",
+      "type": "string"
+    },
+    "legal_name": {
+      "title": "Legal Name",
+      "type": "string"
+    },
+    "country": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Country"
+    },
+    "service_categories": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Service Categories",
+      "type": "array"
+    },
+    "heuristic_priority_score": {
+      "maximum": 100,
+      "minimum": 0,
+      "title": "Heuristic Priority Score",
+      "type": "number"
+    },
+    "score_kind": {
+      "const": "HEURISTIC_PRIORITIZATION",
+      "default": "HEURISTIC_PRIORITIZATION",
+      "title": "Score Kind",
+      "type": "string"
+    },
+    "calibrated": {
+      "const": false,
+      "default": false,
+      "title": "Calibrated",
+      "type": "boolean"
+    },
+    "win_probability": {
+      "default": null,
+      "description": "always null: no calibrated model exists yet",
+      "title": "Win Probability",
+      "type": "null"
+    },
+    "components": {
+      "items": {
+        "$ref": "#/$defs/ScoreComponent"
+      },
+      "title": "Components",
+      "type": "array"
+    },
+    "penalties": {
+      "items": {
+        "$ref": "#/$defs/ScoreComponent"
+      },
+      "title": "Penalties",
+      "type": "array"
+    },
+    "risk_flags": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Risk Flags",
+      "type": "array"
+    },
+    "missing_information": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Missing Information",
+      "type": "array"
+    },
+    "verified_spend_base": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "title": "Verified Spend Base"
+    },
+    "indicative_spend_base": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "title": "Indicative Spend Base"
+    },
+    "hypothetical_spend_base": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "title": "Hypothetical Spend Base"
+    },
+    "evidence_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Evidence Ids",
+      "type": "array"
+    },
+    "tender_deadlines": {
+      "items": {
+        "$ref": "#/$defs/TenderDeadline"
+      },
+      "title": "Tender Deadlines",
+      "type": "array"
+    },
+    "synthetic_only": {
+      "title": "Synthetic Only",
+      "type": "boolean"
+    },
+    "rfq_seed_evidence_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Rfq Seed Evidence Id"
+    },
+    "rfq_seed_blockers": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Rfq Seed Blockers",
+      "type": "array"
+    }
+  },
+  "required": [
+    "opportunity_id",
+    "account_id",
+    "legal_name",
+    "service_categories",
+    "heuristic_priority_score",
+    "components",
+    "penalties",
+    "risk_flags",
+    "missing_information",
+    "verified_spend_base",
+    "indicative_spend_base",
+    "hypothetical_spend_base",
+    "evidence_ids",
+    "synthetic_only"
+  ],
+  "title": "OpportunityAssessment.v1",
+  "type": "object"
+}

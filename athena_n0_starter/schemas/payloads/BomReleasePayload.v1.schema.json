@@ -1,0 +1,171 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:n0:schema:BomReleasePayload.v1",
+  "$defs": {
+    "BomItem": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "bom_item.v1",
+          "default": "bom_item.v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "line": {
+          "minimum": 1,
+          "title": "Line",
+          "type": "integer"
+        },
+        "mpn": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Mpn"
+        },
+        "manufacturer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Manufacturer"
+        },
+        "refdes": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Refdes",
+          "type": "array"
+        },
+        "qty": {
+          "minimum": 0,
+          "title": "Qty",
+          "type": "integer"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Value"
+        },
+        "footprint": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Footprint"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "dnp": {
+          "default": false,
+          "title": "Dnp",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "line",
+        "refdes",
+        "qty"
+      ],
+      "title": "bom_item.v1",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "N3 → N5: engineering BOM locked to one design revision.",
+  "properties": {
+    "release_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+      "title": "Release Id",
+      "type": "string"
+    },
+    "scope": {
+      "enum": [
+        "schematic_pcb",
+        "circuit_simulation",
+        "mechanical_thermal"
+      ],
+      "title": "Scope",
+      "type": "string"
+    },
+    "prd_ref": {
+      "title": "Prd Ref",
+      "type": "string"
+    },
+    "design_revision": {
+      "maxLength": 16,
+      "minLength": 1,
+      "title": "Design Revision",
+      "type": "string"
+    },
+    "pcb_revision": {
+      "anyOf": [
+        {
+          "maxLength": 16,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Pcb Revision"
+    },
+    "bom_source_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Bom Source Sha256",
+      "type": "string"
+    },
+    "items": {
+      "items": {
+        "$ref": "#/$defs/BomItem"
+      },
+      "minItems": 1,
+      "title": "Items",
+      "type": "array"
+    }
+  },
+  "required": [
+    "release_id",
+    "scope",
+    "prd_ref",
+    "design_revision",
+    "bom_source_sha256",
+    "items"
+  ],
+  "title": "BomReleasePayload.v1",
+  "type": "object"
+}

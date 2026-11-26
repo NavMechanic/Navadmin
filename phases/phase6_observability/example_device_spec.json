@@ -1,0 +1,107 @@
+{
+  "device_name": "WiFi Beacon v2.0",
+  "version": "2.0.0",
+  "board_size_mm": [85, 65],
+  "layer_count": 4,
+  "components": [
+    {
+      "name": "Bluetooth",
+      "type": "bluetooth",
+      "part_number": "nRF52840",
+      "manufacturer": "Nordic Semiconductor",
+      "min_voltage_v": 3.0,
+      "max_voltage_v": 3.6,
+      "timeout_s": 5.0,
+      "expected_response": "OK",
+      "test_parameters": {
+        "advertising_power_dbm": -20,
+        "connection_timeout_s": 10
+      }
+    },
+    {
+      "name": "Camera",
+      "type": "camera",
+      "part_number": "OV2640",
+      "manufacturer": "OmniVision",
+      "min_voltage_v": 2.6,
+      "max_voltage_v": 3.0,
+      "timeout_s": 8.0,
+      "expected_response": "READY",
+      "test_parameters": {
+        "resolution": "1600x1200",
+        "frame_rate_fps": 15
+      }
+    },
+    {
+      "name": "Battery",
+      "type": "battery",
+      "part_number": "ICR18650",
+      "manufacturer": "Sanyo",
+      "min_voltage_v": 2.8,
+      "max_voltage_v": 4.2,
+      "timeout_s": 3.0,
+      "test_parameters": {
+        "capacity_mah": 2800,
+        "max_charge_current_a": 2.8,
+        "expected_cycles": 500
+      }
+    },
+    {
+      "name": "USB",
+      "type": "usb",
+      "part_number": "DX4R064HN",
+      "manufacturer": "JAE",
+      "min_voltage_v": 4.75,
+      "max_voltage_v": 5.25,
+      "timeout_s": 2.0,
+      "test_parameters": {
+        "usb_version": "2.0",
+        "max_current_ma": 500
+      }
+    },
+    {
+      "name": "IMU",
+      "type": "imu",
+      "part_number": "ICM-20689",
+      "manufacturer": "InvenSense",
+      "min_voltage_v": 2.4,
+      "max_voltage_v": 3.6,
+      "timeout_s": 3.0,
+      "calibration_range": {
+        "min_x": -2048,
+        "max_x": 2048,
+        "min_y": -2048,
+        "max_y": 2048,
+        "min_z": -2048,
+        "max_z": 2048
+      },
+      "test_parameters": {
+        "gyro_range_dps": 250,
+        "accel_range_g": 2
+      }
+    },
+    {
+      "name": "NFC",
+      "type": "nfc",
+      "part_number": "PN7150",
+      "manufacturer": "NXP",
+      "min_voltage_v": 2.6,
+      "max_voltage_v": 3.6,
+      "timeout_s": 4.0,
+      "test_parameters": {
+        "frequency_mhz": 13.56,
+        "field_strength_a_m": 0.5
+      }
+    }
+  ],
+  "test_plan": {
+    "total_components": 6,
+    "estimated_test_time_s": 60,
+    "critical_tests": [
+      "Bluetooth connectivity",
+      "Battery voltage monitoring",
+      "IMU calibration"
+    ],
+    "pass_criteria": "All component tests must pass; no communication timeouts"
+  }
+}

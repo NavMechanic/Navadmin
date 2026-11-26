@@ -1,0 +1,1014 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n1_market_report",
+  "$defs": {
+    "Citation": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence_id": {
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "evidence_revision": {
+          "title": "Evidence Revision",
+          "type": "integer"
+        },
+        "source_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Source Url"
+        },
+        "source_connector": {
+          "title": "Source Connector",
+          "type": "string"
+        },
+        "observation_type": {
+          "title": "Observation Type",
+          "type": "string"
+        },
+        "published_at": {
+          "format": "date-time",
+          "title": "Published At",
+          "type": "string"
+        },
+        "n0_artifact": {
+          "title": "N0 Artifact",
+          "type": "string"
+        }
+      },
+      "required": [
+        "evidence_id",
+        "evidence_revision",
+        "source_url",
+        "source_connector",
+        "observation_type",
+        "published_at",
+        "n0_artifact"
+      ],
+      "title": "Citation",
+      "type": "object"
+    },
+    "EvidenceFeature": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence_id": {
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "evidence_revision": {
+          "title": "Evidence Revision",
+          "type": "integer"
+        },
+        "evidence_sha256": {
+          "title": "Evidence Sha256",
+          "type": "string"
+        },
+        "account_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Account Id"
+        },
+        "observation_type": {
+          "enum": [
+            "TENDER_NOTICE",
+            "CONTRACT_AWARD",
+            "TRADE_STATISTIC",
+            "BUDGET_DOCUMENT",
+            "BUYER_INTERVIEW",
+            "CRM_RECORD"
+          ],
+          "title": "Observation Type",
+          "type": "string"
+        },
+        "source_connector": {
+          "enum": [
+            "UN_COMTRADE",
+            "SAM_GOV",
+            "TED_EU",
+            "INDIA_CPPP",
+            "CRM",
+            "INTERVIEW",
+            "MANUAL"
+          ],
+          "title": "Source Connector",
+          "type": "string"
+        },
+        "source_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Source Url"
+        },
+        "n0_artifact": {
+          "description": "ARTIFACT_ID@REVISION of the N0 artifact that admitted this evidence",
+          "title": "N0 Artifact",
+          "type": "string"
+        },
+        "service_category": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Service Category"
+        },
+        "category_source": {
+          "enum": [
+            "GIVEN",
+            "CODE",
+            "KEYWORD",
+            "NONE"
+          ],
+          "title": "Category Source",
+          "type": "string"
+        },
+        "spend_type": {
+          "enum": [
+            "VERIFIED_BUDGET",
+            "INDICATIVE",
+            "HYPOTHETICAL"
+          ],
+          "title": "Spend Type",
+          "type": "string"
+        },
+        "spend_reason": {
+          "title": "Spend Reason",
+          "type": "string"
+        },
+        "fx": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FxConversion"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "age_days": {
+          "title": "Age Days",
+          "type": "integer"
+        },
+        "sla_days": {
+          "title": "Sla Days",
+          "type": "integer"
+        },
+        "freshness_score": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Freshness Score",
+          "type": "number"
+        },
+        "attested": {
+          "title": "Attested",
+          "type": "boolean"
+        },
+        "attestation_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Attestation Id"
+        },
+        "synthetic": {
+          "title": "Synthetic",
+          "type": "boolean"
+        },
+        "exclusions": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Exclusions",
+          "type": "array"
+        },
+        "exclusion_detail": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Exclusion Detail",
+          "type": "array"
+        },
+        "counts_as": {
+          "enum": [
+            "VERIFIED",
+            "INDICATIVE",
+            "HYPOTHETICAL",
+            "EXCLUDED"
+          ],
+          "title": "Counts As",
+          "type": "string"
+        }
+      },
+      "required": [
+        "evidence_id",
+        "evidence_revision",
+        "evidence_sha256",
+        "account_id",
+        "observation_type",
+        "source_connector",
+        "source_url",
+        "n0_artifact",
+        "service_category",
+        "category_source",
+        "spend_type",
+        "spend_reason",
+        "age_days",
+        "sla_days",
+        "freshness_score",
+        "attested",
+        "synthetic",
+        "counts_as"
+      ],
+      "title": "EvidenceFeature",
+      "type": "object"
+    },
+    "Exclusion": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence_id": {
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "codes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Codes",
+          "type": "array"
+        },
+        "detail": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Detail",
+          "type": "array"
+        }
+      },
+      "required": [
+        "evidence_id",
+        "codes",
+        "detail"
+      ],
+      "title": "Exclusion",
+      "type": "object"
+    },
+    "FxConversion": {
+      "additionalProperties": false,
+      "properties": {
+        "original": {
+          "$ref": "#/$defs/MarketAmount"
+        },
+        "base_currency": {
+          "title": "Base Currency",
+          "type": "string"
+        },
+        "rate": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Rate"
+        },
+        "fx_as_of": {
+          "format": "date",
+          "title": "Fx As Of",
+          "type": "string"
+        },
+        "fx_source": {
+          "title": "Fx Source",
+          "type": "string"
+        },
+        "amount_base": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Amount Base"
+        },
+        "fx_stale": {
+          "title": "Fx Stale",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "original",
+        "base_currency",
+        "rate",
+        "fx_as_of",
+        "fx_source",
+        "amount_base",
+        "fx_stale"
+      ],
+      "title": "FxConversion",
+      "type": "object"
+    },
+    "FxRate": {
+      "additionalProperties": false,
+      "properties": {
+        "currency": {
+          "pattern": "^[A-Z]{3}$",
+          "title": "Currency",
+          "type": "string"
+        },
+        "rate_to_base": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "description": "1 unit of currency = rate_to_base units of base currency",
+          "title": "Rate To Base"
+        },
+        "as_of": {
+          "format": "date",
+          "title": "As Of",
+          "type": "string"
+        },
+        "source": {
+          "description": "e.g. 'ECB reference rate'",
+          "minLength": 2,
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "currency",
+        "rate_to_base",
+        "as_of",
+        "source"
+      ],
+      "title": "FxRate",
+      "type": "object"
+    },
+    "MarketAmount": {
+      "additionalProperties": false,
+      "description": "Amount as stated by the source. Deliberately unconstrained in sign: N1.4 guardrails exclude\nnegative or malformed values per observation instead of rejecting the whole batch.",
+      "properties": {
+        "amount": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Amount"
+        },
+        "currency": {
+          "pattern": "^[A-Z]{3}$",
+          "title": "Currency",
+          "type": "string"
+        }
+      },
+      "required": [
+        "amount",
+        "currency"
+      ],
+      "title": "MarketAmount",
+      "type": "object"
+    },
+    "MlReadiness": {
+      "additionalProperties": false,
+      "properties": {
+        "labeled_outcomes": {
+          "title": "Labeled Outcomes",
+          "type": "integer"
+        },
+        "required": {
+          "title": "Required",
+          "type": "integer"
+        },
+        "ready": {
+          "title": "Ready",
+          "type": "boolean"
+        },
+        "note": {
+          "title": "Note",
+          "type": "string"
+        }
+      },
+      "required": [
+        "labeled_outcomes",
+        "required",
+        "ready",
+        "note"
+      ],
+      "title": "MlReadiness",
+      "type": "object"
+    },
+    "OpportunityAssessment": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "OpportunityAssessment.v1",
+          "default": "OpportunityAssessment.v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "opportunity_id": {
+          "title": "Opportunity Id",
+          "type": "string"
+        },
+        "account_id": {
+          "title": "Account Id",
+          "type": "string"
+        },
+        "legal_name": {
+          "title": "Legal Name",
+          "type": "string"
+        },
+        "country": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Country"
+        },
+        "service_categories": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Service Categories",
+          "type": "array"
+        },
+        "heuristic_priority_score": {
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Heuristic Priority Score",
+          "type": "number"
+        },
+        "score_kind": {
+          "const": "HEURISTIC_PRIORITIZATION",
+          "default": "HEURISTIC_PRIORITIZATION",
+          "title": "Score Kind",
+          "type": "string"
+        },
+        "calibrated": {
+          "const": false,
+          "default": false,
+          "title": "Calibrated",
+          "type": "boolean"
+        },
+        "win_probability": {
+          "default": null,
+          "description": "always null: no calibrated model exists yet",
+          "title": "Win Probability",
+          "type": "null"
+        },
+        "components": {
+          "items": {
+            "$ref": "#/$defs/ScoreComponent"
+          },
+          "title": "Components",
+          "type": "array"
+        },
+        "penalties": {
+          "items": {
+            "$ref": "#/$defs/ScoreComponent"
+          },
+          "title": "Penalties",
+          "type": "array"
+        },
+        "risk_flags": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Risk Flags",
+          "type": "array"
+        },
+        "missing_information": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Missing Information",
+          "type": "array"
+        },
+        "verified_spend_base": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Verified Spend Base"
+        },
+        "indicative_spend_base": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Indicative Spend Base"
+        },
+        "hypothetical_spend_base": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Hypothetical Spend Base"
+        },
+        "evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "tender_deadlines": {
+          "items": {
+            "$ref": "#/$defs/TenderDeadline"
+          },
+          "title": "Tender Deadlines",
+          "type": "array"
+        },
+        "synthetic_only": {
+          "title": "Synthetic Only",
+          "type": "boolean"
+        },
+        "rfq_seed_evidence_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rfq Seed Evidence Id"
+        },
+        "rfq_seed_blockers": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Rfq Seed Blockers",
+          "type": "array"
+        }
+      },
+      "required": [
+        "opportunity_id",
+        "account_id",
+        "legal_name",
+        "service_categories",
+        "heuristic_priority_score",
+        "components",
+        "penalties",
+        "risk_flags",
+        "missing_information",
+        "verified_spend_base",
+        "indicative_spend_base",
+        "hypothetical_spend_base",
+        "evidence_ids",
+        "synthetic_only"
+      ],
+      "title": "OpportunityAssessment.v1",
+      "type": "object"
+    },
+    "RiskFlag": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "account_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Account Id"
+        },
+        "evidence_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Evidence Id"
+        },
+        "detail": {
+          "title": "Detail",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "detail"
+      ],
+      "title": "RiskFlag",
+      "type": "object"
+    },
+    "SamSummary": {
+      "additionalProperties": false,
+      "properties": {
+        "base_currency": {
+          "title": "Base Currency",
+          "type": "string"
+        },
+        "verified_real_sam": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Verified Real Sam"
+        },
+        "indicative_spend": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Indicative Spend"
+        },
+        "hypothetical_addressable_spend": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Hypothetical Addressable Spend"
+        },
+        "excluded_spend": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Excluded Spend"
+        },
+        "verified_by_category": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "title": "Verified By Category",
+          "type": "object"
+        },
+        "verified_evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Verified Evidence Ids",
+          "type": "array"
+        },
+        "indicative_evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Indicative Evidence Ids",
+          "type": "array"
+        },
+        "hypothetical_evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Hypothetical Evidence Ids",
+          "type": "array"
+        },
+        "synthetic_evidence_count": {
+          "title": "Synthetic Evidence Count",
+          "type": "integer"
+        },
+        "disclaimer": {
+          "default": "verified_real_sam counts only non-synthetic, VERIFIED_BUDGET, reviewer-attested, fresh, in-category, de-duplicated evidence. Synthetic records, TAM proxies and unattested estimates are reported separately and never counted as verified real SAM.",
+          "title": "Disclaimer",
+          "type": "string"
+        }
+      },
+      "required": [
+        "base_currency",
+        "verified_real_sam",
+        "indicative_spend",
+        "hypothetical_addressable_spend",
+        "excluded_spend",
+        "verified_by_category",
+        "verified_evidence_ids",
+        "indicative_evidence_ids",
+        "hypothetical_evidence_ids",
+        "synthetic_evidence_count"
+      ],
+      "title": "SamSummary",
+      "type": "object"
+    },
+    "ScoreComponent": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "points": {
+          "title": "Points",
+          "type": "number"
+        },
+        "max_points": {
+          "title": "Max Points",
+          "type": "number"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "points",
+        "max_points",
+        "reason"
+      ],
+      "title": "ScoreComponent",
+      "type": "object"
+    },
+    "TenderDeadline": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence_id": {
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "deadline_at": {
+          "format": "date-time",
+          "title": "Deadline At",
+          "type": "string"
+        },
+        "source_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Url"
+        }
+      },
+      "required": [
+        "evidence_id",
+        "deadline_at"
+      ],
+      "title": "TenderDeadline",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "MarketReport.v1",
+      "default": "MarketReport.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "report_id": {
+      "title": "Report Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "scope_name": {
+      "title": "Scope Name",
+      "type": "string"
+    },
+    "scope_key": {
+      "title": "Scope Key",
+      "type": "string"
+    },
+    "revision": {
+      "minimum": 1,
+      "title": "Revision",
+      "type": "integer"
+    },
+    "supersedes_report_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Supersedes Report Id"
+    },
+    "as_of": {
+      "format": "date-time",
+      "title": "As Of",
+      "type": "string"
+    },
+    "generated_at": {
+      "format": "date-time",
+      "title": "Generated At",
+      "type": "string"
+    },
+    "generated_by": {
+      "title": "Generated By",
+      "type": "string"
+    },
+    "engine_version": {
+      "title": "Engine Version",
+      "type": "string"
+    },
+    "base_currency": {
+      "title": "Base Currency",
+      "type": "string"
+    },
+    "fx_table": {
+      "items": {
+        "$ref": "#/$defs/FxRate"
+      },
+      "title": "Fx Table",
+      "type": "array"
+    },
+    "serviceable_categories": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Serviceable Categories",
+      "type": "array"
+    },
+    "sam": {
+      "$ref": "#/$defs/SamSummary"
+    },
+    "opportunities": {
+      "items": {
+        "$ref": "#/$defs/OpportunityAssessment"
+      },
+      "title": "Opportunities",
+      "type": "array"
+    },
+    "exclusions": {
+      "items": {
+        "$ref": "#/$defs/Exclusion"
+      },
+      "title": "Exclusions",
+      "type": "array"
+    },
+    "risk_flags": {
+      "items": {
+        "$ref": "#/$defs/RiskFlag"
+      },
+      "title": "Risk Flags",
+      "type": "array"
+    },
+    "pending_attestations": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Pending Attestations",
+      "type": "array"
+    },
+    "missing_information": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Missing Information",
+      "type": "array"
+    },
+    "citations": {
+      "items": {
+        "$ref": "#/$defs/Citation"
+      },
+      "title": "Citations",
+      "type": "array"
+    },
+    "evidence_features": {
+      "items": {
+        "$ref": "#/$defs/EvidenceFeature"
+      },
+      "title": "Evidence Features",
+      "type": "array"
+    },
+    "ml_readiness": {
+      "$ref": "#/$defs/MlReadiness"
+    },
+    "disclaimers": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Disclaimers",
+      "type": "array"
+    },
+    "report_sha256": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Report Sha256"
+    }
+  },
+  "required": [
+    "report_id",
+    "tenant_id",
+    "scope_name",
+    "scope_key",
+    "revision",
+    "as_of",
+    "generated_at",
+    "generated_by",
+    "engine_version",
+    "base_currency",
+    "fx_table",
+    "serviceable_categories",
+    "sam",
+    "opportunities",
+    "exclusions",
+    "risk_flags",
+    "pending_attestations",
+    "missing_information",
+    "citations",
+    "evidence_features",
+    "ml_readiness",
+    "disclaimers"
+  ],
+  "title": "MarketReport.v1",
+  "type": "object"
+}

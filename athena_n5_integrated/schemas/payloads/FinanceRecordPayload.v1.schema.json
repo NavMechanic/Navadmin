@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:FinanceRecordPayload.v1",
+  "$defs": {
+    "Money": {
+      "additionalProperties": false,
+      "properties": {
+        "amount": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Amount"
+        },
+        "currency": {
+          "pattern": "^[A-Z]{3}$",
+          "title": "Currency",
+          "type": "string"
+        }
+      },
+      "required": [
+        "amount",
+        "currency"
+      ],
+      "title": "Money",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "record_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+      "title": "Record Id",
+      "type": "string"
+    },
+    "period": {
+      "pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
+      "title": "Period",
+      "type": "string"
+    },
+    "category": {
+      "title": "Category",
+      "type": "string"
+    },
+    "amount": {
+      "$ref": "#/$defs/Money"
+    }
+  },
+  "required": [
+    "record_id",
+    "period",
+    "category",
+    "amount"
+  ],
+  "title": "FinanceRecordPayload.v1",
+  "type": "object"
+}

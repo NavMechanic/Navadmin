@@ -1,0 +1,606 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n5_quote",
+  "$defs": {
+    "CapacityAllocation": {
+      "additionalProperties": false,
+      "properties": {
+        "allocated_qty": {
+          "description": "finished units (EMS / ODM) or parts (factory order) reserved",
+          "minimum": 1,
+          "title": "Allocated Qty",
+          "type": "integer"
+        },
+        "period_start": {
+          "format": "date",
+          "title": "Period Start",
+          "type": "string"
+        },
+        "period_end": {
+          "format": "date",
+          "title": "Period End",
+          "type": "string"
+        },
+        "site_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Site Id"
+        },
+        "document_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Document Sha256"
+        }
+      },
+      "required": [
+        "allocated_qty",
+        "period_start",
+        "period_end"
+      ],
+      "title": "N5CapacityAllocation",
+      "type": "object"
+    },
+    "ConnectorProvenance": {
+      "additionalProperties": false,
+      "properties": {
+        "connector": {
+          "enum": [
+            "DIGIKEY",
+            "MOUSER",
+            "NEXAR",
+            "OPEN_SUPPLY_HUB"
+          ],
+          "title": "Connector",
+          "type": "string"
+        },
+        "operation": {
+          "title": "Operation",
+          "type": "string"
+        },
+        "call_id": {
+          "title": "Call Id",
+          "type": "string"
+        },
+        "retrieved_at": {
+          "format": "date-time",
+          "title": "Retrieved At",
+          "type": "string"
+        },
+        "response_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Response Sha256",
+          "type": "string"
+        },
+        "cache_hit": {
+          "default": false,
+          "title": "Cache Hit",
+          "type": "boolean"
+        },
+        "terms": {
+          "description": "the licence terms the data is held under",
+          "title": "Terms",
+          "type": "string"
+        }
+      },
+      "required": [
+        "connector",
+        "operation",
+        "call_id",
+        "retrieved_at",
+        "response_sha256",
+        "terms"
+      ],
+      "title": "ConnectorProvenance",
+      "type": "object"
+    },
+    "ExcludedCharge": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "FREIGHT",
+            "DUTIES",
+            "GST",
+            "OTHER_TAX",
+            "NRE",
+            "TOOLING",
+            "ASSEMBLY_LABOR",
+            "TEST_LABOR",
+            "WARRANTY",
+            "FINANCING"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "amount": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Amount"
+        },
+        "currency": {
+          "pattern": "^[A-Z]{3}$",
+          "title": "Currency",
+          "type": "string"
+        },
+        "note": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Note"
+        }
+      },
+      "required": [
+        "kind",
+        "amount",
+        "currency"
+      ],
+      "title": "ExcludedCharge",
+      "type": "object"
+    },
+    "LineCharge": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "HANDLING",
+            "REELING",
+            "CUT_TAPE",
+            "PACKAGING",
+            "MIN_ORDER_SURCHARGE"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "amount": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Amount"
+        }
+      },
+      "required": [
+        "kind",
+        "amount"
+      ],
+      "title": "LineCharge",
+      "type": "object"
+    },
+    "N5Offer": {
+      "additionalProperties": false,
+      "properties": {
+        "line": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "the BOM line this offer answers",
+          "title": "Line"
+        },
+        "quoted_mpn": {
+          "minLength": 1,
+          "title": "Quoted Mpn",
+          "type": "string"
+        },
+        "manufacturer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Manufacturer"
+        },
+        "uom": {
+          "default": "EA",
+          "title": "Uom",
+          "type": "string"
+        },
+        "currency": {
+          "pattern": "^[A-Z]{3}$",
+          "title": "Currency",
+          "type": "string"
+        },
+        "price_breaks": {
+          "items": {
+            "$ref": "#/$defs/PriceBreak"
+          },
+          "minItems": 1,
+          "title": "Price Breaks",
+          "type": "array"
+        },
+        "moq": {
+          "minimum": 1,
+          "title": "Moq",
+          "type": "integer"
+        },
+        "pack_multiple": {
+          "minimum": 1,
+          "title": "Pack Multiple",
+          "type": "integer"
+        },
+        "availability": {
+          "default": "STOCK",
+          "enum": [
+            "STOCK",
+            "FACTORY_ORDER"
+          ],
+          "title": "Availability",
+          "type": "string"
+        },
+        "stock_qty": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Stock Qty"
+        },
+        "lead_time_days": {
+          "minimum": 0,
+          "title": "Lead Time Days",
+          "type": "integer"
+        },
+        "line_charges": {
+          "items": {
+            "$ref": "#/$defs/LineCharge"
+          },
+          "title": "Line Charges",
+          "type": "array"
+        },
+        "excluded_charges": {
+          "items": {
+            "$ref": "#/$defs/ExcludedCharge"
+          },
+          "title": "Excluded Charges",
+          "type": "array"
+        },
+        "capacity": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CapacityAllocation"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "supplier_sku": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Supplier Sku"
+        },
+        "offer_id": {
+          "title": "Offer Id",
+          "type": "string"
+        },
+        "quote_id": {
+          "title": "Quote Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "quoted_mpn",
+        "currency",
+        "price_breaks",
+        "moq",
+        "pack_multiple",
+        "lead_time_days",
+        "offer_id",
+        "quote_id"
+      ],
+      "title": "N5Offer",
+      "type": "object"
+    },
+    "PriceBreak": {
+      "additionalProperties": false,
+      "properties": {
+        "min_qty": {
+          "minimum": 1,
+          "title": "Min Qty",
+          "type": "integer"
+        },
+        "unit_price": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Unit Price"
+        }
+      },
+      "required": [
+        "min_qty",
+        "unit_price"
+      ],
+      "title": "PriceBreak",
+      "type": "object"
+    },
+    "QuoteFile": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "title": "Path",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "role": {
+          "enum": [
+            "QUOTE_DOCUMENT",
+            "MANIFEST",
+            "CAPACITY_EVIDENCE",
+            "SERVICE_TERMS",
+            "EDI",
+            "OTHER"
+          ],
+          "title": "Role",
+          "type": "string"
+        },
+        "size_bytes": {
+          "minimum": 0,
+          "title": "Size Bytes",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "path",
+        "sha256",
+        "role",
+        "size_bytes"
+      ],
+      "title": "QuoteFile",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "N5Quote.v1",
+      "default": "N5Quote.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "quote_id": {
+      "title": "Quote Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "bom_intake_id": {
+      "title": "Bom Intake Id",
+      "type": "string"
+    },
+    "supplier_id": {
+      "title": "Supplier Id",
+      "type": "string"
+    },
+    "channel": {
+      "enum": [
+        "MANUAL",
+        "DIGIKEY_API",
+        "MOUSER_API",
+        "NEXAR_API",
+        "EMS_DROPZONE"
+      ],
+      "title": "Channel",
+      "type": "string"
+    },
+    "source_id": {
+      "title": "Source Id",
+      "type": "string"
+    },
+    "quote_ref": {
+      "title": "Quote Ref",
+      "type": "string"
+    },
+    "design_revision": {
+      "title": "Design Revision",
+      "type": "string"
+    },
+    "issued_at": {
+      "format": "date-time",
+      "title": "Issued At",
+      "type": "string"
+    },
+    "valid_until": {
+      "format": "date-time",
+      "title": "Valid Until",
+      "type": "string"
+    },
+    "offers": {
+      "items": {
+        "$ref": "#/$defs/N5Offer"
+      },
+      "title": "Offers",
+      "type": "array"
+    },
+    "nre": {
+      "description": "reported to N7, never in the total",
+      "items": {
+        "$ref": "#/$defs/ExcludedCharge"
+      },
+      "title": "Nre",
+      "type": "array"
+    },
+    "service_terms": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Service Terms"
+    },
+    "files": {
+      "items": {
+        "$ref": "#/$defs/QuoteFile"
+      },
+      "title": "Files",
+      "type": "array"
+    },
+    "signature": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Signature"
+    },
+    "provenance": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ConnectorProvenance"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "data_use": {
+      "additionalProperties": true,
+      "title": "Data Use",
+      "type": "object"
+    },
+    "synthetic": {
+      "default": false,
+      "title": "Synthetic",
+      "type": "boolean"
+    },
+    "status": {
+      "enum": [
+        "ACCEPTED",
+        "REJECTED"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "rejection_codes": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Rejection Codes",
+      "type": "array"
+    },
+    "problems": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Problems",
+      "type": "array"
+    },
+    "submitted_by": {
+      "title": "Submitted By",
+      "type": "string"
+    },
+    "submitted_at": {
+      "format": "date-time",
+      "title": "Submitted At",
+      "type": "string"
+    },
+    "quote_sha256": {
+      "anyOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Quote Sha256"
+    }
+  },
+  "required": [
+    "quote_id",
+    "tenant_id",
+    "bom_intake_id",
+    "supplier_id",
+    "channel",
+    "source_id",
+    "quote_ref",
+    "design_revision",
+    "issued_at",
+    "valid_until",
+    "offers",
+    "status",
+    "submitted_by",
+    "submitted_at"
+  ],
+  "title": "N5Quote",
+  "type": "object"
+}

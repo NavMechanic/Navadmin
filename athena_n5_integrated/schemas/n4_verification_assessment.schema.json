@@ -1,0 +1,706 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n4_verification_assessment",
+  "$defs": {
+    "AttributeInspection": {
+      "additionalProperties": false,
+      "description": "Attribute (go / no-go) inspection of one unit, e.g. AOI. Model detections never decide it: the\nverdict is a human adjudication, and every model-flagged or ambiguous call must be adjudicated.",
+      "properties": {
+        "test_id": {
+          "title": "Test Id",
+          "type": "string"
+        },
+        "unit_serial": {
+          "title": "Unit Serial",
+          "type": "string"
+        },
+        "method": {
+          "default": "INSPECTION",
+          "enum": [
+            "SIM",
+            "BENCH_ATE",
+            "ACCREDITED_LAB",
+            "INSPECTION"
+          ],
+          "title": "Method",
+          "type": "string"
+        },
+        "provenance": {
+          "default": "PHYSICAL_INSPECTION",
+          "enum": [
+            "PHYSICAL_ATE",
+            "PHYSICAL_BENCH",
+            "PHYSICAL_INSPECTION",
+            "ACCREDITED_LAB",
+            "SIMULATION",
+            "SYNTHETIC",
+            "MOCK_FIXTURE"
+          ],
+          "title": "Provenance",
+          "type": "string"
+        },
+        "defects_confirmed": {
+          "minimum": 0,
+          "title": "Defects Confirmed",
+          "type": "integer"
+        },
+        "unadjudicated": {
+          "minimum": 0,
+          "title": "Unadjudicated",
+          "type": "integer"
+        },
+        "human_verdict": {
+          "enum": [
+            "ACCEPT",
+            "REJECT"
+          ],
+          "title": "Human Verdict",
+          "type": "string"
+        },
+        "adjudicator": {
+          "title": "Adjudicator",
+          "type": "string"
+        },
+        "evidence_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Evidence Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "test_id",
+        "unit_serial",
+        "defects_confirmed",
+        "unadjudicated",
+        "human_verdict",
+        "adjudicator",
+        "evidence_sha256"
+      ],
+      "title": "AttributeInspection",
+      "type": "object"
+    },
+    "N4Finding": {
+      "additionalProperties": false,
+      "properties": {
+        "finding_id": {
+          "title": "Finding Id",
+          "type": "string"
+        },
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "outcome": {
+          "enum": [
+            "BLOCK",
+            "REWORK",
+            "INFO"
+          ],
+          "title": "Outcome",
+          "type": "string"
+        },
+        "category": {
+          "title": "Category",
+          "type": "string"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        },
+        "test_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Test Id"
+        },
+        "requirement_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Requirement Id"
+        },
+        "evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "finding_id",
+        "code",
+        "outcome",
+        "category",
+        "message"
+      ],
+      "title": "N4Finding",
+      "type": "object"
+    },
+    "N4TraceabilityMatrix": {
+      "additionalProperties": false,
+      "properties": {
+        "plan_id": {
+          "title": "Plan Id",
+          "type": "string"
+        },
+        "rows": {
+          "items": {
+            "$ref": "#/$defs/TraceRow"
+          },
+          "title": "Rows",
+          "type": "array"
+        },
+        "safety_critical_total": {
+          "title": "Safety Critical Total",
+          "type": "integer"
+        },
+        "safety_critical_covered": {
+          "title": "Safety Critical Covered",
+          "type": "integer"
+        },
+        "safety_critical_coverage_pct": {
+          "title": "Safety Critical Coverage Pct",
+          "type": "string"
+        },
+        "uncovered_safety_critical": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Uncovered Safety Critical",
+          "type": "array"
+        },
+        "uncovered_other": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Uncovered Other",
+          "type": "array"
+        },
+        "unknown_requirement_refs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Unknown Requirement Refs",
+          "type": "array"
+        },
+        "complete": {
+          "title": "Complete",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "plan_id",
+        "rows",
+        "safety_critical_total",
+        "safety_critical_covered",
+        "safety_critical_coverage_pct",
+        "uncovered_safety_critical",
+        "uncovered_other",
+        "unknown_requirement_refs",
+        "complete"
+      ],
+      "title": "N4TraceabilityMatrix",
+      "type": "object"
+    },
+    "TestVerdict": {
+      "additionalProperties": false,
+      "properties": {
+        "test_id": {
+          "title": "Test Id",
+          "type": "string"
+        },
+        "method": {
+          "enum": [
+            "SIM",
+            "BENCH_ATE",
+            "ACCREDITED_LAB",
+            "INSPECTION"
+          ],
+          "title": "Method",
+          "type": "string"
+        },
+        "verdict": {
+          "enum": [
+            "PASS",
+            "FAIL",
+            "INDETERMINATE",
+            "NOT_TESTED"
+          ],
+          "title": "Verdict",
+          "type": "string"
+        },
+        "measurements": {
+          "items": {
+            "$ref": "#/$defs/VerifiedMeasurement"
+          },
+          "title": "Measurements",
+          "type": "array"
+        },
+        "attribute_inspections": {
+          "items": {
+            "$ref": "#/$defs/AttributeInspection"
+          },
+          "title": "Attribute Inspections",
+          "type": "array"
+        }
+      },
+      "required": [
+        "test_id",
+        "method",
+        "verdict"
+      ],
+      "title": "TestVerdict",
+      "type": "object"
+    },
+    "TraceRow": {
+      "additionalProperties": false,
+      "properties": {
+        "requirement_id": {
+          "title": "Requirement Id",
+          "type": "string"
+        },
+        "parameter": {
+          "title": "Parameter",
+          "type": "string"
+        },
+        "safety_critical": {
+          "title": "Safety Critical",
+          "type": "boolean"
+        },
+        "hazard_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Hazard Ids",
+          "type": "array"
+        },
+        "test_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Test Ids",
+          "type": "array"
+        },
+        "methods": {
+          "items": {
+            "enum": [
+              "SIM",
+              "BENCH_ATE",
+              "ACCREDITED_LAB",
+              "INSPECTION"
+            ],
+            "type": "string"
+          },
+          "title": "Methods",
+          "type": "array"
+        },
+        "owners": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Owners",
+          "type": "array"
+        },
+        "gaps": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Gaps",
+          "type": "array"
+        }
+      },
+      "required": [
+        "requirement_id",
+        "parameter",
+        "safety_critical",
+        "hazard_ids",
+        "test_ids",
+        "methods",
+        "owners",
+        "gaps"
+      ],
+      "title": "TraceRow",
+      "type": "object"
+    },
+    "VerifiedMeasurement": {
+      "additionalProperties": false,
+      "description": "One measured (or simulated) characteristic with its guard-banded verdict. ``value``, the\nexpanded uncertainty and both limits share ``unit``.",
+      "properties": {
+        "measurement_id": {
+          "title": "Measurement Id",
+          "type": "string"
+        },
+        "test_id": {
+          "title": "Test Id",
+          "type": "string"
+        },
+        "characteristic": {
+          "title": "Characteristic",
+          "type": "string"
+        },
+        "unit_serial": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit Serial"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Value"
+        },
+        "unit": {
+          "title": "Unit",
+          "type": "string"
+        },
+        "expanded_uncertainty": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Expanded Uncertainty"
+        },
+        "coverage_factor": {
+          "default": 2.0,
+          "exclusiveMinimum": 0,
+          "title": "Coverage Factor",
+          "type": "number"
+        },
+        "lower_limit": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Lower Limit"
+        },
+        "upper_limit": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Upper Limit"
+        },
+        "verdict": {
+          "enum": [
+            "PASS",
+            "FAIL",
+            "INDETERMINATE"
+          ],
+          "title": "Verdict",
+          "type": "string"
+        },
+        "method": {
+          "enum": [
+            "SIM",
+            "BENCH_ATE",
+            "ACCREDITED_LAB",
+            "INSPECTION"
+          ],
+          "title": "Method",
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "PHYSICAL_ATE",
+            "PHYSICAL_BENCH",
+            "PHYSICAL_INSPECTION",
+            "ACCREDITED_LAB",
+            "SIMULATION",
+            "SYNTHETIC",
+            "MOCK_FIXTURE"
+          ],
+          "title": "Provenance",
+          "type": "string"
+        },
+        "instrument_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Instrument Id"
+        },
+        "calibration_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Calibration Id"
+        },
+        "calibration_due": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Calibration Due"
+        },
+        "captured_at": {
+          "format": "date-time",
+          "title": "Captured At",
+          "type": "string"
+        },
+        "raw_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Raw Sha256"
+        }
+      },
+      "required": [
+        "measurement_id",
+        "test_id",
+        "characteristic",
+        "value",
+        "unit",
+        "verdict",
+        "method",
+        "provenance",
+        "captured_at"
+      ],
+      "title": "VerifiedMeasurement",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "N4VerificationAssessment.v1",
+      "default": "N4VerificationAssessment.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "assessment_id": {
+      "title": "Assessment Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "plan_id": {
+      "title": "Plan Id",
+      "type": "string"
+    },
+    "intake_id": {
+      "title": "Intake Id",
+      "type": "string"
+    },
+    "design_revision": {
+      "title": "Design Revision",
+      "type": "string"
+    },
+    "pcb_revision": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Pcb Revision"
+    },
+    "decision": {
+      "enum": [
+        "PASS",
+        "REWORK",
+        "BLOCK"
+      ],
+      "title": "Decision",
+      "type": "string"
+    },
+    "findings": {
+      "items": {
+        "$ref": "#/$defs/N4Finding"
+      },
+      "title": "Findings",
+      "type": "array"
+    },
+    "test_verdicts": {
+      "items": {
+        "$ref": "#/$defs/TestVerdict"
+      },
+      "title": "Test Verdicts",
+      "type": "array"
+    },
+    "traceability": {
+      "$ref": "#/$defs/N4TraceabilityMatrix"
+    },
+    "evidence_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Evidence Ids",
+      "type": "array"
+    },
+    "evidence_submitters": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Evidence Submitters",
+      "type": "array"
+    },
+    "evidence_sha256": {
+      "description": "binds plan, design revision and every evidence file",
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Evidence Sha256",
+      "type": "string"
+    },
+    "plan_sha256": {
+      "title": "Plan Sha256",
+      "type": "string"
+    },
+    "pfmea_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Pfmea Id"
+    },
+    "prioritization_method": {
+      "enum": [
+        "CUSTOM_ATTENTION_HEURISTIC",
+        "AIAG_VDA_AP_LICENSED"
+      ],
+      "title": "Prioritization Method",
+      "type": "string"
+    },
+    "unit_serials": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Unit Serials",
+      "type": "array"
+    },
+    "engine_version": {
+      "title": "Engine Version",
+      "type": "string"
+    },
+    "assessed_by": {
+      "title": "Assessed By",
+      "type": "string"
+    },
+    "assessed_at": {
+      "format": "date-time",
+      "title": "Assessed At",
+      "type": "string"
+    },
+    "assessment_sha256": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Assessment Sha256"
+    },
+    "approval_scope": {
+      "default": "N4 verification release means the listed requirements were verified, for the stated design revision, by the recorded and calibrated evidence. It feeds the next controlled lifecycle step (N8 genealogy and monitoring, N6 / N7 planning). It is NOT product safety certification or a regulatory approval, except where an accredited laboratory certificate in the package states so for its own scope.",
+      "title": "Approval Scope",
+      "type": "string"
+    }
+  },
+  "required": [
+    "assessment_id",
+    "tenant_id",
+    "plan_id",
+    "intake_id",
+    "design_revision",
+    "decision",
+    "findings",
+    "test_verdicts",
+    "traceability",
+    "evidence_ids",
+    "evidence_submitters",
+    "evidence_sha256",
+    "plan_sha256",
+    "prioritization_method",
+    "unit_serials",
+    "engine_version",
+    "assessed_by",
+    "assessed_at"
+  ],
+  "title": "N4VerificationAssessment",
+  "type": "object"
+}

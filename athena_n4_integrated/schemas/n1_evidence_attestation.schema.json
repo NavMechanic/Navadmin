@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n1_evidence_attestation",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "EvidenceAttestation.v1",
+      "default": "EvidenceAttestation.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "attestation_id": {
+      "title": "Attestation Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "evidence_id": {
+      "title": "Evidence Id",
+      "type": "string"
+    },
+    "evidence_revision": {
+      "title": "Evidence Revision",
+      "type": "integer"
+    },
+    "evidence_sha256": {
+      "description": "attestation covers exactly this content",
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Evidence Sha256",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "ATTESTED",
+        "REJECTED",
+        "NEEDS_INFO"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "method": {
+      "enum": [
+        "DOCUMENT_REVIEW",
+        "OFFICIAL_PORTAL_CHECK",
+        "BUYER_CONFIRMATION",
+        "CONTRACT_ON_FILE"
+      ],
+      "title": "Method",
+      "type": "string"
+    },
+    "notes": {
+      "title": "Notes",
+      "type": "string"
+    },
+    "attested_by": {
+      "title": "Attested By",
+      "type": "string"
+    },
+    "attested_at": {
+      "format": "date-time",
+      "title": "Attested At",
+      "type": "string"
+    },
+    "approval_event_id": {
+      "title": "Approval Event Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "attestation_id",
+    "tenant_id",
+    "evidence_id",
+    "evidence_revision",
+    "evidence_sha256",
+    "status",
+    "method",
+    "notes",
+    "attested_by",
+    "attested_at",
+    "approval_event_id"
+  ],
+  "title": "EvidenceAttestation.v1",
+  "type": "object"
+}

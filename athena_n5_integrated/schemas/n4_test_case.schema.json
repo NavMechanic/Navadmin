@@ -1,0 +1,192 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n4_test_case",
+  "$defs": {
+    "AcceptanceLimit": {
+      "additionalProperties": false,
+      "properties": {
+        "characteristic": {
+          "pattern": "^[a-z][a-z0-9_]{0,63}$",
+          "title": "Characteristic",
+          "type": "string"
+        },
+        "unit": {
+          "title": "Unit",
+          "type": "string"
+        },
+        "lower": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Lower"
+        },
+        "upper": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Upper"
+        }
+      },
+      "required": [
+        "characteristic",
+        "unit"
+      ],
+      "title": "AcceptanceLimit",
+      "type": "object"
+    },
+    "MethodRef": {
+      "additionalProperties": false,
+      "properties": {
+        "method_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+          "title": "Method Id",
+          "type": "string"
+        },
+        "revision": {
+          "maxLength": 16,
+          "minLength": 1,
+          "title": "Revision",
+          "type": "string"
+        }
+      },
+      "required": [
+        "method_id",
+        "revision"
+      ],
+      "title": "MethodRef",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "test_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+      "title": "Test Id",
+      "type": "string"
+    },
+    "title": {
+      "minLength": 3,
+      "title": "Title",
+      "type": "string"
+    },
+    "requirement_ids": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Requirement Ids",
+      "type": "array"
+    },
+    "method": {
+      "enum": [
+        "SIM",
+        "BENCH_ATE",
+        "ACCREDITED_LAB",
+        "INSPECTION"
+      ],
+      "title": "Method",
+      "type": "string"
+    },
+    "acceptance": {
+      "items": {
+        "$ref": "#/$defs/AcceptanceLimit"
+      },
+      "minItems": 1,
+      "title": "Acceptance",
+      "type": "array"
+    },
+    "method_ref": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/MethodRef"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "approved SOP + revision (required to release)"
+    },
+    "owner": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "accountable engineer (required to release)",
+      "title": "Owner"
+    },
+    "sample_size": {
+      "default": 1,
+      "minimum": 1,
+      "title": "Sample Size",
+      "type": "integer"
+    },
+    "conditions": {
+      "additionalProperties": true,
+      "title": "Conditions",
+      "type": "object"
+    },
+    "sim_corner": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "SIM: N3 worst-case corner name, or 'all'",
+      "title": "Sim Corner"
+    },
+    "sim_model_uncertainty": {
+      "anyOf": [
+        {
+          "exclusiveMinimum": 0.0,
+          "type": "number"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "SIM: model uncertainty in the limit unit",
+      "title": "Sim Model Uncertainty"
+    }
+  },
+  "required": [
+    "test_id",
+    "title",
+    "requirement_ids",
+    "method",
+    "acceptance"
+  ],
+  "title": "N4TestCase",
+  "type": "object"
+}

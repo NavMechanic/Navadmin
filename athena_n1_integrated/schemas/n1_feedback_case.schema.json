@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n1_feedback_case",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "FeedbackCase.v1",
+      "default": "FeedbackCase.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "case_id": {
+      "title": "Case Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "target_kind": {
+      "title": "Target Kind",
+      "type": "string"
+    },
+    "target_id": {
+      "title": "Target Id",
+      "type": "string"
+    },
+    "label": {
+      "enum": [
+        "OUTCOME_WON",
+        "OUTCOME_LOST",
+        "OUTCOME_NO_BID",
+        "CORRECT_ENTITY_MATCH",
+        "WRONG_ENTITY_MATCH",
+        "WRONG_CATEGORY",
+        "WRONG_SPEND_TYPE",
+        "EXTRACTION_ERROR",
+        "OTHER"
+      ],
+      "title": "Label",
+      "type": "string"
+    },
+    "corrected_value": {
+      "anyOf": [
+        {},
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Corrected Value"
+    },
+    "reason": {
+      "title": "Reason",
+      "type": "string"
+    },
+    "created_by": {
+      "title": "Created By",
+      "type": "string"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "synthetic_target": {
+      "title": "Synthetic Target",
+      "type": "boolean"
+    },
+    "training_eligible": {
+      "description": "only labels on real (non-synthetic) targets feed SLM/ML evaluation",
+      "title": "Training Eligible",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "case_id",
+    "tenant_id",
+    "target_kind",
+    "target_id",
+    "label",
+    "reason",
+    "created_by",
+    "created_at",
+    "synthetic_target",
+    "training_eligible"
+  ],
+  "title": "FeedbackCase.v1",
+  "type": "object"
+}

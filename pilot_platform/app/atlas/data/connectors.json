@@ -1,0 +1,1419 @@
+[
+ {
+  "connector_id": "CON-001",
+  "node": "N1",
+  "provider": "AlphaSense",
+  "capability": "Financial/industry research",
+  "deliverable": "Source-backed sector research",
+  "ingestion_mode": "Portal export/manual",
+  "ingestion_routes": [
+   "ING-08"
+  ],
+  "evidence_status": "Unverified API for ATHENA",
+  "doc_url": "https://www.alpha-sense.com/",
+  "auth_license": "SSO/license",
+  "input_type": "Search terms",
+  "output_type": "PDF, XLSX",
+  "canonical_schemas": [
+   "market_opportunity.v1"
+  ],
+  "thread_kind": "MARKET",
+  "pricing_basis": "Enterprise subscription; quote",
+  "gate_fallback": "Check export and AI reuse rights; manual citation entry",
+  "reference_state": "Research / qualification pending",
+  "priority": "P2",
+  "internal": false,
+  "atlas_ids": [
+   "AT-0223"
+  ],
+  "atlas_match_basis": "exact_name",
+  "atlas_match_note": ""
+ },
+ {
+  "connector_id": "CON-002",
+  "node": "N1",
+  "provider": "CB Insights",
+  "capability": "Private-company/industry intelligence",
+  "deliverable": "Named account/competitive lists",
+  "ingestion_mode": "Portal export/manual",
+  "ingestion_routes": [
+   "ING-08"
+  ],
+  "evidence_status": "Unverified API for ATHENA",
+  "doc_url": "https://www.cbinsights.com/",
+  "auth_license": "SSO/license",
+  "input_type": "Keyword/sector",
+  "output_type": "CSV/PDF",
+  "canonical_schemas": [
+   "market_opportunity.v1"
+  ],
+  "thread_kind": "MARKET",
+  "pricing_basis": "Subscription; quote",
+  "gate_fallback": "Verify redistribution rights; analyst curation",
+  "reference_state": "Research / qualification pending",
+  "priority": "P2",
+  "internal": false,
+  "atlas_ids": [
+   "AT-0224"
+  ],
+  "atlas_match_basis": "exact_name",
+  "atlas_match_note": ""
+ },
+ {
+  "connector_id": "CON-003",
+  "node": "N1",
+  "provider": "TrendForce",
+  "capability": "Electronics supply/market data",
+  "deliverable": "Category demand evidence",
+  "ingestion_mode": "Portal/file export",
+  "ingestion_routes": [
+   "ING-08"
+  ],
+  "evidence_status": "Unverified API for ATHENA",
+  "doc_url": "https://www.trendforce.com/",
+  "auth_license": "License",
+  "input_type": "Market category",
+  "output_type": "PDF/XLSX",
+  "canonical_schemas": [
+   "market_opportunity.v1"
+  ],
+  "thread_kind": "MARKET",
+  "pricing_basis": "Research subscription",
+  "gate_fallback": "Source rights + data recency",
+  "reference_state": "Research / qualification pending",
+  "priority": "P2",
+  "internal": false,
+  "atlas_ids": [
+   "AT-0243"
+  ],
+  "atlas_match_basis": "exact_name",
+  "atlas_match_note": ""
+ },
+ {
+  "connector_id": "CON-004",
+  "node": "N1",
+  "provider": "TechInsights",
+  "capability": "Semiconductor product intelligence",
+  "deliverable": "Market/product intelligence",
+  "ingestion_mode": "Portal/manual",
+  "ingestion_routes": [
+   "ING-08"
+  ],
+  "evidence_status": "Unverified API for ATHENA",
+  "doc_url": "https://www.techinsights.com/",
+  "auth_license": "License",
+  "input_type": "Product/industry query",
+  "output_type": "Report/PDF",
+  "canonical_schemas": [
+   "market_opportunity.v1"
+  ],
+  "thread_kind": "MARKET",
+  "pricing_basis": "Enterprise/research quote",
+  "gate_fallback": "Avoid treating report estimates as spend budgets",
+  "reference_state": "Research / qualification pending",
+  "priority": "P2",
+  "internal": false,
+  "atlas_ids": [
+   "AT-0244"
+  ],
+  "atlas_match_basis": "exact_name",
+  "atlas_match_note": ""
+ },
+ {
+  "connector_id": "CON-005",
+  "node": "N1",
+  "provider": "Siemens Supplyframe",
+  "capability": "Part and market intelligence",
+  "deliverable": "Component alternatives, trends",
+  "ingestion_mode": "Licensed portal/data feed",
+  "ingestion_routes": [
+   "ING-08"
+  ],
+  "evidence_status": "Unverified ATHENA entitlement",
+  "doc_url": "https://www.supplyframe.com/",
+  "auth_license": "Enterprise license",
+  "input_type": "MPN/category",
+  "output_type": "CSV/report",
+  "canonical_schemas": [
+   "market_opportunity.v1"
+  ],
+  "thread_kind": "MARKET",
+  "pricing_basis": "Enterprise quote",
+  "gate_fallback": "Verify feeds; manual review",
+  "reference_state": "Research / qualification pending",
+  "priority": "P2",
+  "internal": false,
+  "atlas_ids": [
+   "AT-0560"
+  ],
+  "atlas_match_basis": "exact_name",
+  "atlas_match_note": ""
+ },
+ {
+  "connector_id": "CON-006",
+  "node": "N1",
+  "provider": "India GeM portal",
+  "capability": "Public procurement opportunity",
+  "deliverable": "Eligible tender metadata",
+  "ingestion_mode": "Authorized browser/manual",
+  "ingestion_routes": [
+   "ING-08"
+  ],
+  "evidence_status": "No generic bid submission assumed",
+  "doc_url": "https://gem.gov.in/",
+  "auth_license": "Official registered account",
+  "input_type": "Tender identifier",
+  "output_type": "PDF/portal records",
+  "canonical_schemas": [
+   "market_opportunity.v1"
+  ],
+  "thread_kind": "MARKET",
+  "pricing_basis": "Portal terms govern",
+  "gate_fallback": "No automated bidding without approved interface",
+  "reference_state": "Research / qualification pending",
+  "priority": "P2",
+  "internal": false,
+  "atlas_ids": [],
+  "atlas_match_basis": "not_in_atlas",
+  "atlas_match_note": "government procurement portal, not a vendor record"
+ },
+ {
+  "connector_id": "CON-007",
+  "node": "N2",
+  "provider": "CELUS Design Studio",
+  "capability": "Electronics concept/design",
+  "deliverable": "Schematic reference + BOM",
+  "ingestion_mode": "MCP or reviewed export",
+  "ingestion_routes": [
+   "ING-04",
+   "ING-08"
+  ],
+  "evidence_status": "Official product/docs support export/MCP; entitlement required",
+  "doc_url": "https://www.celus.io/knowledge",
+  "auth_license": "Vendor account/MCP key",
+  "input_type": "Functional blocks/PRD",
+  "output_type": "PDF/native EDA/BOM",
+  "canonical_schemas": [
+   "product_prd.v1",
+   "design_package.v1"
+  ],
+  "thread_kind": "PRD",
+  "pricing_basis": "Plan/quote check",
+  "gate_fallback": "Qualify output licensing and supported integration",
+  "reference_state": "Documented interface; entitlement not tested",
+  "priority": "P0",
+  "internal": false,
+  "atlas_ids": [
+   "AT-0281"
+  ],
+  "atlas_match_basis": "curated",
+  "atlas_match_note": "CELUS Design Studio is a CELUS product"
+ },
+ {
+  "connector_id": "CON-008",
+  "node": "N2",
+  "provider": "Flux",
+  "capability": "AI PCB/schematic editor",
+  "deliverable": "Schematic/board, parts, netlist",
+  "ingestion_mode": "MCP / export",
+  "ingestion_routes": [
+   "ING-04",
+   "ING-08"
+  ],
+  "evidence_status": "Official Flux MCP and export docs",
+  "doc_url": "https://docs.flux.ai/flux/account/flux-mcp-server",
+  "auth_license": "Project-scoped API key",
+  "input_type": "PRD/design context",
+  "output_type": "Project objects/EDIF/BOM",
+  "canonical_schemas": [
+   "design_package.v1"
+  ],
+  "thread_kind": "SIM",
+  "pricing_basis": "AI compute subscription; verify",
+  "gate_fallback": "Write actions gated by engineer",
+  "reference_state": "Documented interface; entitlement not tested",
+  "priority": "P0",
+  "internal": false,
+  "atlas_ids": [
+   "AT-0282"
+  ],
+  "atlas_match_basis": "exact_name",
+  "atlas_match_note": ""
+ },
+ {
+  "connector_id": "CON-009",
+  "node": "N2",
+  "provider": "Circuit Mind",
+  "capability": "Circuit-design automation",
+  "deliverable": "Circuit design proposals",
+  "ingestion_mode": "Portal/export/manual",
+  "ingestion_routes": [
+   "ING-08"
+  ],
+  "evidence_status": "API unverified for ATHENA",
+  "doc_url": "https://www.circuitmind.io/",
+  "auth_license": "Enterprise account",
+  "input_type": "Specifications",
+  "output_type": "Design/BOM",
+  "canonical_schemas": [
+   "design_package.v1"
+  ],
+  "thread_kind": "SIM",
+  "pricing_basis": "Quote",
+  "gate_fallback": "Check file portability and commercial use",
+  "reference_state": "Research / qualification pending",
+  "priority": "P2",
+  "internal": false,
+  "atlas_ids": [
+   "AT-0286"
+  ],
+  "atlas_match_basis": "exact_name",
+  "atlas_match_note": ""
+ },
+ {
+  "connector_id": "CON-010",
+  "node": "N2",
+  "provider": "JITX",
+  "capability": "Electronics design automation",
+  "deliverable": "Code-generated schematic/board/BOM",
+  "ingestion_mode": "Licensed project file / code",
+  "ingestion_routes": [
+   "ING-08",
+   "ING-05"
+  ],
+  "evidence_status": "Public workflow; programmatic service API unverified",
+  "doc_url": "https://www.jitx.com/",
+  "auth_license": "License",
+  "input_type": "Design code/spec",
+  "output_type": "Native EDA/BOM",
+  "canonical_schemas": [
+   "design_package.v1"
+  ],
+  "thread_kind": "SIM",
+  "pricing_basis": "License/quote",
+  "gate_fallback": "Local project handoff; reviewer",
+  "reference_state": "Research / qualification pending",
+  "priority": "P2",
+  "internal": false,
+  "atlas_ids": [
+   "AT-0285"
+  ],
+  "atlas_match_basis": "exact_name",
+  "atlas_match_note": ""
+ },
+ {
+  "connector_id": "CON-011",
+  "node": "N2",
+  "provider": "Jama Connect",
+  "capability": "Requirements lifecycle",
+  "deliverable": "Approved requirements/trace matrix",
+  "ingestion_mode": "Export/partner API",
+  "ingestion_routes": [
+   "ING-08",
+   "ING-01"
+  ],
+  "evidence_status": "API scope not verified here",
+  "doc_url": "https://www.jamasoftware.com/",
+  "auth_license": "Enterprise",
+  "input_type": "Requirements",
+  "output_type": "CSV/JSON",
+  "canonical_schemas": [
+   "product_prd.v1"
+  ],
+  "thread_kind": "PRD",
+  "pricing_basis": "Enterprise quote",
+  "gate_fallback": "Map source requirement IDs",
+  "reference_state": "Research / qualification pending",
+  "priority": "P2",
+  "internal": false,
+  "atlas_ids": [
+   "AT-0470"
+  ],
+  "atlas_match_basis": "curated",
+  "atlas_match_note": "Jama Connect is a Jama Software product"
+ },
+ {
+  "connector_id": "CON-012",
+  "node": "N3",
+  "provider": "KiCad",
+  "capability": "ECAD generation/verification",
+  "deliverable": "Schematic exports, Gerbers, BOM",
+  "ingestion_mode": "Local CLI/files",
+  "ingestion_routes": [
+   "ING-05",
+   "ING-08"
+  ],
+  "evidence_status": "Official kicad-cli docs",
+  "doc_url": "https://docs.kicad.org/master/en/cli/cli.html",
+  "auth_license": "Local execution",
+  "input_type": "Native .kicad_sch/.kicad_pcb",
+  "output_type": "Gerber/STEP/netlist/BOM",
+  "canonical_schemas": [
+   "design_package.v1"
+  ],
+  "thread_kind": "SIM",
+  "pricing_basis": "Open-source; engineering effort",
+  "gate_fallback": "ERC/DRC under CI; do not imply AI generator",
+  "reference_state": "Documented interface; entitlement not tested",
+  "priority": "P0",
+  "internal": false,
+  "atlas_ids": [
+   "AT-0352"
+  ],
+  "atlas_match_basis": "curated",
+  "atlas_match_note": "atlas lists the KiCad Project"
+ },
+ {
+  "connector_id": "CON-013",
+  "node": "N3",
+  "provider": "ngspice",
+  "capability": "Circuit numerical simulation",
+  "deliverable": "Transient/AC/DC waveforms",
+  "ingestion_mode": "Local CLI/batch",
+  "ingestion_routes": [
+   "ING-05"
+  ],
+  "evidence_status": "Established CLI software; verify exact version",
+  "doc_url": "https://ngspice.sourceforge.io/",
+  "auth_license": "Local execution",
+  "input_type": "SPICE netlist",
+  "output_type": "raw/CSV/log",
+  "canonical_schemas": [
+   "simulation_report.v1"
+  ],
+  "thread_kind": "SIM",
+  "pricing_basis": "Open-source compute",
+  "gate_fallback": "Solver convergence + model revision",
+  "reference_state": "Research / qualification pending",
+  "priority": "P0",
+  "internal": false,
+  "atlas_ids": [
+   "AT-0355"
+  ],
+  "atlas_match_basis": "curated",
+  "atlas_match_note": "atlas lists the Ngspice Project"
+ },
+ {
+  "connector_id": "CON-014",
+  "node": "N3",
+  "provider": "Altium 365",
+  "capability": "Design/BOM workspace",
+  "deliverable": "Components, designs, BOM revisions",
+  "ingestion_mode": "GraphQL API",
+  "ingestion_routes": [
+   "ING-02"
+  ],
+  "evidence_status": "Official GraphQL API docs",
+  "doc_url": "https://www.altium.com/documentation/altium-developer-center/altium-365/api",
+  "auth_license": "Access token/program enrollment",
+  "input_type": "Workspace/GraphQL",
+  "output_type": "JSON/workspace files",
+  "canonical_schemas": [
+   "design_package.v1",
+   "bom_item.v1"
+  ],
+  "thread_kind": "SIM",
+  "pricing_basis": "Enterprise/license",
+  "gate_fallback": "Workspace ACL and export rights",
+  "reference_state": "Documented interface; entitlement not tested",
+  "priority": "P1",
+  "internal": false,
+  "atlas_ids": [
+   "AT-0312"
+  ],
+  "atlas_match_basis": "curated",
+  "atlas_match_note": "Altium 365 is an Altium product"
+ },
+ {
+  "connector_id": "CON-015",
+  "node": "N3",
+  "provider": "Onshape",
+  "capability": "Mechanical CAD",
+  "deliverable": "Parts/assembly STEP/BOM metadata",
+  "ingestion_mode": "REST API",
+  "ingestion_routes": [
+   "ING-01"
+  ],
+  "evidence_status": "Official REST/JSON docs",
+  "doc_url": "https://onshape-public.github.io/docs/api-intro/",
+  "auth_license": "OAuth/API keys",
+  "input_type": "CAD documents",
+  "output_type": "JSON/STEP",
+  "canonical_schemas": [
+   "design_package.v1"
+  ],
+  "thread_kind": "SIM",
+  "pricing_basis": "CAD subscription",
+  "gate_fallback": "Tenant permissions and STEP revision",
+  "reference_state": "Documented interface; entitlement not tested",
+  "priority": "P1",
+  "internal": false,
+  "atlas_ids": [
+   "AT-0385"
+  ],
+  "atlas_match_basis": "exact_name",
+  "atlas_match_note": ""
+ },
+ {
+  "connector_id": "CON-016",
+  "node": "N3",
+  "provider": "Flux MCP",
+  "capability": "Schematic/PCB action bridge",
+  "deliverable": "Design objects and edits",
+  "ingestion_mode": "MCP",
+  "ingestion_routes": [
+   "ING-04"
+  ],
+  "evidence_status": "Official Flux MCP docs",
+  "doc_url": "https://docs.flux.ai/flux/account/flux-mcp-server",
+  "auth_license": "Scoped API key",
+  "input_type": "Project object/actions",
+  "output_type": "MCP structured result",
+  "canonical_schemas": [
+   "design_package.v1"
+  ],
+  "thread_kind": "SIM",
+  "pricing_basis": "Plan / usage",
+  "gate_fallback": "Treat all writes as gated change requests",
+  "reference_state": "Documented interface; entitlement not tested",
+  "priority": "P1",
+  "internal": false,
+  "atlas_ids": [
+   "AT-0282"
+  ],
+  "atlas_match_basis": "curated",
+  "atlas_match_note": "Flux MCP is Flux's MCP interface (same vendor as CON-008)"
+ },
+ {
+  "connector_id": "CON-017",
+  "node": "N3",
+  "provider": "Quilter",
+  "capability": "Automated PCB layout",
+  "deliverable": "Candidate placement/routing",
+  "ingestion_mode": "Web upload/download",
+  "ingestion_routes": [
+   "ING-08"
+  ],
+  "evidence_status": "Upload workflow published; public API not assumed",
+  "doc_url": "https://docs.quilter.ai/get-started/quickstart",
+  "auth_license": "Vendor account",
+  "input_type": "EDA schematic/board files",
+  "output_type": "PCB design files/review",
+  "canonical_schemas": [
+   "design_package.v1"
+  ],
+  "thread_kind": "SIM",
+  "pricing_basis": "Per project/quote check",
+  "gate_fallback": "Review returned design and DRC",
+  "reference_state": "Research / qualification pending",
+  "priority": "P1",
+  "internal": false,
+  "atlas_ids": [
+   "AT-0283"
+  ],
+  "atlas_match_basis": "exact_name",
+  "atlas_match_note": ""
+ },
+ {
+  "connector_id": "CON-018",
+  "node": "N3",
+  "provider": "FreeCAD",
+  "capability": "Mechanical CAD",
+  "deliverable": "STEP/STL drawings",
+  "ingestion_mode": "Local Python/macros/files",
+  "ingestion_routes": [
+   "ING-05",
+   "ING-08"
+  ],
+  "evidence_status": "Local scripting; verify supported version",
+  "doc_url": "https://www.freecad.org/",
+  "auth_license": "Local execution",
+  "input_type": "Parametric dimensions",
+  "output_type": "STEP/STL/native files",
+  "canonical_schemas": [
+   "design_package.v1"
+  ],
+  "thread_kind": "SIM",
+  "pricing_basis": "Open-source; engineering time",
+  "gate_fallback": "B-rep integrity and dimensional checks",
+  "reference_state": "Documented interface; entitlement not tested",
+  "priority": "P1",
+  "internal": false,
+  "atlas_ids": [
+   "AT-0382"
+  ],
+  "atlas_match_basis": "curated",
+  "atlas_match_note": "atlas lists the FreeCAD Project"
+ },
+ {
+  "connector_id": "CON-019",
+  "node": "N3",
+  "provider": "Ansys Electronics Desktop",
+  "capability": "EM/electrothermal CAE",
+  "deliverable": "Thermal/EM simulation files",
+  "ingestion_mode": "Licensed scripting/export",
+  "ingestion_routes": [
+   "ING-05",
+   "ING-08"
+  ],
+  "evidence_status": "Service API not verified here",
+  "doc_url": "https://www.ansys.com/",
+  "auth_license": "Licensed seat",
+  "input_type": "Geometry/materials",
+  "output_type": "Report/CSV",
+  "canonical_schemas": [
+   "simulation_report.v1"
+  ],
+  "thread_kind": "SIM",
+  "pricing_basis": "Enterprise seat/compute",
+  "gate_fallback": "Licensed solver+independent validation",
+  "reference_state": "Research / qualification pending",
+  "priority": "P1",
+  "internal": false,
+  "atlas_ids": [
+   "AT-0315"
+  ],
+  "atlas_match_basis": "curated",
+  "atlas_match_note": "Ansys Electronics Desktop is in the Ansys Electronics record"
+ },
+ {
+  "connector_id": "CON-020",
+  "node": "N3",
+  "provider": "SimScale",
+  "capability": "Cloud simulation",
+  "deliverable": "Thermal/flow simulation",
+  "ingestion_mode": "Portal/file exchange",
+  "ingestion_routes": [
+   "ING-08"
+  ],
+  "evidence_status": "API entitlement unverified here",
+  "doc_url": "https://www.simscale.com/",
+  "auth_license": "Workspace account",
+  "input_type": "STEP/mesh",
+  "output_type": "Reports, field data",
+  "canonical_schemas": [
+   "simulation_report.v1"
+  ],
+  "thread_kind": "SIM",
+  "pricing_basis": "Subscription/compute",
+  "gate_fallback": "Material/boundary conditions review",
+  "reference_state": "Research / qualification pending",
+  "priority": "P1",
+  "internal": false,
+  "atlas_ids": [
+   "AT-0408"
+  ],
+  "atlas_match_basis": "exact_name",
+  "atlas_match_note": ""
+ },
+ {
+  "connector_id": "CON-021",
+  "node": "N3",
+  "provider": "Cadence Allegro",
+  "capability": "ECAD layout/signoff",
+  "deliverable": "ODB/Gerber/verification files",
+  "ingestion_mode": "Licensed scripts + export",
+  "ingestion_routes": [
+   "ING-05",
+   "ING-08"
+  ],
+  "evidence_status": "No public SaaS integration assumed",
+  "doc_url": "https://www.cadence.com/",
+  "auth_license": "Licensed seat",
+  "input_type": "Netlist/design rules",
+  "output_type": "CAD/ODB/Gerber",
+  "canonical_schemas": [
+   "design_package.v1"
+  ],
+  "thread_kind": "SIM",
+  "pricing_basis": "Enterprise license",
+  "gate_fallback": "Partner handoff & export agreement",
+  "reference_state": "Research / qualification pending",
+  "priority": "P1",
+  "internal": false,
+  "atlas_ids": [
+   "AT-0309"
+  ],
+  "atlas_match_basis": "curated",
+  "atlas_match_note": "Cadence Allegro is a Cadence Design Systems product"
+ },
+ {
+  "connector_id": "CON-022",
+  "node": "N4",
+  "provider": "Roboflow",
+  "capability": "Machine vision QA",
+  "deliverable": "Image bounding boxes/segmentation",
+  "ingestion_mode": "API/SDK",
+  "ingestion_routes": [
+   "ING-01",
+   "ING-05"
+  ],
+  "evidence_status": "Official inference SDK docs",
+  "doc_url": "https://github.com/roboflow/inference",
+  "auth_license": "API key/SDK",
+  "input_type": "Images and labeled datasets",
+  "output_type": "JSON annotations",
+  "canonical_schemas": [
+   "verification_result.v1"
+  ],
+  "thread_kind": "TEST",
+  "pricing_basis": "Per image/compute",
+  "gate_fallback": "Model evaluated on own defects first",
+  "reference_state": "Documented interface; entitlement not tested",
+  "priority": "P1",
+  "internal": false,
+  "atlas_ids": [
+   "AT-1162"
+  ],
+  "atlas_match_basis": "exact_name",
+  "atlas_match_note": ""
+ },
+ {
+  "connector_id": "CON-023",
+  "node": "N4",
+  "provider": "Instrumental",
+  "capability": "Electronics visual quality",
+  "deliverable": "Manufacturing defect analytics",
+  "ingestion_mode": "Enterprise portal/export",
+  "ingestion_routes": [
+   "ING-08"
+  ],
+  "evidence_status": "Direct public API not established",
+  "doc_url": "https://instrumental.com/",
+  "auth_license": "Enterprise agreement",
+  "input_type": "AOI images/process data",
+  "output_type": "Reports/CSV if licensed",
+  "canonical_schemas": [
+   "verification_result.v1"
+  ],
+  "thread_kind": "TEST",
+  "pricing_basis": "Enterprise quote",
+  "gate_fallback": "Validate usable exports and customer rights",
+  "reference_state": "Research / qualification pending",
+  "priority": "P1",
+  "internal": false,
+  "atlas_ids": [
+   "AT-0075"
+  ],
+  "atlas_match_basis": "exact_name",
+  "atlas_match_note": ""
+ },
+ {
+  "connector_id": "CON-024",
+  "node": "N4",
+  "provider": "Keysight instruments",
+  "capability": "ATE measurements",
+  "deliverable": "Measured electrical data",
+  "ingestion_mode": "SCPI / VISA",
+  "ingestion_routes": [
+   "ING-13"
+  ],
+  "evidence_status": "Official SCPI/VISA docs (instrument dependent)",
+  "doc_url": "https://helpfiles.keysight.com/csg/89600B/WebHelp-scpi/Content/SCPI_Documentation/Using_SCPI.htm",
+  "auth_license": "Instrument LAN/USB auth",
+  "input_type": "Command strings",
+  "output_type": "SCPI data / CSV",
+  "canonical_schemas": [
+   "verification_result.v1"
+  ],
+  "thread_kind": "TEST",
+  "pricing_basis": "Equipment + licenses",
+  "gate_fallback": "Calibrated instrument and safe probing",
+  "reference_state": "Documented interface; entitlement not tested",
+  "priority": "P1",
+  "internal": false,
+  "atlas_ids": [
+   "AT-0850"
+  ],
+  "atlas_match_basis": "curated",
+  "atlas_match_note": "Keysight instruments are a Keysight Technologies line"
+ },
+ {
+  "connector_id": "CON-025",
+  "node": "N4",
+  "provider": "NI TestStand",
+  "capability": "Test sequencer",
+  "deliverable": "Test logs, steps, pass/fail",
+  "ingestion_mode": "Local sequence/db log",
+  "ingestion_routes": [
+   "ING-05"
+  ],
+  "evidence_status": "Connector options unverified here",
+  "doc_url": "https://www.ni.com/",
+  "auth_license": "Test station permissions",
+  "input_type": "Fixture/test script",
+  "output_type": "TDMS/CSV/log",
+  "canonical_schemas": [
+   "verification_result.v1"
+  ],
+  "thread_kind": "TEST",
+  "pricing_basis": "Licensed seats",
+  "gate_fallback": "Capture raw results + UUT ID",
+  "reference_state": "Research / qualification pending",
+  "priority": "P1",
+  "internal": false,
+  "atlas_ids": [
+   "AT-0849"
+  ],
+  "atlas_match_basis": "curated",
+  "atlas_match_note": "TestStand is a National Instruments product"
+ },
+ {
+  "connector_id": "CON-026",
+  "node": "N4",
+  "provider": "Cognex",
+  "capability": "Vision QA",
+  "deliverable": "Inspection classification and measurements",
+  "ingestion_mode": "SDK / file/PLC gateway",
+  "ingestion_routes": [
+   "ING-05",
+   "ING-08",
+   "ING-11"
+  ],
+  "evidence_status": "Specific product SDK must be verified",
+  "doc_url": "https://www.cognex.com/",
+  "auth_license": "Station/SDK license",
+  "input_type": "Frames/sensors",
+  "output_type": "Result/log",
+  "canonical_schemas": [
+   "verification_result.v1"
+  ],
+  "thread_kind": "TEST",
+  "pricing_basis": "License/hardware",
+  "gate_fallback": "False rejection/catch rate benchmark",
+  "reference_state": "Research / qualification pending",
+  "priority": "P1",
+  "internal": false,
+  "atlas_ids": [
+   "AT-0822"
+  ],
+  "atlas_match_basis": "exact_name",
+  "atlas_match_note": ""
+ },
+ {
+  "connector_id": "CON-027",
+  "node": "N5",
+  "provider": "Nexar / Octopart",
+  "capability": "Component data",
+  "deliverable": "Offers, stock, lead-times, lifecycle",
+  "ingestion_mode": "GraphQL API",
+  "ingestion_routes": [
+   "ING-02"
+  ],
+  "evidence_status": "Official API docs",
+  "doc_url": "https://support.nexar.com/support/solutions/articles/101000450648-introduction-to-the-nexar-api",
+  "auth_license": "API credentials",
+  "input_type": "MPN, supplier params",
+  "output_type": "JSON",
+  "canonical_schemas": [
+   "bom_item.v1",
+   "supplier_quote.v1"
+  ],
+  "thread_kind": "BOM",
+  "pricing_basis": "API subscription/usage",
+  "gate_fallback": "Pricing freshness & MPN mapping",
+  "reference_state": "Documented interface; entitlement not tested",
+  "priority": "P0",
+  "internal": false,
+  "atlas_ids": [
+   "AT-0564",
+   "AT-0565"
+  ],
+  "atlas_match_basis": "exact_name",
+  "atlas_match_note": ""
+ },
+ {
+  "connector_id": "CON-028",
+  "node": "N5",
+  "provider": "Luminovo",
+  "capability": "BOM/RFQ/procurement",
+  "deliverable": "BOM tree, RFQ, quoted sourcing",
+  "ingestion_mode": "REST API / CSV",
+  "ingestion_routes": [
+   "ING-01",
+   "ING-10"
+  ],
+  "evidence_status": "Official API spec and CSV integration",
+  "doc_url": "https://docs.luminovo.com/specs/bundled",
+  "auth_license": "API license/token",
+  "input_type": "BOM/assembly id",
+  "output_type": "Versioned JSON/CSV",
+  "canonical_schemas": [
+   "supplier_quote.v1",
+   "sourced_bom.v1"
+  ],
+  "thread_kind": "BOM",
+  "pricing_basis": "Enterprise quote",
+  "gate_fallback": "Validate plan/contract entitlement",
+  "reference_state": "Documented interface; entitlement not tested",
+  "priority": "P0",
+  "internal": false,
+  "atlas_ids": [
+   "AT-0582"
+  ],
+  "atlas_match_basis": "exact_name",
+  "atlas_match_note": ""
+ },
+ {
+  "connector_id": "CON-029",
+  "node": "N5",
+  "provider": "Z2Data",
+  "capability": "Part availability/compliance",
+  "deliverable": "Supplier/component risk profile",
+  "ingestion_mode": "Portal/manual export",
+  "ingestion_routes": [
+   "ING-08"
+  ],
+  "evidence_status": "Public API entitlement unverified",
+  "doc_url": "https://www.z2data.com/",
+  "auth_license": "Enterprise subscription",
+  "input_type": "MPN/Country",
+  "output_type": "Report/CSV",
+  "canonical_schemas": [
+   "supply_risk.v1"
+  ],
+  "thread_kind": "BOM",
+  "pricing_basis": "Enterprise quote",
+  "gate_fallback": "Review lifecycle-source date",
+  "reference_state": "Research / qualification pending",
+  "priority": "P1",
+  "internal": false,
+  "atlas_ids": [
+   "AT-0562"
+  ],
+  "atlas_match_basis": "exact_name",
+  "atlas_match_note": ""
+ },
+ {
+  "connector_id": "CON-030",
+  "node": "N5",
+  "provider": "SiliconExpert",
+  "capability": "Component intelligence",
+  "deliverable": "Obsolescence and supply-risk assessment",
+  "ingestion_mode": "Licensed feed/portal",
+  "ingestion_routes": [
+   "ING-08"
+  ],
+  "evidence_status": "Integration rights not verified",
+  "doc_url": "https://www.siliconexpert.com/",
+  "auth_license": "Enterprise",
+  "input_type": "Part list",
+  "output_type": "CSV/API if contracted",
+  "canonical_schemas": [
+   "supply_risk.v1"
+  ],
+  "thread_kind": "BOM",
+  "pricing_basis": "Enterprise quote",
+  "gate_fallback": "Verify data license terms",
+  "reference_state": "Research / qualification pending",
+  "priority": "P1",
+  "internal": false,
+  "atlas_ids": [
+   "AT-0561"
+  ],
+  "atlas_match_basis": "exact_name",
+  "atlas_match_note": ""
+ },
+ {
+  "connector_id": "CON-031",
+  "node": "N5",
+  "provider": "CalcuQuote",
+  "capability": "EMS RFQ and quoting",
+  "deliverable": "EMS costs and quoting workflow",
+  "ingestion_mode": "Portal/export/manual",
+  "ingestion_routes": [
+   "ING-08"
+  ],
+  "evidence_status": "API entitlement unverified",
+  "doc_url": "https://www.calcuquote.com/",
+  "auth_license": "Enterprise",
+  "input_type": "BOM + quantity",
+  "output_type": "Quote/XLSX",
+  "canonical_schemas": [
+   "supplier_quote.v1"
+  ],
+  "thread_kind": "BOM",
+  "pricing_basis": "Subscription/quote",
+  "gate_fallback": "Quote-by-rev and commercial terms",
+  "reference_state": "Research / qualification pending",
+  "priority": "P1",
+  "internal": false,
+  "atlas_ids": [
+   "AT-0583"
+  ],
+  "atlas_match_basis": "exact_name",
+  "atlas_match_note": ""
+ },
+ {
+  "connector_id": "CON-032",
+  "node": "N5",
+  "provider": "DigiKey",
+  "capability": "Distributor part intelligence",
+  "deliverable": "MPN offers/availability",
+  "ingestion_mode": "API candidate",
+  "ingestion_routes": [
+   "ING-01"
+  ],
+  "evidence_status": "API and license require onboarding verification",
+  "doc_url": "https://www.digikey.com/",
+  "auth_license": "API account",
+  "input_type": "MPN",
+  "output_type": "JSON/CSV",
+  "canonical_schemas": [
+   "bom_item.v1"
+  ],
+  "thread_kind": "BOM",
+  "pricing_basis": "Terms/limits apply",
+  "gate_fallback": "Distributor API not assumed enabled",
+  "reference_state": "Research / qualification pending",
+  "priority": "P1",
+  "internal": false,
+  "atlas_ids": [
+   "AT-0589"
+  ],
+  "atlas_match_basis": "exact_name",
+  "atlas_match_note": ""
+ },
+ {
+  "connector_id": "CON-033",
+  "node": "N6",
+  "provider": "HubSpot CRM",
+  "capability": "Lead/bid management",
+  "deliverable": "Opportunity, deal and activity IDs",
+  "ingestion_mode": "REST API candidate",
+  "ingestion_routes": [
+   "ING-01"
+  ],
+  "evidence_status": "Requires active plan/API review",
+  "doc_url": "https://developers.hubspot.com/",
+  "auth_license": "OAuth/token",
+  "input_type": "Lead/opportunity JSON",
+  "output_type": "JSON",
+  "canonical_schemas": [
+   "bid_package.v1"
+  ],
+  "thread_kind": "QUOTE",
+  "pricing_basis": "Seat/tier pricing",
+  "gate_fallback": "No customer outreach without approval",
+  "reference_state": "Research / qualification pending",
+  "priority": "P2",
+  "internal": false,
+  "atlas_ids": [],
+  "atlas_match_basis": "not_in_atlas",
+  "atlas_match_note": "HubSpot not present in the atlas"
+ },
+ {
+  "connector_id": "CON-034",
+  "node": "N6",
+  "provider": "Salesforce",
+  "capability": "Commercial opportunities",
+  "deliverable": "Deal, quote, contacts",
+  "ingestion_mode": "REST/SOAP candidate",
+  "ingestion_routes": [
+   "ING-01"
+  ],
+  "evidence_status": "Requires tenant, API license and permissions",
+  "doc_url": "https://developer.salesforce.com/",
+  "auth_license": "OAuth",
+  "input_type": "Opportunity JSON",
+  "output_type": "JSON",
+  "canonical_schemas": [
+   "bid_package.v1"
+  ],
+  "thread_kind": "QUOTE",
+  "pricing_basis": "License/tier pricing",
+  "gate_fallback": "Sales order scope review",
+  "reference_state": "Research / qualification pending",
+  "priority": "P2",
+  "internal": false,
+  "atlas_ids": [],
+  "atlas_match_basis": "not_in_atlas",
+  "atlas_match_note": "Salesforce not present in the atlas"
+ },
+ {
+  "connector_id": "CON-035",
+  "node": "N6",
+  "provider": "DocuSign",
+  "capability": "Agreement signatures",
+  "deliverable": "Executed SOW and milestone acceptance",
+  "ingestion_mode": "API candidate",
+  "ingestion_routes": [
+   "ING-01"
+  ],
+  "evidence_status": "Developer access and plan to verify",
+  "doc_url": "https://developers.docusign.com/",
+  "auth_license": "OAuth",
+  "input_type": "Agreement PDF+signer",
+  "output_type": "Signed PDF/event",
+  "canonical_schemas": [
+   "approval_event.v1"
+  ],
+  "thread_kind": null,
+  "pricing_basis": "Per seat/envelope/quote",
+  "gate_fallback": "Legal signatory rights mandatory",
+  "reference_state": "Research / qualification pending",
+  "priority": "P2",
+  "internal": false,
+  "atlas_ids": [],
+  "atlas_match_basis": "not_in_atlas",
+  "atlas_match_note": "DocuSign not present in the atlas"
+ },
+ {
+  "connector_id": "CON-036",
+  "node": "N7",
+  "provider": "ATHENA Cost Engine",
+  "capability": "Deterministic unit economics",
+  "deliverable": "Cash, COGS, pricing, break-even",
+  "ingestion_mode": "Internal Python/SQL",
+  "ingestion_routes": [
+   "ING-05"
+  ],
+  "evidence_status": "ATHENA proposed build (not third party)",
+  "doc_url": "",
+  "auth_license": "Service auth",
+  "input_type": "Approved cost rows",
+  "output_type": "JSON/XLSX",
+  "canonical_schemas": [
+   "project_pnl.v1"
+  ],
+  "thread_kind": "QUOTE",
+  "pricing_basis": "Internal development",
+  "gate_fallback": "Never use raw LLM sums",
+  "reference_state": "Research / qualification pending",
+  "priority": "P0",
+  "internal": true,
+  "atlas_ids": [],
+  "atlas_match_basis": "not_in_atlas",
+  "atlas_match_note": "internal ATHENA component"
+ },
+ {
+  "connector_id": "CON-037",
+  "node": "N7",
+  "provider": "aPriori",
+  "capability": "Manufacturing should-cost",
+  "deliverable": "Cost/DFM estimate",
+  "ingestion_mode": "Enterprise portal/export",
+  "ingestion_routes": [
+   "ING-08"
+  ],
+  "evidence_status": "API entitlement unverified",
+  "doc_url": "https://www.apriori.com/",
+  "auth_license": "Enterprise license",
+  "input_type": "CAD/process/material",
+  "output_type": "Cost report",
+  "canonical_schemas": [
+   "project_pnl.v1"
+  ],
+  "thread_kind": "QUOTE",
+  "pricing_basis": "Enterprise quote",
+  "gate_fallback": "Record cost model assumptions",
+  "reference_state": "Research / qualification pending",
+  "priority": "P2",
+  "internal": false,
+  "atlas_ids": [
+   "AT-0509"
+  ],
+  "atlas_match_basis": "exact_name",
+  "atlas_match_note": ""
+ },
+ {
+  "connector_id": "CON-038",
+  "node": "N7",
+  "provider": "Coupa",
+  "capability": "Spend/contract controls",
+  "deliverable": "Procurement approvals, spend",
+  "ingestion_mode": "Enterprise connector",
+  "ingestion_routes": [
+   "ING-08"
+  ],
+  "evidence_status": "API and product eligibility unverified",
+  "doc_url": "https://www.coupa.com/",
+  "auth_license": "Enterprise license",
+  "input_type": "Cost/contract JSON",
+  "output_type": "Approval/export",
+  "canonical_schemas": [
+   "project_pnl.v1"
+  ],
+  "thread_kind": "QUOTE",
+  "pricing_basis": "Enterprise quote",
+  "gate_fallback": "Don't merge vendor spend with project COGS",
+  "reference_state": "Research / qualification pending",
+  "priority": "P2",
+  "internal": false,
+  "atlas_ids": [
+   "AT-0644"
+  ],
+  "atlas_match_basis": "exact_name",
+  "atlas_match_note": ""
+ },
+ {
+  "connector_id": "CON-039",
+  "node": "N8",
+  "provider": "Siemens Opcenter Intelligence",
+  "capability": "Manufacturing analytics",
+  "deliverable": "Entity and KPI manufacturing data",
+  "ingestion_mode": "OData + ingestion API",
+  "ingestion_routes": [
+   "ING-01"
+  ],
+  "evidence_status": "Official Siemens documentation",
+  "doc_url": "https://developer.siemens.com/insights-hub/docs/apis/advanced-opcenter-intelligence/api-opcenter-intelligence-api.html",
+  "auth_license": "Tenant licensed token",
+  "input_type": "MES/warehouse events",
+  "output_type": "OData/JSON",
+  "canonical_schemas": [
+   "lifecycle_event.v1"
+  ],
+  "thread_kind": "BUILD",
+  "pricing_basis": "Enterprise quote",
+  "gate_fallback": "Interface rights and lot lineage",
+  "reference_state": "Documented interface; entitlement not tested",
+  "priority": "P2",
+  "internal": false,
+  "atlas_ids": [
+   "AT-0008"
+  ],
+  "atlas_match_basis": "curated",
+  "atlas_match_note": "Opcenter Intelligence is part of the Siemens Opcenter family"
+ },
+ {
+  "connector_id": "CON-040",
+  "node": "N8",
+  "provider": "Cognite Data Fusion",
+  "capability": "Industrial event data",
+  "deliverable": "Time-series/asset context",
+  "ingestion_mode": "REST API candidate",
+  "ingestion_routes": [
+   "ING-01"
+  ],
+  "evidence_status": "Official platform docs require verification",
+  "doc_url": "https://api-docs.cognite.com/",
+  "auth_license": "Client credentials",
+  "input_type": "Timeseries + asset refs",
+  "output_type": "JSON",
+  "canonical_schemas": [
+   "lifecycle_event.v1"
+  ],
+  "thread_kind": "BUILD",
+  "pricing_basis": "Enterprise usage",
+  "gate_fallback": "Customer-owned historian and rights",
+  "reference_state": "Documented interface; entitlement not tested",
+  "priority": "P2",
+  "internal": false,
+  "atlas_ids": [
+   "AT-0134"
+  ],
+  "atlas_match_basis": "exact_name",
+  "atlas_match_note": ""
+ },
+ {
+  "connector_id": "CON-041",
+  "node": "N8",
+  "provider": "MachineMetrics",
+  "capability": "Equipment operations analytics",
+  "deliverable": "Machine utilization and events",
+  "ingestion_mode": "Enterprise export/connector",
+  "ingestion_routes": [
+   "ING-08"
+  ],
+  "evidence_status": "API access not verified",
+  "doc_url": "https://www.machinemetrics.com/",
+  "auth_license": "Enterprise",
+  "input_type": "Machine data",
+  "output_type": "Reports/CSV",
+  "canonical_schemas": [
+   "lifecycle_event.v1"
+  ],
+  "thread_kind": "BUILD",
+  "pricing_basis": "Subscription/quote",
+  "gate_fallback": "No customer data without approval",
+  "reference_state": "Research / qualification pending",
+  "priority": "P2",
+  "internal": false,
+  "atlas_ids": [
+   "AT-0042"
+  ],
+  "atlas_match_basis": "exact_name",
+  "atlas_match_note": ""
+ },
+ {
+  "connector_id": "CON-042",
+  "node": "N8",
+  "provider": "Arch Systems",
+  "capability": "Factory intelligence",
+  "deliverable": "Process, yield and supply insights",
+  "ingestion_mode": "Enterprise data exchange",
+  "ingestion_routes": [
+   "ING-08"
+  ],
+  "evidence_status": "API access not verified",
+  "doc_url": "https://archsys.io/",
+  "auth_license": "Enterprise",
+  "input_type": "MES/SMT test data",
+  "output_type": "Report/CSV",
+  "canonical_schemas": [
+   "lifecycle_event.v1"
+  ],
+  "thread_kind": "BUILD",
+  "pricing_basis": "Enterprise quote",
+  "gate_fallback": "Validate feasibility and data ownership",
+  "reference_state": "Research / qualification pending",
+  "priority": "P2",
+  "internal": false,
+  "atlas_ids": [
+   "AT-0191"
+  ],
+  "atlas_match_basis": "exact_name",
+  "atlas_match_note": ""
+ },
+ {
+  "connector_id": "CON-043",
+  "node": "N8",
+  "provider": "AWS IoT Core",
+  "capability": "Telemetry ingestion infrastructure",
+  "deliverable": "MQTT events to cloud",
+  "ingestion_mode": "MQTT / rules / API",
+  "ingestion_routes": [
+   "ING-12",
+   "ING-01"
+  ],
+  "evidence_status": "General platform availability; configuration needed",
+  "doc_url": "https://aws.amazon.com/iot-core/",
+  "auth_license": "IAM/certificates",
+  "input_type": "MQTT JSON",
+  "output_type": "JSON stream",
+  "canonical_schemas": [
+   "lifecycle_event.v1"
+  ],
+  "thread_kind": "BUILD",
+  "pricing_basis": "Message usage",
+  "gate_fallback": "TLS and per-device authorization",
+  "reference_state": "Research / qualification pending",
+  "priority": "P2",
+  "internal": false,
+  "atlas_ids": [],
+  "atlas_match_basis": "not_in_atlas",
+  "atlas_match_note": "AWS IoT Core not present in the atlas"
+ },
+ {
+  "connector_id": "CON-044",
+  "node": "N8",
+  "provider": "Langfuse",
+  "capability": "Model tracing/LLMOps",
+  "deliverable": "Trace, token and evaluation events",
+  "ingestion_mode": "OTLP/HTTP SDK",
+  "ingestion_routes": [
+   "ING-01",
+   "ING-05"
+  ],
+  "evidence_status": "Official OTEL docs; deprecated legacy ingestion must not be used",
+  "doc_url": "https://langfuse.com/docs/observability/get-started",
+  "auth_license": "API keys / OTEL",
+  "input_type": "Traces, spans, eval scores",
+  "output_type": "OTEL/JSON",
+  "canonical_schemas": [
+   "ai_run_trace.v1"
+  ],
+  "thread_kind": null,
+  "pricing_basis": "Cloud/self-host tiers",
+  "gate_fallback": "Do not send secrets/raw customer IP",
+  "reference_state": "Documented interface; entitlement not tested",
+  "priority": "P0",
+  "internal": false,
+  "atlas_ids": [
+   "AT-1115"
+  ],
+  "atlas_match_basis": "exact_name",
+  "atlas_match_note": ""
+ },
+ {
+  "connector_id": "CON-045",
+  "node": "X",
+  "provider": "OpenAI API",
+  "capability": "General reasoning/extraction",
+  "deliverable": "Structured JSON and explanation",
+  "ingestion_mode": "HTTPS API",
+  "ingestion_routes": [
+   "ING-01"
+  ],
+  "evidence_status": "General public API; exact model entitlement not verified",
+  "doc_url": "https://platform.openai.com/docs",
+  "auth_license": "API key",
+  "input_type": "Text/multimodal inputs",
+  "output_type": "JSON/text",
+  "canonical_schemas": [
+   "ai_run_trace.v1"
+  ],
+  "thread_kind": null,
+  "pricing_basis": "Per token/tool call",
+  "gate_fallback": "Privacy, tool permission, data terms",
+  "reference_state": "Documented interface; entitlement not tested",
+  "priority": "P0",
+  "internal": false,
+  "atlas_ids": [
+   "AT-1084"
+  ],
+  "atlas_match_basis": "curated",
+  "atlas_match_note": "OpenAI API is an OpenAI product"
+ },
+ {
+  "connector_id": "CON-046",
+  "node": "X",
+  "provider": "Google Gemini API",
+  "capability": "Reasoning/extraction",
+  "deliverable": "Structured JSON and explanation",
+  "ingestion_mode": "HTTPS API",
+  "ingestion_routes": [
+   "ING-01"
+  ],
+  "evidence_status": "General public API; account entitlement not verified",
+  "doc_url": "https://ai.google.dev/",
+  "auth_license": "API key / cloud identity",
+  "input_type": "Text/PDF/multimodal",
+  "output_type": "JSON/text",
+  "canonical_schemas": [
+   "ai_run_trace.v1"
+  ],
+  "thread_kind": null,
+  "pricing_basis": "Per token/tool call",
+  "gate_fallback": "Fallback budget and data terms",
+  "reference_state": "Documented interface; entitlement not tested",
+  "priority": "P2",
+  "internal": false,
+  "atlas_ids": [
+   "AT-1086"
+  ],
+  "atlas_match_basis": "exact_name",
+  "atlas_match_note": ""
+ },
+ {
+  "connector_id": "CON-047",
+  "node": "X",
+  "provider": "Anthropic API",
+  "capability": "Reasoning/document review",
+  "deliverable": "Structured text/JSON",
+  "ingestion_mode": "HTTPS API",
+  "ingestion_routes": [
+   "ING-01"
+  ],
+  "evidence_status": "General public API; entitlement not verified",
+  "doc_url": "https://docs.anthropic.com/",
+  "auth_license": "API key",
+  "input_type": "Text/document blocks",
+  "output_type": "JSON/text",
+  "canonical_schemas": [
+   "ai_run_trace.v1"
+  ],
+  "thread_kind": null,
+  "pricing_basis": "Per token/tool call",
+  "gate_fallback": "Avoid double charging on redundant reviewers",
+  "reference_state": "Documented interface; entitlement not tested",
+  "priority": "P2",
+  "internal": false,
+  "atlas_ids": [
+   "AT-1085"
+  ],
+  "atlas_match_basis": "curated",
+  "atlas_match_note": "Anthropic API is an Anthropic product"
+ }
+]

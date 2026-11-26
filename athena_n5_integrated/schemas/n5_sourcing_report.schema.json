@@ -1,0 +1,692 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n5_sourcing_report",
+  "$defs": {
+    "FxAssumption": {
+      "additionalProperties": false,
+      "properties": {
+        "fx_id": {
+          "title": "Fx Id",
+          "type": "string"
+        },
+        "from_currency": {
+          "pattern": "^[A-Z]{3}$",
+          "title": "From Currency",
+          "type": "string"
+        },
+        "to_currency": {
+          "pattern": "^[A-Z]{3}$",
+          "title": "To Currency",
+          "type": "string"
+        },
+        "rate": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "description": "1 unit of from_currency = rate units of to_currency",
+          "title": "Rate"
+        },
+        "as_of": {
+          "format": "date",
+          "title": "As Of",
+          "type": "string"
+        },
+        "source": {
+          "minLength": 3,
+          "title": "Source",
+          "type": "string"
+        },
+        "valid_until": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Valid Until"
+        }
+      },
+      "required": [
+        "fx_id",
+        "from_currency",
+        "to_currency",
+        "rate",
+        "as_of",
+        "source"
+      ],
+      "title": "FxAssumption",
+      "type": "object"
+    },
+    "GuardrailFinding": {
+      "additionalProperties": false,
+      "properties": {
+        "finding_id": {
+          "title": "Finding Id",
+          "type": "string"
+        },
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "outcome": {
+          "enum": [
+            "BLOCK",
+            "REWORK",
+            "INFO"
+          ],
+          "title": "Outcome",
+          "type": "string"
+        },
+        "level": {
+          "enum": [
+            "OFFER",
+            "LINE",
+            "REPORT"
+          ],
+          "title": "Level",
+          "type": "string"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        },
+        "line": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Line"
+        },
+        "offer_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Offer Id"
+        },
+        "quote_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Quote Id"
+        },
+        "supplier_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Supplier Id"
+        }
+      },
+      "required": [
+        "finding_id",
+        "code",
+        "outcome",
+        "level",
+        "message"
+      ],
+      "title": "N5GuardrailFinding",
+      "type": "object"
+    },
+    "LineResult": {
+      "additionalProperties": false,
+      "properties": {
+        "line": {
+          "title": "Line",
+          "type": "integer"
+        },
+        "mpn": {
+          "title": "Mpn",
+          "type": "string"
+        },
+        "manufacturer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Manufacturer"
+        },
+        "qty_per_unit": {
+          "title": "Qty Per Unit",
+          "type": "integer"
+        },
+        "q_required": {
+          "title": "Q Required",
+          "type": "integer"
+        },
+        "critical": {
+          "title": "Critical",
+          "type": "boolean"
+        },
+        "status": {
+          "enum": [
+            "SOURCED",
+            "UNSOURCED"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "selected_offer_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Selected Offer Id"
+        },
+        "offers": {
+          "items": {
+            "$ref": "#/$defs/RankedOffer"
+          },
+          "title": "Offers",
+          "type": "array"
+        },
+        "risk_flags": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Risk Flags",
+          "type": "array"
+        }
+      },
+      "required": [
+        "line",
+        "mpn",
+        "qty_per_unit",
+        "q_required",
+        "critical",
+        "status"
+      ],
+      "title": "LineResult",
+      "type": "object"
+    },
+    "RankedOffer": {
+      "additionalProperties": false,
+      "properties": {
+        "offer_id": {
+          "title": "Offer Id",
+          "type": "string"
+        },
+        "quote_id": {
+          "title": "Quote Id",
+          "type": "string"
+        },
+        "quote_sha256": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Quote Sha256"
+        },
+        "supplier_id": {
+          "title": "Supplier Id",
+          "type": "string"
+        },
+        "supplier_kind": {
+          "anyOf": [
+            {
+              "enum": [
+                "MANUFACTURER",
+                "DISTRIBUTOR",
+                "EMS",
+                "ODM"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Supplier Kind"
+        },
+        "quoted_mpn": {
+          "title": "Quoted Mpn",
+          "type": "string"
+        },
+        "eligible": {
+          "title": "Eligible",
+          "type": "boolean"
+        },
+        "rank": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "1 = cheapest eligible by extended cost",
+          "title": "Rank"
+        },
+        "codes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Codes",
+          "type": "array"
+        },
+        "q_order": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Q Order"
+        },
+        "price_break_min_qty": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Price Break Min Qty"
+        },
+        "unit_price": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit Price"
+        },
+        "currency": {
+          "title": "Currency",
+          "type": "string"
+        },
+        "line_charges_total": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Line Charges Total"
+        },
+        "extended_cost": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Extended Cost"
+        },
+        "fx_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fx Id"
+        },
+        "fx_rate": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fx Rate"
+        },
+        "extended_cost_base": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Extended Cost Base"
+        },
+        "availability": {
+          "enum": [
+            "STOCK",
+            "FACTORY_ORDER"
+          ],
+          "title": "Availability",
+          "type": "string"
+        },
+        "stock_qty": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Stock Qty"
+        },
+        "lead_time_days": {
+          "title": "Lead Time Days",
+          "type": "integer"
+        },
+        "step_up": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "advice only, never applied",
+          "title": "Step Up"
+        }
+      },
+      "required": [
+        "offer_id",
+        "quote_id",
+        "supplier_id",
+        "quoted_mpn",
+        "eligible",
+        "currency",
+        "availability",
+        "lead_time_days"
+      ],
+      "title": "RankedOffer",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "N5SourcingReport.v1",
+      "default": "N5SourcingReport.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "report_id": {
+      "title": "Report Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "bom_intake_id": {
+      "title": "Bom Intake Id",
+      "type": "string"
+    },
+    "intake_sha256": {
+      "title": "Intake Sha256",
+      "type": "string"
+    },
+    "bom_ref": {
+      "title": "Bom Ref",
+      "type": "string"
+    },
+    "design_revision": {
+      "title": "Design Revision",
+      "type": "string"
+    },
+    "build_quantity": {
+      "title": "Build Quantity",
+      "type": "integer"
+    },
+    "base_currency": {
+      "title": "Base Currency",
+      "type": "string"
+    },
+    "decision": {
+      "enum": [
+        "PASS",
+        "REWORK",
+        "BLOCK"
+      ],
+      "title": "Decision",
+      "type": "string"
+    },
+    "findings": {
+      "items": {
+        "$ref": "#/$defs/GuardrailFinding"
+      },
+      "title": "Findings",
+      "type": "array"
+    },
+    "lines": {
+      "items": {
+        "$ref": "#/$defs/LineResult"
+      },
+      "title": "Lines",
+      "type": "array"
+    },
+    "quote_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Quote Ids",
+      "type": "array"
+    },
+    "quote_hashes": {
+      "description": "SHA-256 of every quote whose offer was selected",
+      "items": {
+        "type": "string"
+      },
+      "title": "Quote Hashes",
+      "type": "array"
+    },
+    "all_quote_hashes": {
+      "items": {
+        "type": "string"
+      },
+      "title": "All Quote Hashes",
+      "type": "array"
+    },
+    "quote_source_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Quote Source Ids",
+      "type": "array"
+    },
+    "fx_assumptions": {
+      "items": {
+        "$ref": "#/$defs/FxAssumption"
+      },
+      "title": "Fx Assumptions",
+      "type": "array"
+    },
+    "indicative_total": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Indicative Total"
+    },
+    "indicative_unit_cost": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Indicative Unit Cost"
+    },
+    "indicative_scope": {
+      "default": "INDICATIVE MATERIAL QUOTE: quoted component material only (order quantity × applicable price break + quoted line charges). It excludes GST and other taxes, tooling / NRE, financing, complete freight and duties, production labour and warranty, which belong to N7 Finance.",
+      "title": "Indicative Scope",
+      "type": "string"
+    },
+    "excluded_cost_categories": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Excluded Cost Categories",
+      "type": "array"
+    },
+    "excluded_items_reported": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Excluded Items Reported",
+      "type": "array"
+    },
+    "synthetic": {
+      "default": false,
+      "title": "Synthetic",
+      "type": "boolean"
+    },
+    "engine_version": {
+      "title": "Engine Version",
+      "type": "string"
+    },
+    "created_by": {
+      "title": "Created By",
+      "type": "string"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "report_sha256": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Report Sha256"
+    },
+    "approval_scope": {
+      "default": "N5 approval means the supplier selection and the indicative material quote were checked against the approved N3 BOM revision, current supplier qualifications, quotation validity and the deterministic guardrails. It is a draft input for N6 bidding and N7 costing: not a purchase order, a supplier contract, a complete product cost or an engineering approval of any alternate part.",
+      "title": "Approval Scope",
+      "type": "string"
+    }
+  },
+  "required": [
+    "report_id",
+    "tenant_id",
+    "bom_intake_id",
+    "intake_sha256",
+    "bom_ref",
+    "design_revision",
+    "build_quantity",
+    "base_currency",
+    "decision",
+    "findings",
+    "lines",
+    "quote_ids",
+    "quote_hashes",
+    "all_quote_hashes",
+    "quote_source_ids",
+    "engine_version",
+    "created_by",
+    "created_at"
+  ],
+  "title": "N5SourcingReport",
+  "type": "object"
+}

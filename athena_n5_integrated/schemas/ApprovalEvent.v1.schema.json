@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:ApprovalEvent.v1",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "ApprovalEvent.v1",
+      "default": "ApprovalEvent.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "approval_id": {
+      "title": "Approval Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "artifact_id": {
+      "description": "artifact id, or source:<source_id> for rights approvals",
+      "title": "Artifact Id",
+      "type": "string"
+    },
+    "exact_revision": {
+      "title": "Exact Revision",
+      "type": "string"
+    },
+    "approver_id": {
+      "title": "Approver Id",
+      "type": "string"
+    },
+    "approver_role": {
+      "title": "Approver Role",
+      "type": "string"
+    },
+    "decision": {
+      "enum": [
+        "APPROVED",
+        "REJECTED"
+      ],
+      "title": "Decision",
+      "type": "string"
+    },
+    "scope": {
+      "enum": [
+        "SOURCE_RIGHTS",
+        "RELEASE",
+        "REVIEW_RESOLUTION",
+        "FEEDBACK",
+        "EVIDENCE_ATTESTATION"
+      ],
+      "title": "Scope",
+      "type": "string"
+    },
+    "reason": {
+      "minLength": 5,
+      "title": "Reason",
+      "type": "string"
+    },
+    "timestamp_utc": {
+      "format": "date-time",
+      "title": "Timestamp Utc",
+      "type": "string"
+    },
+    "prev_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Prev Hash",
+      "type": "string"
+    },
+    "event_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Event Hash",
+      "type": "string"
+    }
+  },
+  "required": [
+    "approval_id",
+    "tenant_id",
+    "artifact_id",
+    "exact_revision",
+    "approver_id",
+    "approver_role",
+    "decision",
+    "scope",
+    "reason",
+    "timestamp_utc",
+    "prev_hash",
+    "event_hash"
+  ],
+  "title": "ApprovalEvent.v1",
+  "type": "object"
+}

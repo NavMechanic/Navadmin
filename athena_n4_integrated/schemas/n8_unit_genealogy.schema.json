@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n8_unit_genealogy",
+  "additionalProperties": false,
+  "properties": {
+    "unit_serial": {
+      "title": "Unit Serial",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "design_revision": {
+      "title": "Design Revision",
+      "type": "string"
+    },
+    "pcb_revision": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Pcb Revision"
+    },
+    "design_refs": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Design Refs",
+      "type": "array"
+    },
+    "prd_ref": {
+      "title": "Prd Ref",
+      "type": "string"
+    },
+    "verification_artifact": {
+      "title": "Verification Artifact",
+      "type": "string"
+    },
+    "verification_evidence_sha256": {
+      "title": "Verification Evidence Sha256",
+      "type": "string"
+    },
+    "tests_passed": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Tests Passed",
+      "type": "array"
+    },
+    "status": {
+      "const": "VERIFIED_FOR_LIFECYCLE",
+      "default": "VERIFIED_FOR_LIFECYCLE",
+      "title": "Status",
+      "type": "string"
+    },
+    "registered_at": {
+      "format": "date-time",
+      "title": "Registered At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "unit_serial",
+    "tenant_id",
+    "design_revision",
+    "design_refs",
+    "prd_ref",
+    "verification_artifact",
+    "verification_evidence_sha256",
+    "tests_passed",
+    "registered_at"
+  ],
+  "title": "N8UnitGenealogy",
+  "type": "object"
+}

@@ -1,0 +1,12 @@
+fastapi==0.115.6
+uvicorn==0.32.1
+sqlalchemy==2.0.36
+pydantic==2.10.3
+pyjwt==2.10.1
+openpyxl==3.1.5      # vendor atlas import
+defusedxml==0.7.1    # openpyxl uses it automatically to block XML-bomb workbooks
+
+# optional: real LLM calls through the gateway (LLM_PROVIDER=anthropic)
+# anthropic
+# optional: PostgreSQL instead of SQLite
+# psycopg[binary]==3.2.3

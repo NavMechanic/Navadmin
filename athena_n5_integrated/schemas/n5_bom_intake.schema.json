@@ -1,0 +1,315 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n5_bom_intake",
+  "$defs": {
+    "N5BomLine": {
+      "additionalProperties": false,
+      "properties": {
+        "line": {
+          "minimum": 1,
+          "title": "Line",
+          "type": "integer"
+        },
+        "mpn": {
+          "description": "exact-MPN key: whitespace removed, upper-cased; suffixes stay significant",
+          "title": "Mpn",
+          "type": "string"
+        },
+        "mpn_as_released": {
+          "title": "Mpn As Released",
+          "type": "string"
+        },
+        "manufacturer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Manufacturer"
+        },
+        "refdes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Refdes",
+          "type": "array"
+        },
+        "qty_per_unit": {
+          "minimum": 1,
+          "title": "Qty Per Unit",
+          "type": "integer"
+        },
+        "uom": {
+          "const": "EA",
+          "default": "EA",
+          "title": "Uom",
+          "type": "string"
+        },
+        "q_required": {
+          "description": "qty_per_unit × build_quantity",
+          "minimum": 1,
+          "title": "Q Required",
+          "type": "integer"
+        },
+        "critical": {
+          "default": false,
+          "title": "Critical",
+          "type": "boolean"
+        },
+        "critical_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Critical Reason"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Value"
+        },
+        "footprint": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Footprint"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        }
+      },
+      "required": [
+        "line",
+        "mpn",
+        "mpn_as_released",
+        "refdes",
+        "qty_per_unit",
+        "q_required"
+      ],
+      "title": "N5BomLine",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "N5BomIntake.v1",
+      "default": "N5BomIntake.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "intake_id": {
+      "title": "Intake Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "project_id": {
+      "title": "Project Id",
+      "type": "string"
+    },
+    "prd_id": {
+      "title": "Prd Id",
+      "type": "string"
+    },
+    "prd_ref": {
+      "title": "Prd Ref",
+      "type": "string"
+    },
+    "bom_ref": {
+      "description": "N3 BOM_RELEASE ARTIFACT_ID@REVISION",
+      "title": "Bom Ref",
+      "type": "string"
+    },
+    "bom_payload_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Bom Payload Sha256",
+      "type": "string"
+    },
+    "manifest_id": {
+      "title": "Manifest Id",
+      "type": "string"
+    },
+    "approval_id": {
+      "title": "Approval Id",
+      "type": "string"
+    },
+    "n3_release_id": {
+      "title": "N3 Release Id",
+      "type": "string"
+    },
+    "scope": {
+      "title": "Scope",
+      "type": "string"
+    },
+    "design_revision": {
+      "title": "Design Revision",
+      "type": "string"
+    },
+    "pcb_revision": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Pcb Revision"
+    },
+    "build_quantity": {
+      "minimum": 1,
+      "title": "Build Quantity",
+      "type": "integer"
+    },
+    "purpose": {
+      "enum": [
+        "PROTOTYPE_BUILD",
+        "PILOT_BUILD",
+        "PRODUCTION"
+      ],
+      "title": "Purpose",
+      "type": "string"
+    },
+    "target_lead_time_days": {
+      "minimum": 0,
+      "title": "Target Lead Time Days",
+      "type": "integer"
+    },
+    "base_currency": {
+      "pattern": "^[A-Z]{3}$",
+      "title": "Base Currency",
+      "type": "string"
+    },
+    "lines": {
+      "items": {
+        "$ref": "#/$defs/N5BomLine"
+      },
+      "minItems": 1,
+      "title": "Lines",
+      "type": "array"
+    },
+    "dnp_lines": {
+      "items": {
+        "type": "integer"
+      },
+      "title": "Dnp Lines",
+      "type": "array"
+    },
+    "release_source_id": {
+      "title": "Release Source Id",
+      "type": "string"
+    },
+    "synthetic": {
+      "title": "Synthetic",
+      "type": "boolean"
+    },
+    "verification_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "N4 VERIFICATION_RELEASE for this revision",
+      "title": "Verification Ref"
+    },
+    "verification_status": {
+      "default": "NOT_VERIFIED",
+      "enum": [
+        "VERIFIED",
+        "NOT_VERIFIED"
+      ],
+      "title": "Verification Status",
+      "type": "string"
+    },
+    "locked_by": {
+      "title": "Locked By",
+      "type": "string"
+    },
+    "locked_at": {
+      "format": "date-time",
+      "title": "Locked At",
+      "type": "string"
+    },
+    "intake_sha256": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Intake Sha256"
+    },
+    "approval_scope": {
+      "default": "N5 approval means the supplier selection and the indicative material quote were checked against the approved N3 BOM revision, current supplier qualifications, quotation validity and the deterministic guardrails. It is a draft input for N6 bidding and N7 costing: not a purchase order, a supplier contract, a complete product cost or an engineering approval of any alternate part.",
+      "title": "Approval Scope",
+      "type": "string"
+    }
+  },
+  "required": [
+    "intake_id",
+    "tenant_id",
+    "project_id",
+    "prd_id",
+    "prd_ref",
+    "bom_ref",
+    "bom_payload_sha256",
+    "manifest_id",
+    "approval_id",
+    "n3_release_id",
+    "scope",
+    "design_revision",
+    "build_quantity",
+    "purpose",
+    "target_lead_time_days",
+    "base_currency",
+    "lines",
+    "release_source_id",
+    "synthetic",
+    "locked_by",
+    "locked_at"
+  ],
+  "title": "N5BomIntake",
+  "type": "object"
+}

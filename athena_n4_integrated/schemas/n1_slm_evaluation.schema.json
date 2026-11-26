@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n1_slm_evaluation",
+  "additionalProperties": false,
+  "properties": {
+    "evaluation_id": {
+      "title": "Evaluation Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "provider": {
+      "title": "Provider",
+      "type": "string"
+    },
+    "model": {
+      "title": "Model",
+      "type": "string"
+    },
+    "prompt_revision": {
+      "title": "Prompt Revision",
+      "type": "string"
+    },
+    "gold_set": {
+      "title": "Gold Set",
+      "type": "string"
+    },
+    "gold_set_sha256": {
+      "title": "Gold Set Sha256",
+      "type": "string"
+    },
+    "n_examples": {
+      "title": "N Examples",
+      "type": "integer"
+    },
+    "metrics": {
+      "additionalProperties": {
+        "type": "number"
+      },
+      "title": "Metrics",
+      "type": "object"
+    },
+    "thresholds": {
+      "additionalProperties": {
+        "type": "number"
+      },
+      "title": "Thresholds",
+      "type": "object"
+    },
+    "failures": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Failures",
+      "type": "array"
+    },
+    "passed": {
+      "title": "Passed",
+      "type": "boolean"
+    },
+    "evaluated_by": {
+      "title": "Evaluated By",
+      "type": "string"
+    },
+    "evaluated_at": {
+      "format": "date-time",
+      "title": "Evaluated At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "evaluation_id",
+    "tenant_id",
+    "provider",
+    "model",
+    "prompt_revision",
+    "gold_set",
+    "gold_set_sha256",
+    "n_examples",
+    "metrics",
+    "thresholds",
+    "failures",
+    "passed",
+    "evaluated_by",
+    "evaluated_at"
+  ],
+  "title": "SlmEvaluation.v1",
+  "type": "object"
+}

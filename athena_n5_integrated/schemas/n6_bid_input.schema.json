@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n6_bid_input",
+  "additionalProperties": false,
+  "properties": {
+    "intake_id": {
+      "title": "Intake Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "artifact": {
+      "title": "Artifact",
+      "type": "string"
+    },
+    "handoff_id": {
+      "title": "Handoff Id",
+      "type": "string"
+    },
+    "prd_ref": {
+      "title": "Prd Ref",
+      "type": "string"
+    },
+    "bom_ref": {
+      "title": "Bom Ref",
+      "type": "string"
+    },
+    "design_revision": {
+      "title": "Design Revision",
+      "type": "string"
+    },
+    "build_quantity": {
+      "title": "Build Quantity",
+      "type": "integer"
+    },
+    "currency": {
+      "title": "Currency",
+      "type": "string"
+    },
+    "indicative_unit_material_cost": {
+      "title": "Indicative Unit Material Cost",
+      "type": "string"
+    },
+    "indicative_total": {
+      "title": "Indicative Total",
+      "type": "string"
+    },
+    "label": {
+      "title": "Label",
+      "type": "string"
+    },
+    "supplier_risk_flags": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Supplier Risk Flags",
+      "type": "array"
+    },
+    "lead_time_constraints": {
+      "additionalProperties": true,
+      "title": "Lead Time Constraints",
+      "type": "object"
+    },
+    "design_verification": {
+      "title": "Design Verification",
+      "type": "string"
+    },
+    "verification_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Verification Ref"
+    },
+    "synthetic": {
+      "title": "Synthetic",
+      "type": "boolean"
+    },
+    "status": {
+      "const": "DRAFT",
+      "default": "DRAFT",
+      "title": "Status",
+      "type": "string"
+    },
+    "ingested_by": {
+      "title": "Ingested By",
+      "type": "string"
+    },
+    "ingested_at": {
+      "format": "date-time",
+      "title": "Ingested At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "intake_id",
+    "tenant_id",
+    "artifact",
+    "handoff_id",
+    "prd_ref",
+    "bom_ref",
+    "design_revision",
+    "build_quantity",
+    "currency",
+    "indicative_unit_material_cost",
+    "indicative_total",
+    "label",
+    "supplier_risk_flags",
+    "lead_time_constraints",
+    "design_verification",
+    "synthetic",
+    "ingested_by",
+    "ingested_at"
+  ],
+  "title": "N6BidInput",
+  "type": "object"
+}

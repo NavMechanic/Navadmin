@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n4_adjudication",
+  "$defs": {
+    "AdjudicationDecision": {
+      "additionalProperties": false,
+      "properties": {
+        "detection_id": {
+          "title": "Detection Id",
+          "type": "string"
+        },
+        "label": {
+          "enum": [
+            "CONFIRMED_DEFECT",
+            "FALSE_CALL"
+          ],
+          "title": "Label",
+          "type": "string"
+        }
+      },
+      "required": [
+        "detection_id",
+        "label"
+      ],
+      "title": "AdjudicationDecision",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "adjudication_id": {
+      "title": "Adjudication Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "evidence_id": {
+      "title": "Evidence Id",
+      "type": "string"
+    },
+    "adjudicator": {
+      "title": "Adjudicator",
+      "type": "string"
+    },
+    "decisions": {
+      "items": {
+        "$ref": "#/$defs/AdjudicationDecision"
+      },
+      "title": "Decisions",
+      "type": "array"
+    },
+    "unit_verdict": {
+      "enum": [
+        "ACCEPT",
+        "REJECT"
+      ],
+      "title": "Unit Verdict",
+      "type": "string"
+    },
+    "notes": {
+      "title": "Notes",
+      "type": "string"
+    },
+    "independent": {
+      "title": "Independent",
+      "type": "boolean"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "adjudication_id",
+    "tenant_id",
+    "evidence_id",
+    "adjudicator",
+    "decisions",
+    "unit_verdict",
+    "notes",
+    "independent",
+    "created_at"
+  ],
+  "title": "N4Adjudication",
+  "type": "object"
+}

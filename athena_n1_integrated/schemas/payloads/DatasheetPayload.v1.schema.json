@@ -1,0 +1,293 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:DatasheetPayload.v1",
+  "$defs": {
+    "Derivation": {
+      "additionalProperties": false,
+      "properties": {
+        "formula": {
+          "title": "Formula",
+          "type": "string"
+        },
+        "inputs": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Inputs",
+          "type": "array"
+        },
+        "computed_by": {
+          "default": "n0-deterministic",
+          "title": "Computed By",
+          "type": "string"
+        }
+      },
+      "required": [
+        "formula",
+        "inputs"
+      ],
+      "title": "Derivation",
+      "type": "object"
+    },
+    "EvidenceSnippet": {
+      "additionalProperties": false,
+      "properties": {
+        "source_ref": {
+          "description": "blob_id, file URI or 'payload'",
+          "minLength": 1,
+          "title": "Source Ref",
+          "type": "string"
+        },
+        "text": {
+          "maxLength": 2000,
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        },
+        "page": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Page"
+        },
+        "char_start": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Char Start"
+        },
+        "char_end": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Char End"
+        }
+      },
+      "required": [
+        "source_ref",
+        "text"
+      ],
+      "title": "EvidenceSnippet",
+      "type": "object"
+    },
+    "Requirement": {
+      "additionalProperties": false,
+      "description": "One value. ``value_origin`` says who stated it: the customer, a measurement, N0's own\ndeterministic derivation, or a model extraction awaiting human confirmation.",
+      "properties": {
+        "schema_version": {
+          "const": "Requirement.v1",
+          "default": "Requirement.v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "req_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+          "title": "Req Id",
+          "type": "string"
+        },
+        "parameter": {
+          "description": "snake_case with a unit suffix, e.g. output_voltage_v",
+          "pattern": "^[a-z][a-z0-9_]{1,79}$",
+          "title": "Parameter",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Value"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit"
+        },
+        "tolerance": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Tolerance"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "operating_conditions": {
+          "additionalProperties": true,
+          "title": "Operating Conditions",
+          "type": "object"
+        },
+        "value_origin": {
+          "enum": [
+            "CUSTOMER",
+            "MEASURED",
+            "DERIVED",
+            "MODEL_EXTRACTED"
+          ],
+          "title": "Value Origin",
+          "type": "string"
+        },
+        "evidence_snippets": {
+          "items": {
+            "$ref": "#/$defs/EvidenceSnippet"
+          },
+          "title": "Evidence Snippets",
+          "type": "array"
+        },
+        "derivation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Derivation"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "si_value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Si Value"
+        },
+        "si_unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Si Unit"
+        }
+      },
+      "required": [
+        "req_id",
+        "parameter",
+        "value",
+        "value_origin"
+      ],
+      "title": "Requirement.v1",
+      "type": "object"
+    },
+    "Tolerance": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "ABS",
+            "PCT"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "plus": {
+          "title": "Plus",
+          "type": "number"
+        },
+        "minus": {
+          "title": "Minus",
+          "type": "number"
+        }
+      },
+      "required": [
+        "kind",
+        "plus",
+        "minus"
+      ],
+      "title": "Tolerance",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "part_number": {
+      "title": "Part Number",
+      "type": "string"
+    },
+    "manufacturer": {
+      "title": "Manufacturer",
+      "type": "string"
+    },
+    "datasheet_revision": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Datasheet Revision"
+    },
+    "requirements": {
+      "items": {
+        "$ref": "#/$defs/Requirement"
+      },
+      "minItems": 1,
+      "title": "Requirements",
+      "type": "array"
+    }
+  },
+  "required": [
+    "part_number",
+    "manufacturer",
+    "requirements"
+  ],
+  "title": "DatasheetPayload.v1",
+  "type": "object"
+}

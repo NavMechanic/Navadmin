@@ -1,0 +1,47 @@
+{
+  "_note": "FICTIONAL sample shaped like the public API response; not real procurement data.",
+  "totalRecords": 2,
+  "limit": 100,
+  "offset": 0,
+  "opportunitiesData": [
+    {
+      "noticeId": "f1e2d3c4b5a60001",
+      "title": "Power supply modules for test racks",
+      "solicitationNumber": "EXA-26-R-0042",
+      "fullParentPathName": "DEPARTMENT OF EXAMPLE AFFAIRS.EXAMPLE ACQUISITION OFFICE",
+      "fullParentPathCode": "099.0001",
+      "postedDate": "2026-11-03",
+      "type": "Award Notice",
+      "baseType": "Award Notice",
+      "naicsCode": "335999",
+      "classificationCode": "6130",
+      "typeOfSetAside": "SBA",
+      "responseDeadLine": null,
+      "award": {
+        "date": "2026-10-30",
+        "number": "EXA26C0042",
+        "amount": "300000.00",
+        "awardee": {
+          "name": "Example Power Systems LLC",
+          "ueiSAM": "EXAMPLEUEI01"
+        }
+      },
+      "uiLink": "https://sam.gov/opp/f1e2d3c4b5a60001/view",
+      "active": "Yes"
+    },
+    {
+      "noticeId": "f1e2d3c4b5a60002",
+      "title": "Rectifier and battery charger replacement",
+      "solicitationNumber": "EXA-26-Q-0077",
+      "fullParentPathName": "DEPARTMENT OF EXAMPLE AFFAIRS.EXAMPLE FACILITIES OFFICE",
+      "fullParentPathCode": "099.0002",
+      "postedDate": "2026-11-15",
+      "type": "Combined Synopsis/Solicitation",
+      "baseType": "Combined Synopsis/Solicitation",
+      "naicsCode": "335999",
+      "responseDeadLine": "2026-12-20T17:00:00-05:00",
+      "uiLink": "https://sam.gov/opp/f1e2d3c4b5a60002/view",
+      "active": "Yes"
+    }
+  ]
+}

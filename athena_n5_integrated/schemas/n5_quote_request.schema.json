@@ -1,0 +1,380 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n5_quote_request",
+  "$defs": {
+    "CapacityAllocation": {
+      "additionalProperties": false,
+      "properties": {
+        "allocated_qty": {
+          "description": "finished units (EMS / ODM) or parts (factory order) reserved",
+          "minimum": 1,
+          "title": "Allocated Qty",
+          "type": "integer"
+        },
+        "period_start": {
+          "format": "date",
+          "title": "Period Start",
+          "type": "string"
+        },
+        "period_end": {
+          "format": "date",
+          "title": "Period End",
+          "type": "string"
+        },
+        "site_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Site Id"
+        },
+        "document_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Document Sha256"
+        }
+      },
+      "required": [
+        "allocated_qty",
+        "period_start",
+        "period_end"
+      ],
+      "title": "N5CapacityAllocation",
+      "type": "object"
+    },
+    "ExcludedCharge": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "FREIGHT",
+            "DUTIES",
+            "GST",
+            "OTHER_TAX",
+            "NRE",
+            "TOOLING",
+            "ASSEMBLY_LABOR",
+            "TEST_LABOR",
+            "WARRANTY",
+            "FINANCING"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "amount": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Amount"
+        },
+        "currency": {
+          "pattern": "^[A-Z]{3}$",
+          "title": "Currency",
+          "type": "string"
+        },
+        "note": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Note"
+        }
+      },
+      "required": [
+        "kind",
+        "amount",
+        "currency"
+      ],
+      "title": "ExcludedCharge",
+      "type": "object"
+    },
+    "LineCharge": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "HANDLING",
+            "REELING",
+            "CUT_TAPE",
+            "PACKAGING",
+            "MIN_ORDER_SURCHARGE"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "amount": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Amount"
+        }
+      },
+      "required": [
+        "kind",
+        "amount"
+      ],
+      "title": "LineCharge",
+      "type": "object"
+    },
+    "OfferIn": {
+      "additionalProperties": false,
+      "properties": {
+        "line": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "the BOM line this offer answers",
+          "title": "Line"
+        },
+        "quoted_mpn": {
+          "minLength": 1,
+          "title": "Quoted Mpn",
+          "type": "string"
+        },
+        "manufacturer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Manufacturer"
+        },
+        "uom": {
+          "default": "EA",
+          "title": "Uom",
+          "type": "string"
+        },
+        "currency": {
+          "pattern": "^[A-Z]{3}$",
+          "title": "Currency",
+          "type": "string"
+        },
+        "price_breaks": {
+          "items": {
+            "$ref": "#/$defs/PriceBreak"
+          },
+          "minItems": 1,
+          "title": "Price Breaks",
+          "type": "array"
+        },
+        "moq": {
+          "minimum": 1,
+          "title": "Moq",
+          "type": "integer"
+        },
+        "pack_multiple": {
+          "minimum": 1,
+          "title": "Pack Multiple",
+          "type": "integer"
+        },
+        "availability": {
+          "default": "STOCK",
+          "enum": [
+            "STOCK",
+            "FACTORY_ORDER"
+          ],
+          "title": "Availability",
+          "type": "string"
+        },
+        "stock_qty": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Stock Qty"
+        },
+        "lead_time_days": {
+          "minimum": 0,
+          "title": "Lead Time Days",
+          "type": "integer"
+        },
+        "line_charges": {
+          "items": {
+            "$ref": "#/$defs/LineCharge"
+          },
+          "title": "Line Charges",
+          "type": "array"
+        },
+        "excluded_charges": {
+          "items": {
+            "$ref": "#/$defs/ExcludedCharge"
+          },
+          "title": "Excluded Charges",
+          "type": "array"
+        },
+        "capacity": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CapacityAllocation"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "supplier_sku": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Supplier Sku"
+        }
+      },
+      "required": [
+        "quoted_mpn",
+        "currency",
+        "price_breaks",
+        "moq",
+        "pack_multiple",
+        "lead_time_days"
+      ],
+      "title": "OfferIn",
+      "type": "object"
+    },
+    "PriceBreak": {
+      "additionalProperties": false,
+      "properties": {
+        "min_qty": {
+          "minimum": 1,
+          "title": "Min Qty",
+          "type": "integer"
+        },
+        "unit_price": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Unit Price"
+        }
+      },
+      "required": [
+        "min_qty",
+        "unit_price"
+      ],
+      "title": "PriceBreak",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "``athena-quote/1`` (manual / e-mail / portal quotes keyed in by procurement).",
+  "properties": {
+    "format": {
+      "const": "athena-quote/1",
+      "default": "athena-quote/1",
+      "title": "Format",
+      "type": "string"
+    },
+    "supplier_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{0,127}$",
+      "title": "Supplier Id",
+      "type": "string"
+    },
+    "bom_intake_id": {
+      "title": "Bom Intake Id",
+      "type": "string"
+    },
+    "design_revision": {
+      "description": "the BOM / design revision the supplier quoted against",
+      "title": "Design Revision",
+      "type": "string"
+    },
+    "quote_ref": {
+      "description": "the supplier's own quotation number",
+      "minLength": 1,
+      "title": "Quote Ref",
+      "type": "string"
+    },
+    "issued_at": {
+      "format": "date-time",
+      "title": "Issued At",
+      "type": "string"
+    },
+    "valid_until": {
+      "format": "date-time",
+      "title": "Valid Until",
+      "type": "string"
+    },
+    "source_id": {
+      "title": "Source Id",
+      "type": "string"
+    },
+    "offers": {
+      "items": {
+        "$ref": "#/$defs/OfferIn"
+      },
+      "minItems": 1,
+      "title": "Offers",
+      "type": "array"
+    }
+  },
+  "required": [
+    "supplier_id",
+    "bom_intake_id",
+    "design_revision",
+    "quote_ref",
+    "issued_at",
+    "valid_until",
+    "source_id",
+    "offers"
+  ],
+  "title": "N5QuoteRequest",
+  "type": "object"
+}

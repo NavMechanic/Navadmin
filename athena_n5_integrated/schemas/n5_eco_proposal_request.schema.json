@@ -1,0 +1,154 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n5_eco_proposal_request",
+  "$defs": {
+    "EquivalenceEvidence": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "DATASHEET",
+            "PARAMETRIC_COMPARISON",
+            "QUALIFICATION_REPORT",
+            "MANUFACTURER_PCN",
+            "CROSS_REFERENCE"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "reference": {
+          "minLength": 3,
+          "title": "Reference",
+          "type": "string"
+        },
+        "sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sha256"
+        },
+        "summary": {
+          "minLength": 3,
+          "title": "Summary",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "reference",
+        "summary"
+      ],
+      "title": "EquivalenceEvidence",
+      "type": "object"
+    },
+    "ParameterComparison": {
+      "additionalProperties": false,
+      "properties": {
+        "parameter": {
+          "title": "Parameter",
+          "type": "string"
+        },
+        "approved_value": {
+          "title": "Approved Value",
+          "type": "string"
+        },
+        "proposed_value": {
+          "title": "Proposed Value",
+          "type": "string"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit"
+        }
+      },
+      "required": [
+        "parameter",
+        "approved_value",
+        "proposed_value"
+      ],
+      "title": "ParameterComparison",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "bom_intake_id": {
+      "title": "Bom Intake Id",
+      "type": "string"
+    },
+    "line": {
+      "minimum": 1,
+      "title": "Line",
+      "type": "integer"
+    },
+    "proposed_mpn": {
+      "minLength": 1,
+      "title": "Proposed Mpn",
+      "type": "string"
+    },
+    "proposed_manufacturer": {
+      "minLength": 2,
+      "title": "Proposed Manufacturer",
+      "type": "string"
+    },
+    "offer_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Offer Id"
+    },
+    "reason": {
+      "minLength": 10,
+      "title": "Reason",
+      "type": "string"
+    },
+    "equivalence_evidence": {
+      "items": {
+        "$ref": "#/$defs/EquivalenceEvidence"
+      },
+      "minItems": 1,
+      "title": "Equivalence Evidence",
+      "type": "array"
+    },
+    "parametric_comparison": {
+      "items": {
+        "$ref": "#/$defs/ParameterComparison"
+      },
+      "minItems": 1,
+      "title": "Parametric Comparison",
+      "type": "array"
+    }
+  },
+  "required": [
+    "bom_intake_id",
+    "line",
+    "proposed_mpn",
+    "proposed_manufacturer",
+    "reason",
+    "equivalence_evidence",
+    "parametric_comparison"
+  ],
+  "title": "N5EcoProposalRequest",
+  "type": "object"
+}

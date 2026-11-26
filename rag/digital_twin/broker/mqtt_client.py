@@ -10,8 +10,9 @@ import json
 import time
 import threading
 import queue
-from dataclasses import dataclass, field, asdict
-from datetime import datetime
+from collections import deque
+from dataclasses import dataclass, field, asdict, fields as dc_fields
+from datetime import datetime, timezone
 from typing import Callable, Optional
 import numpy as np
 
@@ -31,11 +32,18 @@ class BrokerConfig:
     simulate: bool = True          # True = synthetic PLC stream, no real broker needed
     sim_interval_s: float = 2.0    # seconds between simulated events
     qos: int = 1
+    # Live mode only: operator-declared origin for messages that do not state their own
+    # (e.g. "REAL"). Simulated messages are always SYNTHETIC. Unset + undeclared = rejected (DQ10).
+    origin_type: Optional[str] = None
 
 
 @dataclass
 class PLCMessage:
-    """Normalized PLC message from any of the three assembly nodes."""
+    """Normalized PLC message from any of the three assembly nodes.
+
+    Identity (unit/lot), sensor calibration and origin fields feed the DQ gateway
+    (DQ10/DQ25); a message missing any reading is rejected, never back-filled.
+    """
     node: str                      # "A_FASTENING" | "B_DISPENSING" | "C_PRESS"
     station_id: str
     torque_nm: Optional[float] = None
@@ -49,14 +57,23 @@ class PLCMessage:
     display_force_n: Optional[float] = None
     dwell_time_s: Optional[float] = None
     frame_offset_mm: Optional[float] = None
-    timestamp: str = field(default_factory=lambda: datetime.utcnow().isoformat())
+    timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    unit_id: Optional[str] = None
+    lot_id: Optional[str] = None
+    fixture_id: Optional[str] = None
+    sensor_id: Optional[str] = None
+    sensor_status: Optional[str] = None      # CALIBRATED | UNCALIBRATED | SIMULATED
+    calibration_id: Optional[str] = None
+    origin_type: Optional[str] = None        # REAL | SYNTHETIC | DERIVED
 
     def to_json(self) -> str:
         return json.dumps(asdict(self))
 
     @classmethod
     def from_json(cls, payload: str) -> "PLCMessage":
-        return cls(**json.loads(payload))
+        data = json.loads(payload)
+        known = {f.name for f in dc_fields(cls)}
+        return cls(**{k: v for k, v in data.items() if k in known})
 
 
 class MQTTBroker:
@@ -91,6 +108,8 @@ class MQTTBroker:
         self._running = False
         self._thread: Optional[threading.Thread] = None
         self._rng = np.random.default_rng(int(time.time()))
+        self._sim_unit = 0
+        self.parse_errors: deque = deque(maxlen=100)   # malformed live payloads (previously dropped silently)
 
         if not self.config.simulate and not _PAHO_AVAILABLE:
             raise RuntimeError(
@@ -133,6 +152,7 @@ class MQTTBroker:
 
     def _simulate_loop(self) -> None:
         while self._running:
+            self._sim_unit += 1
             for node_key in ("A_FASTENING", "B_DISPENSING", "C_PRESS"):
                 msg = self._generate_plc_message(node_key)
                 self._dispatch(msg)
@@ -140,7 +160,14 @@ class MQTTBroker:
 
     def _generate_plc_message(self, node: str) -> PLCMessage:
         rng = self._rng
-        ts = datetime.utcnow().isoformat()
+        now = datetime.now(timezone.utc)
+        synthetic = dict(
+            timestamp=now.isoformat(),
+            unit_id=f"SIM-U{self._sim_unit:06d}",
+            lot_id=f"SIM-LOT-{now:%Y%m%d}",
+            sensor_status="SIMULATED",
+            origin_type="SYNTHETIC",
+        )
 
         if node == "A_FASTENING":
             return PLCMessage(
@@ -149,7 +176,8 @@ class MQTTBroker:
                 torque_nm=float(rng.normal(0.45, 0.06)),
                 depth_mm=float(rng.normal(3.2, 0.15)),
                 cycle_time_s=float(rng.normal(2.1, 0.3)),
-                timestamp=ts,
+                sensor_id="S22-SIM",
+                **synthetic,
             )
         if node == "B_DISPENSING":
             return PLCMessage(
@@ -159,7 +187,8 @@ class MQTTBroker:
                 mass_lm_mg=float(rng.normal(45.0, 15.0)),
                 nozzle_pressure_bar=float(rng.normal(3.0, 0.5)),
                 humidity_pct=float(rng.normal(45.0, 15.0)),
-                timestamp=ts,
+                sensor_id="S31-SIM",
+                **synthetic,
             )
         # C_PRESS
         return PLCMessage(
@@ -169,7 +198,9 @@ class MQTTBroker:
             display_force_n=float(rng.normal(1210.0, 60.0)),
             dwell_time_s=float(rng.normal(15.0, 1.0)),
             frame_offset_mm=float(rng.normal(0.0, 0.05)),
-            timestamp=ts,
+            fixture_id="BE-45" if self._sim_unit % 2 == 0 else "PA-49",
+            sensor_id="S42-SIM",
+            **synthetic,
         )
 
     # ------------------------------------------------------------------
@@ -195,9 +226,12 @@ class MQTTBroker:
     def _on_mqtt_message(self, client, userdata, msg):
         try:
             plc = PLCMessage.from_json(msg.payload.decode())
-            self._dispatch(plc)
-        except Exception:
-            pass
+        except Exception as exc:
+            self.parse_errors.append({"topic": getattr(msg, "topic", "?"), "error": f"{type(exc).__name__}: {exc}"})
+            return
+        if plc.origin_type is None and self.config.origin_type:
+            plc.origin_type = self.config.origin_type  # operator-declared stream origin
+        self._dispatch(plc)
 
     # ------------------------------------------------------------------
 

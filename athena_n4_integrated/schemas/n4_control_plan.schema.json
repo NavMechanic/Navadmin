@@ -1,0 +1,166 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n4_control_plan",
+  "$defs": {
+    "AcceptanceLimit": {
+      "additionalProperties": false,
+      "properties": {
+        "characteristic": {
+          "pattern": "^[a-z][a-z0-9_]{0,63}$",
+          "title": "Characteristic",
+          "type": "string"
+        },
+        "unit": {
+          "title": "Unit",
+          "type": "string"
+        },
+        "lower": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Lower"
+        },
+        "upper": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Upper"
+        }
+      },
+      "required": [
+        "characteristic",
+        "unit"
+      ],
+      "title": "AcceptanceLimit",
+      "type": "object"
+    },
+    "ControlPlanItem": {
+      "additionalProperties": false,
+      "properties": {
+        "characteristic": {
+          "title": "Characteristic",
+          "type": "string"
+        },
+        "test_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Test Id"
+        },
+        "specification": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AcceptanceLimit"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "measurement_method": {
+          "title": "Measurement Method",
+          "type": "string"
+        },
+        "sample_size": {
+          "minimum": 1,
+          "title": "Sample Size",
+          "type": "integer"
+        },
+        "frequency": {
+          "title": "Frequency",
+          "type": "string"
+        },
+        "reaction_plan": {
+          "minLength": 3,
+          "title": "Reaction Plan",
+          "type": "string"
+        },
+        "special_characteristic": {
+          "default": false,
+          "title": "Special Characteristic",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "characteristic",
+        "measurement_method",
+        "sample_size",
+        "frequency",
+        "reaction_plan"
+      ],
+      "title": "ControlPlanItem",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "control_plan_id": {
+      "title": "Control Plan Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "plan_id": {
+      "title": "Plan Id",
+      "type": "string"
+    },
+    "revision": {
+      "title": "Revision",
+      "type": "integer"
+    },
+    "items": {
+      "items": {
+        "$ref": "#/$defs/ControlPlanItem"
+      },
+      "title": "Items",
+      "type": "array"
+    },
+    "created_by": {
+      "title": "Created By",
+      "type": "string"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "control_plan_id",
+    "tenant_id",
+    "plan_id",
+    "revision",
+    "items",
+    "created_by",
+    "created_at"
+  ],
+  "title": "N4ControlPlan",
+  "type": "object"
+}

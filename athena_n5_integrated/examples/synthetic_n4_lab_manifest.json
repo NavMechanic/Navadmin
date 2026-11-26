@@ -1,0 +1,34 @@
+{
+  "format": "athena-lab-report/1",
+  "lab": {
+    "name": "Example Test Lab GmbH (fictional)",
+    "accreditation_body": "DAkkS",
+    "accreditation_number": "D-PL-99999-01-00"
+  },
+  "certificate_number": "LAB-2026-0042",
+  "issued_at": "2026-11-21T09:00:00Z",
+  "product": "PSU-120W",
+  "pcb_revision": "B",
+  "report_sha256": "58108444d5d8b24a588f5321d072f28e853b5d3248f11dc641f6b06ea5141572",
+  "results": [
+    {
+      "test_id": "T-09",
+      "characteristic": "hipot_leakage_current",
+      "unit_serial": "PSU-0001",
+      "value": "1.2",
+      "unit": "mA",
+      "expanded_uncertainty": "0.1",
+      "k": 2,
+      "instrument_id": "LAB-HIPOT-7",
+      "calibration_id": "LABCAL-7",
+      "calibration_due": "2027-06-01T00:00:00Z",
+      "captured_at": "2026-11-20T09:00:00Z",
+      "method_ref": {
+        "method_id": "SOP-LAB-001",
+        "revision": "A"
+      },
+      "standard_clause": "IEC 62368-1 cl. 5.4"
+    }
+  ],
+  "claimed_provenance": "SYNTHETIC"
+}

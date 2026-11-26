@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass, field, asdict
 from datetime import datetime
-from typing import Optional, TYPE_CHECKING
+from typing import Iterable, Optional, TYPE_CHECKING
 
 import numpy as np
 
@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from rag.pipeline import RAGPipeline
     from rag.fmea.fmea import FMEAAssessment
     from rag.ipc.ipc_a610g import IPCInspector, IPCInspectionResult
+    from rag.dq_gateway.telemetry import TelemetryGate, TelemetryVerdict
 
 
 @dataclass
@@ -36,6 +37,14 @@ class TwinSnapshot:
     ipc_defects: int = 0                            # IPC-A-610G Defect count
     ipc_process_indicators: int = 0                 # IPC-A-610G PI count
     ipc_results: list = field(default_factory=list) # list[IPCInspectionResult]
+    # DQ10: provenance of the readings behind this snapshot. Only REAL snapshots are
+    # field evidence; SYNTHETIC ones (simulator / batch) never are.
+    origin_type: str = "SYNTHETIC"
+    dq_event_ids: list[str] = field(default_factory=list)  # telemetry events that admitted the inputs
+
+    @property
+    def is_field_evidence(self) -> bool:
+        return self.origin_type == "REAL"
 
     def to_dict(self) -> dict:
         d = asdict(self)
@@ -64,6 +73,30 @@ class TwinConfig:
 
 
 _OUTCOME_SCORE = {"PASS": 0.0, "RISK": 0.5, "FAIL": 1.0}
+_CYCLE_NODES = ("A_FASTENING", "B_DISPENSING", "C_PRESS")
+
+
+def assemble_cycles(messages: Iterable, pending: dict, max_pending: int = 50) -> list[list]:
+    """Group streamed PLC messages into A/B/C cycles keyed by ``unit_id``.
+
+    Complete cycles are returned; partial ones wait in ``pending`` (caller-owned, persists
+    across polls). A node repeating for the same unit, or the pending buffer overflowing,
+    flushes the partial group as its own cycle so the gate rejects it as incomplete instead
+    of merging readings from different units.
+    """
+    cycles: list[list] = []
+    for m in messages:
+        key, node = getattr(m, "unit_id", None), getattr(m, "node", "?")
+        group = pending.setdefault(key, {})
+        if node in group:
+            cycles.append(list(group.values()))
+            group = pending[key] = {}
+        group[node] = m
+        if all(n in group for n in _CYCLE_NODES):
+            cycles.append(list(pending.pop(key).values()))
+    while len(pending) > max_pending:
+        cycles.append(list(pending.pop(next(iter(pending))).values()))
+    return cycles
 
 
 class DigitalTwin:
@@ -94,6 +127,7 @@ class DigitalTwin:
         self._ipc = ipc_inspector
         self._history: list[TwinSnapshot] = []
         self._ipc_history: list[list] = []  # parallel list of IPC results per snapshot
+        self.telemetry_rejections: list[dict] = []  # cycles refused by the DQ telemetry gate
 
     # ------------------------------------------------------------------
     # Core prediction
@@ -105,8 +139,17 @@ class DigitalTwin:
         dispensing: DispensingReading,
         press: PressReading,
         query_rag: bool = True,
+        origin_type: str = "SYNTHETIC",
+        dq_event_ids: Optional[list[str]] = None,
     ) -> TwinSnapshot:
-        """Run all three nodes and produce a fused snapshot."""
+        """Run all three nodes and produce a fused snapshot.
+
+        Direct calls are treated as SYNTHETIC (what-if / batch). Line telemetry must
+        enter through :meth:`ingest_plc_cycle`, which applies the DQ gate first and is
+        the only path that can mark a snapshot REAL.
+        """
+        if origin_type not in ("REAL", "SYNTHETIC", "DERIVED"):
+            raise ValueError(f"origin_type must be REAL|SYNTHETIC|DERIVED, got {origin_type!r}")
         pred_a = self.node_a.predict(fastening)
         pred_b = self.node_b.predict(dispensing)
         pred_c = self.node_c.predict(press)
@@ -156,9 +199,62 @@ class DigitalTwin:
             ipc_defects=ipc_defects,
             ipc_process_indicators=ipc_pis,
             ipc_results=ipc_results,
+            origin_type=origin_type,
+            dq_event_ids=list(dq_event_ids or []),
         )
         self._history.append(snap)
         return snap
+
+    # ------------------------------------------------------------------
+    # DQ-gated telemetry path (DQ10 / DQ25 before any node or physics model)
+    # ------------------------------------------------------------------
+
+    def ingest_plc_cycle(
+        self,
+        messages: Iterable,
+        gate: "TelemetryGate",
+        query_rag: bool = False,
+    ) -> Optional[TwinSnapshot]:
+        """Gate one assembly cycle (A/B/C PLC messages) and predict only if all pass.
+
+        Every message goes through ``gate.check`` (DQ01/03/04/09/10/25). If any is
+        rejected, or a node is missing from the cycle, the twin state is not touched
+        and the rejection is recorded. Readings are never back-filled with nominal
+        values. The snapshot is REAL only if every admitted message was REAL.
+        """
+        by_node: dict = {}
+        verdicts: list["TelemetryVerdict"] = []
+        for msg in messages:
+            verdicts.append(gate.check(msg))
+            by_node[getattr(msg, "node", "?")] = msg
+        rejected = [v for v in verdicts if not v.admitted]
+        missing = [n for n in ("A_FASTENING", "B_DISPENSING", "C_PRESS") if n not in by_node]
+        if rejected or missing:
+            self.telemetry_rejections.append({
+                "at": datetime.utcnow().isoformat(),
+                "missing_nodes": missing,
+                "rejected": [{"node": v.node, "station": v.station_id, "rules": v.failed_rules,
+                              "messages": v.messages} for v in rejected],
+            })
+            return None
+
+        a, b, c = by_node["A_FASTENING"], by_node["B_DISPENSING"], by_node["C_PRESS"]
+        fastening = FasteningReading(torque_nm=a.torque_nm, depth_mm=a.depth_mm,
+                                     cycle_time_s=a.cycle_time_s, station_id=a.station_id)
+        dispensing = DispensingReading(mass_tmq_mg=b.mass_tmq_mg, mass_lm_mg=b.mass_lm_mg,
+                                       nozzle_pressure_bar=b.nozzle_pressure_bar,
+                                       humidity_pct=b.humidity_pct)
+        press = PressReading(inlay_force_n=c.inlay_force_n, display_force_n=c.display_force_n,
+                             dwell_time_s=c.dwell_time_s, frame_offset_mm=c.frame_offset_mm,
+                             fixture_id=c.fixture_id)
+        origins = {v.origin_type for v in verdicts}
+        origin = "REAL" if origins == {"REAL"} else ("SYNTHETIC" if "SYNTHETIC" in origins else "DERIVED")
+        return self.predict(fastening, dispensing, press, query_rag=query_rag,
+                            origin_type=origin, dq_event_ids=[v.event_id for v in verdicts])
+
+    def field_evidence_history(self) -> list[TwinSnapshot]:
+        """Snapshots that may be used as field evidence or retraining data (REAL only, DQ10)."""
+        return [s for s in self._history if s.is_field_evidence]
 
     def ipc_variability_history(self) -> list[list]:
         """IPC results per snapshot, for variability heatmap."""

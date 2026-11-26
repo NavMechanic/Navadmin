@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n4_calibration_record",
+  "additionalProperties": false,
+  "properties": {
+    "calibration_id": {
+      "title": "Calibration Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "instrument_id": {
+      "title": "Instrument Id",
+      "type": "string"
+    },
+    "instrument_serial": {
+      "title": "Instrument Serial",
+      "type": "string"
+    },
+    "certificate_number": {
+      "title": "Certificate Number",
+      "type": "string"
+    },
+    "calibration_lab": {
+      "title": "Calibration Lab",
+      "type": "string"
+    },
+    "accreditation_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Accreditation Ref"
+    },
+    "calibrated_at": {
+      "format": "date-time",
+      "title": "Calibrated At",
+      "type": "string"
+    },
+    "calibration_due": {
+      "format": "date-time",
+      "title": "Calibration Due",
+      "type": "string"
+    },
+    "uncertainty_statement": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Uncertainty Statement"
+    },
+    "certificate_sha256": {
+      "anyOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Certificate Sha256"
+    },
+    "certificate_uri": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Certificate Uri"
+    },
+    "status": {
+      "enum": [
+        "VALID",
+        "REVOKED"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "recorded_by": {
+      "title": "Recorded By",
+      "type": "string"
+    },
+    "recorded_at": {
+      "format": "date-time",
+      "title": "Recorded At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "calibration_id",
+    "tenant_id",
+    "instrument_id",
+    "instrument_serial",
+    "certificate_number",
+    "calibration_lab",
+    "calibrated_at",
+    "calibration_due",
+    "status",
+    "recorded_by",
+    "recorded_at"
+  ],
+  "title": "N4CalibrationRecord",
+  "type": "object"
+}

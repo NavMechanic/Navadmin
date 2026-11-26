@@ -1,0 +1,157 @@
+#!/usr/bin/env python3
+"""Test double for KiCad 8 ``kicad-cli`` (no KiCad needed). Emits KiCad-format ERC/DRC JSON, Gerber,
+Excellon, STEP and BOM CSV for the sub-commands the N3 tool runner uses.
+
+Behaviour is driven by markers in the input design file (never by the environment, which the
+sandbox clears):
+
+  (text "ATHENA_TEST_ERC pin_not_connected:error power_pin_not_driven:warning" ...)
+  (gr_text "ATHENA_TEST_DRC clearance:error silk_overlap:warning unconnected:2 parity:1" ...)
+  ATHENA_FAKE_SLEEP <seconds>      hang (timeout tests)
+  ATHENA_FAKE_CRASH                exit 3 without output
+  ATHENA_FAKE_PROBE                write sandbox observations (env, cwd, network) into the report
+
+``kicad-cli`` reports 8.0.4; ``kicad-cli-v7`` runs this file reporting 7.0.11.
+"""
+import json
+import os
+import re
+import socket
+import sys
+import time
+from pathlib import Path
+
+VERSION = globals().get("FAKE_VERSION", "8.0.4")      # kicad-cli-v7 injects 7.0.11
+
+
+def opt(args, name, default=None):
+    return args[args.index(name) + 1] if name in args else default
+
+
+def markers(text, key):
+    m = re.search(key + r" ([^\"]*)", text)
+    out = []
+    for tok in (m.group(1).split() if m else []):
+        kind, _, sev = tok.partition(":")
+        out.append((kind, sev))
+    return out
+
+
+def probe():
+    try:
+        socket.create_connection(("1.1.1.1", 53), timeout=1).close()
+        net = "open"
+    except OSError as exc:
+        net = f"blocked ({type(exc).__name__})"
+    return {"env_keys": sorted(os.environ), "cwd": os.getcwd(), "home": os.environ.get("HOME"), "network": net}
+
+
+def common(text):
+    m = re.search(r"ATHENA_FAKE_SLEEP (\d+)", text)
+    if m:
+        time.sleep(int(m.group(1)))
+    if "ATHENA_FAKE_CRASH" in text:
+        print("Segmentation fault (fake)", file=sys.stderr)
+        sys.exit(3)
+
+
+def violation(kind, sev, i):
+    return {"type": kind, "severity": sev, "description": f"{kind.replace('_', ' ')} (fake #{i})",
+            "items": [{"description": f"item {i}", "pos": {"x": 10.0 + i, "y": 20.0}, "uuid": f"0000-{i:04d}"}]}
+
+
+def main(argv):
+    if argv[:1] == ["version"]:
+        print(VERSION)
+        return 0
+    if len(argv) < 2:
+        print("usage: kicad-cli <command>", file=sys.stderr)
+        return 1
+    src = Path(argv[-1])
+    if not src.exists():
+        print(f"Failed to load {src}", file=sys.stderr)
+        return 2
+    text = src.read_text()
+    common(text)
+    out = opt(argv, "--output")
+    cmd = argv[:2] if argv[0] in ("sch", "pcb") and argv[1] != "export" else argv[:3]
+    if cmd == ["sch", "erc"]:
+        if not text.lstrip().startswith("(kicad_sch"):
+            print("Failed to load schematic", file=sys.stderr)
+            return 2
+        vs = [violation(k, s, i) for i, (k, s) in enumerate(markers(text, "ATHENA_TEST_ERC"))]
+        rep = {"$schema": "https://schemas.kicad.org/erc.v1.json", "coordinate_units": "mm",
+               "date": "2026-11-25T10:00:00+0000", "kicad_version": VERSION, "source": src.name,
+               "sheets": [{"path": "/", "uuid_path": "/00000000", "violations": vs}]}
+        if "ATHENA_FAKE_PROBE" in text:
+            rep["athena_probe"] = probe()
+        Path(out).write_text(json.dumps(rep, indent=2))
+        print(f"Found {len(vs)} violations\nSaved ERC Report to {out}")
+        return 0
+    if cmd == ["pcb", "drc"]:
+        vs, unconnected, parity = [], [], []
+        for i, (k, s) in enumerate(markers(text, "ATHENA_TEST_DRC")):
+            if k == "unconnected":
+                unconnected += [violation("unconnected_items", "error", j) for j in range(int(s or 1))]
+            elif k == "parity":
+                parity += [violation("missing_footprint", "error", j) for j in range(int(s or 1))]
+            else:
+                vs.append(violation(k, s, i))
+        rep = {"$schema": "https://schemas.kicad.org/drc.v1.json", "coordinate_units": "mm",
+               "date": "2026-11-25T10:00:00+0000", "kicad_version": VERSION, "source": src.name,
+               "violations": vs, "unconnected_items": unconnected,
+               "schematic_parity": parity if "--schematic-parity" in argv else []}
+        Path(out).write_text(json.dumps(rep, indent=2))
+        print(f"Found {len(vs)} violations\nFound {len(unconnected)} unconnected items\nSaved DRC Report to {out}")
+        return 0
+    stem = src.stem
+    if cmd == ["pcb", "export", "gerbers"]:
+        d = Path(out)
+        for layer, ext in (("F_Cu", "gtl"), ("B_Cu", "gbl"), ("F_Mask", "gts"), ("B_Mask", "gbs"), ("Edge_Cuts", "gm1")):
+            (d / f"{stem}-{layer}.{ext}").write_text(f"%TF.GenerationSoftware,KiCad,Pcbnew,{VERSION}*%\n"
+                                                    f"%TF.FileFunction,{layer}*%\n%FSLAX46Y46*%\n%MOMM*%\nM02*\n")
+        (d / f"{stem}-job.gbrjob").write_text(json.dumps({"Header": {"GenerationSoftware": {
+            "Vendor": "KiCad", "Application": "Pcbnew", "Version": VERSION}}}))
+        return 0
+    if cmd == ["pcb", "export", "drill"]:
+        Path(out, f"{stem}.drl").write_text(f"M48\n; DRILL file {{KiCad {VERSION}}}\nMETRIC\nT1C0.300\n%\nM30\n")
+        return 0
+    if cmd == ["pcb", "export", "step"]:
+        Path(out).write_text("ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('KiCad electronic assembly'),'2;1');\n"
+                             f"FILE_NAME('{stem}.step','2026-11-25T10:00:00',('Pcbnew'),('Kicad'),"
+                             f"'Open CASCADE STEP processor 7.6','KiCad to STEP converter {VERSION}','Unknown');\n"
+                             "FILE_SCHEMA(('AUTOMOTIVE_DESIGN { 1 0 10303 214 1 1 1 1 }'));\nENDSEC;\nDATA;\n"
+                             "ENDSEC;\nEND-ISO-10303-21;\n")
+        return 0
+    if cmd == ["sch", "export", "bom"]:
+        labels = opt(argv, "--labels").split(",")
+        rows = {}
+        for m in re.finditer(r'\(symbol\s+\(lib_id\s+"[^"]+"\)', text):
+            depth, i = 0, m.start()
+            while i < len(text):
+                depth += {"(": 1, ")": -1}.get(text[i], 0)
+                if depth == 0:
+                    break
+                i += 1
+            props = dict(re.findall(r'\(property\s+"([^"]+)"\s+"([^"]*)"', text[m.start():i + 1]))
+            if not re.fullmatch(r"[A-Za-z]+[0-9]+", props.get("Reference", "")):
+                continue
+            key = (props.get("Value"), props.get("Footprint"), props.get("MPN"))
+            rows.setdefault(key, []).append(props)
+        lines = [",".join(f'"{x}"' for x in labels)]
+        for group in rows.values():
+            p = group[0]
+            refs = ",".join(sorted((g["Reference"] for g in group), key=lambda r: (re.sub(r"\d", "", r),
+                                                                                 int(re.sub(r"\D", "", r)))))
+            vals = [refs, p.get("Value", ""), p.get("Footprint", ""), str(len(group)), p.get("MPN", ""),
+                    p.get("Manufacturer", ""), "DNP" if p.get("DNP") == "yes" else "", p.get("V_Rating", ""),
+                    p.get("I_Rating", ""), p.get("P_Rating", "")]
+            lines.append(",".join(f'"{v}"' for v in vals))
+        Path(out).write_text("\n".join(lines) + "\n")
+        return 0
+    print(f"unknown command {' '.join(argv[:3])}", file=sys.stderr)
+    return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

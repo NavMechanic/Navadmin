@@ -1,0 +1,41 @@
+{
+  "tenant_id": "demo",
+  "project_id": "PRJ-DEMO-PSU-120W",
+  "source_id": "SRC-PRODUCT",
+  "prd_id": "DEMO-PSU-120W",
+  "product_name": "PSU-120W DIN-rail 48 V to 24 V (synthetic)",
+  "rfq_artifact_id": "RFQ-DEMO-PSU-120W",
+  "rfq_revision": "A",
+  "design_scopes": [
+    "schematic_pcb"
+  ],
+  "design_constraints": {
+    "input_voltage_min_v": 43.2,
+    "input_voltage_max_v": 52.8,
+    "ambient_min_c": -40,
+    "ambient_max_c": 85,
+    "load_max_a": 5,
+    "load_max_w": 120,
+    "derating_factor": 0.8,
+    "min_clearance_mm": 0.2,
+    "min_creepage_mm": 1.5,
+    "thermal_margin_c": 10,
+    "max_pcb_layers": 4
+  },
+  "test_limits": [
+    {
+      "parameter": "vout_min",
+      "min": 23.76,
+      "unit": "V",
+      "requirement_ref": "R-002"
+    },
+    {
+      "parameter": "vout_max",
+      "max": 24.24,
+      "unit": "V",
+      "requirement_ref": "R-002"
+    }
+  ],
+  "hazards": [],
+  "safety_critical_requirement_ids": []
+}

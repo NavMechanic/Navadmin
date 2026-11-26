@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n5_bom_intake_request",
+  "$defs": {
+    "CriticalLine": {
+      "additionalProperties": false,
+      "properties": {
+        "line": {
+          "minimum": 1,
+          "title": "Line",
+          "type": "integer"
+        },
+        "reason": {
+          "minLength": 3,
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "line",
+        "reason"
+      ],
+      "title": "CriticalLine",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "prd_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{0,127}$",
+      "title": "Prd Id",
+      "type": "string"
+    },
+    "project_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{0,127}$",
+      "title": "Project Id",
+      "type": "string"
+    },
+    "scope": {
+      "const": "schematic_pcb",
+      "default": "schematic_pcb",
+      "title": "Scope",
+      "type": "string"
+    },
+    "build_quantity": {
+      "description": "finished products to build",
+      "maximum": 10000000,
+      "minimum": 1,
+      "title": "Build Quantity",
+      "type": "integer"
+    },
+    "purpose": {
+      "default": "PROTOTYPE_BUILD",
+      "enum": [
+        "PROTOTYPE_BUILD",
+        "PILOT_BUILD",
+        "PRODUCTION"
+      ],
+      "title": "Purpose",
+      "type": "string"
+    },
+    "target_lead_time_days": {
+      "maximum": 730,
+      "minimum": 0,
+      "title": "Target Lead Time Days",
+      "type": "integer"
+    },
+    "release_source_id": {
+      "description": "SourceRecord permitting COMMERCIAL and FINANCE for the handoffs",
+      "title": "Release Source Id",
+      "type": "string"
+    },
+    "base_currency": {
+      "anyOf": [
+        {
+          "pattern": "^[A-Z]{3}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Base Currency"
+    },
+    "critical_lines": {
+      "items": {
+        "$ref": "#/$defs/CriticalLine"
+      },
+      "title": "Critical Lines",
+      "type": "array"
+    }
+  },
+  "required": [
+    "prd_id",
+    "project_id",
+    "build_quantity",
+    "target_lead_time_days",
+    "release_source_id"
+  ],
+  "title": "N5BomIntakeRequest",
+  "type": "object"
+}

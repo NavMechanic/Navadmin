@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n5_connector_call",
+  "additionalProperties": false,
+  "properties": {
+    "call_id": {
+      "title": "Call Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "connector": {
+      "enum": [
+        "DIGIKEY",
+        "MOUSER",
+        "NEXAR",
+        "OPEN_SUPPLY_HUB"
+      ],
+      "title": "Connector",
+      "type": "string"
+    },
+    "operation": {
+      "title": "Operation",
+      "type": "string"
+    },
+    "project_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Project Id"
+    },
+    "bom_intake_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Bom Intake Id"
+    },
+    "line": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Line"
+    },
+    "key": {
+      "description": "MPN or OS ID looked up (never a bulk query)",
+      "title": "Key",
+      "type": "string"
+    },
+    "requested_by": {
+      "title": "Requested By",
+      "type": "string"
+    },
+    "at": {
+      "format": "date-time",
+      "title": "At",
+      "type": "string"
+    },
+    "cache_hit": {
+      "title": "Cache Hit",
+      "type": "boolean"
+    },
+    "http_status": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Http Status"
+    },
+    "response_sha256": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Response Sha256"
+    },
+    "outcome": {
+      "enum": [
+        "OK",
+        "NOT_FOUND",
+        "ERROR",
+        "DISABLED",
+        "RATE_LIMITED",
+        "OUT_OF_SCOPE"
+      ],
+      "title": "Outcome",
+      "type": "string"
+    },
+    "error": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Error"
+    }
+  },
+  "required": [
+    "call_id",
+    "tenant_id",
+    "connector",
+    "operation",
+    "key",
+    "requested_by",
+    "at",
+    "cache_hit",
+    "outcome"
+  ],
+  "title": "N5ConnectorCall",
+  "type": "object"
+}

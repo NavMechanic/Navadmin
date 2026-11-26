@@ -1,0 +1,236 @@
+version: '3.8'
+
+services:
+  # ========================================================================
+  # Infrastructure
+  # ========================================================================
+
+  postgres:
+    image: timescale/timescaledb:latest-pg16
+    container_name: athena-postgres
+    environment:
+      POSTGRES_USER: athena
+      POSTGRES_PASSWORD: athena
+      POSTGRES_DB: athena
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "athena"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: athena-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redpanda:
+    image: docker.redpanda.com/redpandadata/redpanda:v24.2.7
+    container_name: athena-redpanda
+    command:
+      - redpanda
+      - start
+      - --overprovisioned
+      - --smp=1
+      - --advertise-kafka-addr=redpanda:29092
+      - --advertise-pandaproxy-addr=redpanda:8082
+    ports:
+      - "9092:9092"
+      - "8081:8081"
+      - "8082:8082"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/v1/status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ========================================================================
+  # API Gateway
+  # ========================================================================
+
+  gateway:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    container_name: athena-gateway
+    environment:
+      ATHENA_ENVIRONMENT: dev
+      ATHENA_LOG_LEVEL: INFO
+      ATHENA_GATEWAY_TIMEOUT: 60
+      ATHENA_GATEWAY_HEALTH_TIMEOUT: 5
+      ATHENA_BREAKER_THRESHOLD: 5
+      ATHENA_BREAKER_COOLDOWN: 20
+      ATHENA_REQUIRE_AUTH: "true"
+      ATHENA_JSON_LOGS: "false"
+      ATHENA_NODE1_URL: http://node1:8001
+      ATHENA_NODE2_URL: http://node2:8002
+      ATHENA_NODE3_URL: http://node3:8003
+      ATHENA_NODE4_URL: http://node4:8004
+      ATHENA_NODE5_URL: http://node5:8005
+      ATHENA_NODE6_URL: http://node6:8006
+      ATHENA_REDIS_URL: redis://redis:6379/0
+      ATHENA_KAFKA_BOOTSTRAP_SERVERS: redpanda:29092
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+      - redpanda
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ========================================================================
+  # Node Services
+  # ========================================================================
+
+  node1:
+    build:
+      context: ./node1
+      dockerfile: Dockerfile
+    container_name: athena-node1
+    environment:
+      ATHENA_LOG_LEVEL: INFO
+      ATHENA_KAFKA_BOOTSTRAP_SERVERS: redpanda:29092
+    ports:
+      - "8001:8001"
+    depends_on:
+      - redpanda
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  node2:
+    build:
+      context: ./node2
+      dockerfile: Dockerfile
+    container_name: athena-node2
+    environment:
+      ATHENA_LOG_LEVEL: INFO
+      ATHENA_KAFKA_BOOTSTRAP_SERVERS: redpanda:29092
+      DATABASE_URL: postgresql://athena:athena@postgres:5432/node2
+    ports:
+      - "8002:8002"
+    depends_on:
+      - postgres
+      - redpanda
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  node3:
+    build:
+      context: ./node3
+      dockerfile: Dockerfile
+    container_name: athena-node3
+    environment:
+      ATHENA_LOG_LEVEL: INFO
+      ATHENA_KAFKA_BOOTSTRAP_SERVERS: redpanda:29092
+      DATABASE_URL: postgresql://athena:athena@postgres:5432/node3
+    ports:
+      - "8003:8003"
+    depends_on:
+      - postgres
+      - redpanda
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  node4:
+    build:
+      context: ./node4
+      dockerfile: Dockerfile
+    container_name: athena-node4
+    environment:
+      ATHENA_LOG_LEVEL: INFO
+      ATHENA_ANSYS_CLOUD: "false"
+    ports:
+      - "8004:8004"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8004/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  node5:
+    build:
+      context: ./node5
+      dockerfile: Dockerfile
+    container_name: athena-node5
+    environment:
+      ATHENA_LOG_LEVEL: INFO
+      ATHENA_KAFKA_BOOTSTRAP_SERVERS: redpanda:29092
+      ATHENA_OPCUA_ENDPOINT: ""
+    ports:
+      - "8005:8005"
+    depends_on:
+      - redpanda
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8005/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  node6:
+    build:
+      context: ./node6
+      dockerfile: Dockerfile
+    container_name: athena-node6
+    environment:
+      ATHENA_LOG_LEVEL: INFO
+      ATHENA_KAFKA_BOOTSTRAP_SERVERS: redpanda:29092
+      ATHENA_TIMESCALE_REQUIRED: "false"
+      DATABASE_URL: postgresql://athena:athena@postgres:5432/node6
+    ports:
+      - "8006:8006"
+    depends_on:
+      - postgres
+      - redpanda
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8006/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ========================================================================
+  # Ingestion Service
+  # ========================================================================
+
+  ingestion:
+    build:
+      context: ./ingestion
+      dockerfile: Dockerfile
+    container_name: athena-ingestion
+    environment:
+      ATHENA_LOG_LEVEL: INFO
+    ports:
+      - "8007:8007"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8007/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+
+networks:
+  default:
+    name: athena-network
+    driver: bridge

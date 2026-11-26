@@ -1,0 +1,260 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n4_evidence_intake",
+  "$defs": {
+    "AoiDetection": {
+      "additionalProperties": false,
+      "properties": {
+        "detection_id": {
+          "title": "Detection Id",
+          "type": "string"
+        },
+        "image_sha256": {
+          "title": "Image Sha256",
+          "type": "string"
+        },
+        "cls": {
+          "title": "Cls",
+          "type": "string"
+        },
+        "confidence": {
+          "title": "Confidence",
+          "type": "number"
+        },
+        "bbox_xyxy": {
+          "items": {
+            "type": "number"
+          },
+          "title": "Bbox Xyxy",
+          "type": "array"
+        },
+        "triage": {
+          "enum": [
+            "MODEL_FLAGGED",
+            "AMBIGUOUS",
+            "BELOW_THRESHOLD"
+          ],
+          "title": "Triage",
+          "type": "string"
+        }
+      },
+      "required": [
+        "detection_id",
+        "image_sha256",
+        "cls",
+        "confidence",
+        "bbox_xyxy",
+        "triage"
+      ],
+      "title": "AoiDetection",
+      "type": "object"
+    },
+    "EvidenceFile": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "title": "Path",
+          "type": "string"
+        },
+        "role": {
+          "enum": [
+            "RAW_LOG",
+            "WAVEFORM",
+            "IMAGE",
+            "LAB_REPORT",
+            "MANIFEST",
+            "CERTIFICATE",
+            "OTHER"
+          ],
+          "title": "Role",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "blob_id": {
+          "title": "Blob Id",
+          "type": "string"
+        },
+        "uri": {
+          "title": "Uri",
+          "type": "string"
+        },
+        "size_bytes": {
+          "minimum": 0,
+          "title": "Size Bytes",
+          "type": "integer"
+        },
+        "mime": {
+          "title": "Mime",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "role",
+        "sha256",
+        "blob_id",
+        "uri",
+        "size_bytes",
+        "mime"
+      ],
+      "title": "EvidenceFile",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "N4EvidenceIntake.v1",
+      "default": "N4EvidenceIntake.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "evidence_id": {
+      "title": "Evidence Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "plan_id": {
+      "title": "Plan Id",
+      "type": "string"
+    },
+    "adapter": {
+      "enum": [
+        "SCPI_VISA",
+        "SCPI_LIVE",
+        "ACCREDITED_LAB",
+        "AOI_VISION",
+        "CSV_OFFLINE"
+      ],
+      "title": "Adapter",
+      "type": "string"
+    },
+    "source_id": {
+      "title": "Source Id",
+      "type": "string"
+    },
+    "submitted_by": {
+      "title": "Submitted By",
+      "type": "string"
+    },
+    "submitted_at": {
+      "format": "date-time",
+      "title": "Submitted At",
+      "type": "string"
+    },
+    "claimed_provenance": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Claimed Provenance"
+    },
+    "derived_provenance": {
+      "anyOf": [
+        {
+          "enum": [
+            "PHYSICAL_ATE",
+            "PHYSICAL_BENCH",
+            "PHYSICAL_INSPECTION",
+            "ACCREDITED_LAB",
+            "SIMULATION",
+            "SYNTHETIC",
+            "MOCK_FIXTURE"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Derived Provenance"
+    },
+    "files": {
+      "items": {
+        "$ref": "#/$defs/EvidenceFile"
+      },
+      "title": "Files",
+      "type": "array"
+    },
+    "measurement_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Measurement Ids",
+      "type": "array"
+    },
+    "detections": {
+      "items": {
+        "$ref": "#/$defs/AoiDetection"
+      },
+      "title": "Detections",
+      "type": "array"
+    },
+    "metadata": {
+      "additionalProperties": true,
+      "title": "Metadata",
+      "type": "object"
+    },
+    "evidence_sha256": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "SHA-256 over the sorted file hashes",
+      "title": "Evidence Sha256"
+    },
+    "status": {
+      "enum": [
+        "ACCEPTED",
+        "REJECTED"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "rejection_codes": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Rejection Codes",
+      "type": "array"
+    },
+    "problems": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Problems",
+      "type": "array"
+    }
+  },
+  "required": [
+    "evidence_id",
+    "tenant_id",
+    "plan_id",
+    "adapter",
+    "source_id",
+    "submitted_by",
+    "submitted_at",
+    "files",
+    "status"
+  ],
+  "title": "N4EvidenceIntake",
+  "type": "object"
+}

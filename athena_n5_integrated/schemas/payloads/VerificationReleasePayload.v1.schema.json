@@ -1,0 +1,555 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:VerificationReleasePayload.v1",
+  "$defs": {
+    "AttributeInspection": {
+      "additionalProperties": false,
+      "description": "Attribute (go / no-go) inspection of one unit, e.g. AOI. Model detections never decide it: the\nverdict is a human adjudication, and every model-flagged or ambiguous call must be adjudicated.",
+      "properties": {
+        "test_id": {
+          "title": "Test Id",
+          "type": "string"
+        },
+        "unit_serial": {
+          "title": "Unit Serial",
+          "type": "string"
+        },
+        "method": {
+          "default": "INSPECTION",
+          "enum": [
+            "SIM",
+            "BENCH_ATE",
+            "ACCREDITED_LAB",
+            "INSPECTION"
+          ],
+          "title": "Method",
+          "type": "string"
+        },
+        "provenance": {
+          "default": "PHYSICAL_INSPECTION",
+          "enum": [
+            "PHYSICAL_ATE",
+            "PHYSICAL_BENCH",
+            "PHYSICAL_INSPECTION",
+            "ACCREDITED_LAB",
+            "SIMULATION",
+            "SYNTHETIC",
+            "MOCK_FIXTURE"
+          ],
+          "title": "Provenance",
+          "type": "string"
+        },
+        "defects_confirmed": {
+          "minimum": 0,
+          "title": "Defects Confirmed",
+          "type": "integer"
+        },
+        "unadjudicated": {
+          "minimum": 0,
+          "title": "Unadjudicated",
+          "type": "integer"
+        },
+        "human_verdict": {
+          "enum": [
+            "ACCEPT",
+            "REJECT"
+          ],
+          "title": "Human Verdict",
+          "type": "string"
+        },
+        "adjudicator": {
+          "title": "Adjudicator",
+          "type": "string"
+        },
+        "evidence_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Evidence Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "test_id",
+        "unit_serial",
+        "defects_confirmed",
+        "unadjudicated",
+        "human_verdict",
+        "adjudicator",
+        "evidence_sha256"
+      ],
+      "title": "AttributeInspection",
+      "type": "object"
+    },
+    "TraceEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "requirement_id": {
+          "title": "Requirement Id",
+          "type": "string"
+        },
+        "safety_critical": {
+          "title": "Safety Critical",
+          "type": "boolean"
+        },
+        "hazard_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Hazard Ids",
+          "type": "array"
+        },
+        "test_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Test Ids",
+          "type": "array"
+        },
+        "methods": {
+          "items": {
+            "enum": [
+              "SIM",
+              "BENCH_ATE",
+              "ACCREDITED_LAB",
+              "INSPECTION"
+            ],
+            "type": "string"
+          },
+          "title": "Methods",
+          "type": "array"
+        },
+        "verdict": {
+          "enum": [
+            "VERIFIED",
+            "NOT_VERIFIED"
+          ],
+          "title": "Verdict",
+          "type": "string"
+        }
+      },
+      "required": [
+        "requirement_id",
+        "safety_critical",
+        "verdict"
+      ],
+      "title": "TraceEntry",
+      "type": "object"
+    },
+    "VerifiedMeasurement": {
+      "additionalProperties": false,
+      "description": "One measured (or simulated) characteristic with its guard-banded verdict. ``value``, the\nexpanded uncertainty and both limits share ``unit``.",
+      "properties": {
+        "measurement_id": {
+          "title": "Measurement Id",
+          "type": "string"
+        },
+        "test_id": {
+          "title": "Test Id",
+          "type": "string"
+        },
+        "characteristic": {
+          "title": "Characteristic",
+          "type": "string"
+        },
+        "unit_serial": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit Serial"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Value"
+        },
+        "unit": {
+          "title": "Unit",
+          "type": "string"
+        },
+        "expanded_uncertainty": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Expanded Uncertainty"
+        },
+        "coverage_factor": {
+          "default": 2.0,
+          "exclusiveMinimum": 0,
+          "title": "Coverage Factor",
+          "type": "number"
+        },
+        "lower_limit": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Lower Limit"
+        },
+        "upper_limit": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Upper Limit"
+        },
+        "verdict": {
+          "enum": [
+            "PASS",
+            "FAIL",
+            "INDETERMINATE"
+          ],
+          "title": "Verdict",
+          "type": "string"
+        },
+        "method": {
+          "enum": [
+            "SIM",
+            "BENCH_ATE",
+            "ACCREDITED_LAB",
+            "INSPECTION"
+          ],
+          "title": "Method",
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "PHYSICAL_ATE",
+            "PHYSICAL_BENCH",
+            "PHYSICAL_INSPECTION",
+            "ACCREDITED_LAB",
+            "SIMULATION",
+            "SYNTHETIC",
+            "MOCK_FIXTURE"
+          ],
+          "title": "Provenance",
+          "type": "string"
+        },
+        "instrument_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Instrument Id"
+        },
+        "calibration_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Calibration Id"
+        },
+        "calibration_due": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Calibration Due"
+        },
+        "captured_at": {
+          "format": "date-time",
+          "title": "Captured At",
+          "type": "string"
+        },
+        "raw_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Raw Sha256"
+        }
+      },
+      "required": [
+        "measurement_id",
+        "test_id",
+        "characteristic",
+        "value",
+        "unit",
+        "verdict",
+        "method",
+        "provenance",
+        "captured_at"
+      ],
+      "title": "VerifiedMeasurement",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "N4 → N8 / N6 / N7: a design-revision-locked verification package. It is not product safety\ncertification unless an accredited lab certificate in it says so for its stated scope.",
+  "properties": {
+    "release_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+      "title": "Release Id",
+      "type": "string"
+    },
+    "target": {
+      "enum": [
+        "N6",
+        "N7",
+        "N8"
+      ],
+      "title": "Target",
+      "type": "string"
+    },
+    "prd_ref": {
+      "title": "Prd Ref",
+      "type": "string"
+    },
+    "design_refs": {
+      "description": "N3 DESIGN_RELEASE ARTIFACT_ID@REVISION",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Design Refs",
+      "type": "array"
+    },
+    "design_revision": {
+      "maxLength": 16,
+      "minLength": 1,
+      "title": "Design Revision",
+      "type": "string"
+    },
+    "pcb_revision": {
+      "anyOf": [
+        {
+          "maxLength": 16,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Pcb Revision"
+    },
+    "plan_id": {
+      "title": "Plan Id",
+      "type": "string"
+    },
+    "plan_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Plan Sha256",
+      "type": "string"
+    },
+    "assessment_id": {
+      "title": "Assessment Id",
+      "type": "string"
+    },
+    "evidence_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Evidence Sha256",
+      "type": "string"
+    },
+    "review_id": {
+      "title": "Review Id",
+      "type": "string"
+    },
+    "approved_by": {
+      "title": "Approved By",
+      "type": "string"
+    },
+    "evidence_submitters": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Evidence Submitters",
+      "type": "array"
+    },
+    "verification_status": {
+      "enum": [
+        "VERIFIED",
+        "NOT_VERIFIED"
+      ],
+      "title": "Verification Status",
+      "type": "string"
+    },
+    "measurements": {
+      "items": {
+        "$ref": "#/$defs/VerifiedMeasurement"
+      },
+      "minItems": 1,
+      "title": "Measurements",
+      "type": "array"
+    },
+    "attribute_inspections": {
+      "items": {
+        "$ref": "#/$defs/AttributeInspection"
+      },
+      "title": "Attribute Inspections",
+      "type": "array"
+    },
+    "traceability": {
+      "items": {
+        "$ref": "#/$defs/TraceEntry"
+      },
+      "minItems": 1,
+      "title": "Traceability",
+      "type": "array"
+    },
+    "unit_serials": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Unit Serials",
+      "type": "array"
+    },
+    "prioritization_method": {
+      "default": "CUSTOM_ATTENTION_HEURISTIC",
+      "enum": [
+        "CUSTOM_ATTENTION_HEURISTIC",
+        "AIAG_VDA_AP_LICENSED"
+      ],
+      "title": "Prioritization Method",
+      "type": "string"
+    },
+    "ap_license_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Ap License Ref"
+    },
+    "reliability": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Reliability"
+    },
+    "control_plan": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Control Plan",
+      "type": "array"
+    },
+    "lab_certificates": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Lab Certificates",
+      "type": "array"
+    },
+    "commercial": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Commercial"
+    },
+    "finance": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Finance"
+    },
+    "approval_scope": {
+      "title": "Approval Scope",
+      "type": "string"
+    }
+  },
+  "required": [
+    "release_id",
+    "target",
+    "prd_ref",
+    "design_refs",
+    "design_revision",
+    "plan_id",
+    "plan_sha256",
+    "assessment_id",
+    "evidence_sha256",
+    "review_id",
+    "approved_by",
+    "verification_status",
+    "measurements",
+    "traceability",
+    "approval_scope"
+  ],
+  "title": "VerificationReleasePayload.v1",
+  "type": "object"
+}

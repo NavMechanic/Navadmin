@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n5_review_request",
+  "additionalProperties": false,
+  "properties": {
+    "report_id": {
+      "title": "Report Id",
+      "type": "string"
+    },
+    "report_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Report Sha256",
+      "type": "string"
+    },
+    "quote_hashes": {
+      "description": "the selected quote hashes, exactly as reported",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Quote Hashes",
+      "type": "array"
+    },
+    "decision": {
+      "enum": [
+        "APPROVED",
+        "REJECTED"
+      ],
+      "title": "Decision",
+      "type": "string"
+    },
+    "reason": {
+      "minLength": 3,
+      "title": "Reason",
+      "type": "string"
+    }
+  },
+  "required": [
+    "report_id",
+    "report_sha256",
+    "quote_hashes",
+    "decision",
+    "reason"
+  ],
+  "title": "N5ReviewRequest",
+  "type": "object"
+}

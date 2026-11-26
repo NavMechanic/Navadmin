@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n4_reliability_illustration",
+  "additionalProperties": false,
+  "properties": {
+    "illustration_id": {
+      "title": "Illustration Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "plan_id": {
+      "title": "Plan Id",
+      "type": "string"
+    },
+    "label": {
+      "const": "RESEARCH_ONLY_STATISTICAL_ILLUSTRATION",
+      "default": "RESEARCH_ONLY_STATISTICAL_ILLUSTRATION",
+      "title": "Label",
+      "type": "string"
+    },
+    "release_eligible": {
+      "const": false,
+      "default": false,
+      "title": "Release Eligible",
+      "type": "boolean"
+    },
+    "model": {
+      "default": "exponential (constant failure rate), chi-square bound",
+      "title": "Model",
+      "type": "string"
+    },
+    "total_unit_hours": {
+      "title": "Total Unit Hours",
+      "type": "number"
+    },
+    "failures": {
+      "title": "Failures",
+      "type": "integer"
+    },
+    "mtbf_point_h": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Mtbf Point H"
+    },
+    "mtbf_lower_bound_h": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Mtbf Lower Bound H"
+    },
+    "confidence": {
+      "title": "Confidence",
+      "type": "number"
+    },
+    "missing_prerequisites": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Missing Prerequisites",
+      "type": "array"
+    },
+    "created_by": {
+      "title": "Created By",
+      "type": "string"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "illustration_id",
+    "tenant_id",
+    "plan_id",
+    "total_unit_hours",
+    "failures",
+    "mtbf_point_h",
+    "mtbf_lower_bound_h",
+    "confidence",
+    "missing_prerequisites",
+    "created_by",
+    "created_at"
+  ],
+  "title": "N4ReliabilityIllustration",
+  "type": "object"
+}

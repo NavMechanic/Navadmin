@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:n0:schema:EDAPackagePayload.v1",
+  "additionalProperties": false,
+  "properties": {
+    "design_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+      "title": "Design Id",
+      "type": "string"
+    },
+    "eda_tool": {
+      "title": "Eda Tool",
+      "type": "string"
+    },
+    "tool_version": {
+      "title": "Tool Version",
+      "type": "string"
+    },
+    "layer_count": {
+      "maximum": 64,
+      "minimum": 1,
+      "title": "Layer Count",
+      "type": "integer"
+    },
+    "native_files": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Native Files",
+      "type": "array"
+    },
+    "drc_errors": {
+      "minimum": 0,
+      "title": "Drc Errors",
+      "type": "integer"
+    },
+    "erc_errors": {
+      "minimum": 0,
+      "title": "Erc Errors",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "design_id",
+    "eda_tool",
+    "tool_version",
+    "layer_count",
+    "native_files",
+    "drc_errors",
+    "erc_errors"
+  ],
+  "title": "EDAPackagePayload.v1",
+  "type": "object"
+}

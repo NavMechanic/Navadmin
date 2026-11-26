@@ -1,0 +1,143 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n1_buyer_account",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "BuyerAccount.v1",
+      "default": "BuyerAccount.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "account_id": {
+      "title": "Account Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "revision": {
+      "minimum": 1,
+      "title": "Revision",
+      "type": "integer"
+    },
+    "legal_name": {
+      "title": "Legal Name",
+      "type": "string"
+    },
+    "normalized_name": {
+      "title": "Normalized Name",
+      "type": "string"
+    },
+    "aliases": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Aliases",
+      "type": "array"
+    },
+    "country": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Country"
+    },
+    "buyer_type": {
+      "anyOf": [
+        {
+          "enum": [
+            "PUBLIC",
+            "PRIVATE"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Buyer Type"
+    },
+    "identifiers": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Identifiers",
+      "type": "object"
+    },
+    "relationship_stage": {
+      "default": "NONE",
+      "enum": [
+        "NONE",
+        "COLD",
+        "WARM",
+        "ACTIVE"
+      ],
+      "title": "Relationship Stage",
+      "type": "string"
+    },
+    "do_not_contact": {
+      "default": false,
+      "title": "Do Not Contact",
+      "type": "boolean"
+    },
+    "named_buyer_validated": {
+      "default": false,
+      "description": "confirmed by an N0-approved CRM record or interview",
+      "title": "Named Buyer Validated",
+      "type": "boolean"
+    },
+    "service_categories": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Service Categories",
+      "type": "array"
+    },
+    "evidence_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Evidence Ids",
+      "type": "array"
+    },
+    "synthetic_only": {
+      "default": true,
+      "title": "Synthetic Only",
+      "type": "boolean"
+    },
+    "match_method": {
+      "default": "NEW",
+      "enum": [
+        "NEW",
+        "IDENTIFIER",
+        "EXACT_NAME",
+        "FUZZY_NAME"
+      ],
+      "title": "Match Method",
+      "type": "string"
+    },
+    "updated_at": {
+      "format": "date-time",
+      "title": "Updated At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "account_id",
+    "tenant_id",
+    "revision",
+    "legal_name",
+    "normalized_name",
+    "updated_at"
+  ],
+  "title": "BuyerAccount.v1",
+  "type": "object"
+}

@@ -1,0 +1,24 @@
+# ATHENA N0 + N1 + N2 + N3 — core (SQLite + local storage, full test suite and demo)
+fastapi>=0.115
+uvicorn[standard]>=0.30
+pydantic>=2.8
+jsonschema>=4.23
+sqlalchemy>=2.0.30
+alembic>=1.13
+python-multipart>=0.0.9   # N3 deliveries, N4 evidence uploads
+httpx>=0.27               # N1 connectors and the FastAPI TestClient
+PyJWT[crypto]>=2.10       # JWT bearer authentication (no static API keys)
+pytest>=8.0
+pypdf>=4.0                # fallback PDF parser
+python-docx>=1.1          # fallback DOCX parser
+anthropic>=2.12           # only when an anthropic SLM / explainer / N0 extractor is enabled
+# system tools for N3.4 (optional for the tests, which use tests/fixtures/bin stand-ins):
+#   ngspice (any recent release; apt install ngspice), KiCad 8+ kicad-cli (sch erc / pcb drc), KiCad 9 for ODB++,
+#   util-linux prlimit + unshare (resource limits, private network namespace)
+# production extras: psycopg[binary] (PostgreSQL), boto3 (S3), docling, presidio-analyzer, presidio-anonymizer
+# N4 (optional): pyvisa + a VISA backend (pyvisa-py or the vendor's) for live USB-TMC / LXI instrument capture;
+#   the raw SCPI socket transport (TCPIP0::host::port::SOCKET) needs nothing extra.
+#   presidio-analyzer / presidio-anonymizer redact the N4 RAG corpus when installed (fallback redactor otherwise).
+# N5: `cryptography` (installed with PyJWT[crypto]) verifies Ed25519 / RSA signatures on EMS / ODM quotations;
+#   httpx (above) drives the DigiKey / Mouser / Nexar / Open Supply Hub connectors, which stay off unless
+#   N5_ENABLE_LIVE_APIS=true. Credentials come from N5_* environment variables or the platform secret store.

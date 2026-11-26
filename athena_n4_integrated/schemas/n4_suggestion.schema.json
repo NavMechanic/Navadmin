@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n4_suggestion",
+  "$defs": {
+    "Citation": {
+      "additionalProperties": false,
+      "properties": {
+        "doc_id": {
+          "title": "Doc Id",
+          "type": "string"
+        },
+        "chunk_id": {
+          "title": "Chunk Id",
+          "type": "string"
+        },
+        "quote": {
+          "minLength": 8,
+          "title": "Quote",
+          "type": "string"
+        }
+      },
+      "required": [
+        "doc_id",
+        "chunk_id",
+        "quote"
+      ],
+      "title": "Citation",
+      "type": "object"
+    },
+    "SuggestionItem": {
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "citations": {
+          "items": {
+            "$ref": "#/$defs/Citation"
+          },
+          "minItems": 1,
+          "title": "Citations",
+          "type": "array"
+        }
+      },
+      "required": [
+        "title",
+        "text",
+        "citations"
+      ],
+      "title": "SuggestionItem",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "suggestion_id": {
+      "title": "Suggestion Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "plan_id": {
+      "title": "Plan Id",
+      "type": "string"
+    },
+    "kind": {
+      "title": "Kind",
+      "type": "string"
+    },
+    "status": {
+      "const": "DRAFT_UNREVIEWED",
+      "default": "DRAFT_UNREVIEWED",
+      "title": "Status",
+      "type": "string"
+    },
+    "items": {
+      "items": {
+        "$ref": "#/$defs/SuggestionItem"
+      },
+      "title": "Items",
+      "type": "array"
+    },
+    "rejected_items": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Rejected Items",
+      "type": "array"
+    },
+    "provider": {
+      "title": "Provider",
+      "type": "string"
+    },
+    "model": {
+      "title": "Model",
+      "type": "string"
+    },
+    "corpus_doc_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Corpus Doc Ids",
+      "type": "array"
+    },
+    "created_by": {
+      "title": "Created By",
+      "type": "string"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "note": {
+      "default": "Draft suggestions only: grounded in the cited authorized documents, never rated (S/O/D are set by a human), never approved automatically and never used in a release decision.",
+      "title": "Note",
+      "type": "string"
+    }
+  },
+  "required": [
+    "suggestion_id",
+    "tenant_id",
+    "plan_id",
+    "kind",
+    "items",
+    "provider",
+    "model",
+    "corpus_doc_ids",
+    "created_by",
+    "created_at"
+  ],
+  "title": "N4Suggestion",
+  "type": "object"
+}

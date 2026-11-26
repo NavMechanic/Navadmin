@@ -1,0 +1,73 @@
+{
+  "description": "Starter gold corpus for RFQ extraction. These cases were written alongside the rule-based extractor, so they are a regression set, not a held-out benchmark: replace or extend them with real, permitted customer RFQs (activity B) before treating gate H as evidence of accuracy.",
+  "cases": [
+    {
+      "id": "labelled-ble-tracker",
+      "text": "RFQ: BLE asset tracker\nCustomer: Acme Logistics\nQuantity: 5,000 units\nSupply voltage: 3.3 V\nMax current: 150 mA\nPower budget: 0.6 W\nOperating temperature: -20 to 60 °C\nBoard size: 45 x 30 mm\nInterfaces: BLE 5.0, UART, I2C\nCertifications: CE, FCC, RoHS\nTarget unit price: USD 12.50",
+      "expected": {
+        "customer": "Acme Logistics", "quantity": 5000, "supply_voltage": 3.3, "max_current": 0.15, "power_budget": 0.6,
+        "operating_temp_min": -20, "operating_temp_max": 60, "board_length": 0.045, "board_width": 0.03,
+        "interfaces": ["BLE 5.0", "UART", "I2C"], "certifications": ["CE", "FCC", "RoHS"],
+        "target_unit_price": {"amount": "12.50", "currency": "USD"}
+      }
+    },
+    {
+      "id": "alt-labels-smart-meter",
+      "text": "Project - Smart meter comms board\nAnnual volume: 20k\nInput voltage: 3V3\nPeak current: 0.8 A\nOperating temp: -40°C ~ +85°C\nPCB size: 85mm x 65mm\nConnectivity: LoRa; RS-485; Modbus\nCompliance: IEC 62368-1, CE",
+      "expected": {
+        "quantity": 20000, "supply_voltage": 3.3, "max_current": 0.8, "operating_temp_min": -40, "operating_temp_max": 85,
+        "board_length": 0.085, "board_width": 0.065, "interfaces": ["LoRa", "RS-485", "Modbus"],
+        "certifications": ["IEC 62368-1", "CE"]
+      }
+    },
+    {
+      "id": "prose-industrial-gateway",
+      "text": "We need 1200 boards for an industrial gateway powered from a 24 V supply. Typical current draw is 350 mA. The unit must operate from -25 to 70 °C and fit on a 100 x 80 mm PCB. It needs Ethernet and CAN, and must be CE and UL certified.",
+      "expected": {
+        "quantity": 1200, "supply_voltage": 24, "max_current": 0.35, "operating_temp_min": -25, "operating_temp_max": 70,
+        "board_length": 0.1, "board_width": 0.08, "interfaces": ["Ethernet", "CAN"], "certifications": ["CE", "UL"]
+      }
+    },
+    {
+      "id": "short-labels-power-unit",
+      "text": "Qty: 300 pcs\nVIN: 48 V\nPower: 1.2 kW\nOperating temperature: 0 to 50 C\nInterfaces: CAN, USB\nTarget price: INR 4,500",
+      "expected": {
+        "quantity": 300, "supply_voltage": 48, "power_budget": 1200, "operating_temp_min": 0, "operating_temp_max": 50,
+        "interfaces": ["CAN", "USB"], "target_unit_price": {"amount": "4500.00", "currency": "INR"}
+      }
+    },
+    {
+      "id": "bulleted-wearable",
+      "text": "Requirement summary for wearable patch\n- Quantity: 10,000\n- Supply voltage: 3.0 V (coin cell)\n- Max current: 20 mA\n- Operating temperature: 10 to 45 °C\n- Board size: 30 x 20 mm\n- Interfaces: BLE\n- Certifications: ISO 13485, CE",
+      "expected": {
+        "quantity": 10000, "supply_voltage": 3.0, "max_current": 0.02, "operating_temp_min": 10, "operating_temp_max": 45,
+        "board_length": 0.03, "board_width": 0.02, "interfaces": ["BLE"], "certifications": ["ISO 13485", "CE"]
+      }
+    },
+    {
+      "id": "prose-motor-controller",
+      "text": "Looking for a quote on 750 units of a motor controller. Input voltage is 12 V nominal and the controller may draw up to 5 A. Total power budget 60 W. Ambient range -10 to 55 °C. Interfaces required: CAN and UART. Needs RoHS and REACH compliance.",
+      "expected": {
+        "quantity": 750, "supply_voltage": 12, "max_current": 5, "power_budget": 60, "operating_temp_min": -10,
+        "operating_temp_max": 55, "interfaces": ["CAN", "UART"], "certifications": ["RoHS", "REACH"]
+      }
+    },
+    {
+      "id": "labelled-with-distractor-voltage",
+      "text": "Supply voltage: 5 V\nLogic level: 1.8 V\nQuantity: 2,500 units\nOperating temperature: -40 to 105 °C\nInterfaces: SPI, I2C, USB",
+      "expected": {
+        "supply_voltage": 5, "quantity": 2500, "operating_temp_min": -40, "operating_temp_max": 105,
+        "interfaces": ["SPI", "I2C", "USB"]
+      }
+    },
+    {
+      "id": "symbols-and-unicode",
+      "text": "Quantity: 400\nSupply voltage: 9 V\nMax current: 1.5 A\nOperating temperature: −5 to 40 °C\nBoard size: 120 × 90 mm\nCertifications: FCC, CE\nTarget unit price: $38",
+      "expected": {
+        "quantity": 400, "supply_voltage": 9, "max_current": 1.5, "operating_temp_min": -5, "operating_temp_max": 40,
+        "board_length": 0.12, "board_width": 0.09, "certifications": ["FCC", "CE"],
+        "target_unit_price": {"amount": "38.00", "currency": "USD"}
+      }
+    }
+  ]
+}

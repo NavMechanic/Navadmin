@@ -1,0 +1,344 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n4_pfmea",
+  "$defs": {
+    "DetectionControl": {
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "minLength": 3,
+          "title": "Description",
+          "type": "string"
+        },
+        "test_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Test Id"
+        }
+      },
+      "required": [
+        "description"
+      ],
+      "title": "DetectionControl",
+      "type": "object"
+    },
+    "N4PfmeaEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "entry_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+          "title": "Entry Id",
+          "type": "string"
+        },
+        "process_step": {
+          "title": "Process Step",
+          "type": "string"
+        },
+        "function": {
+          "title": "Function",
+          "type": "string"
+        },
+        "failure_mode": {
+          "minLength": 3,
+          "title": "Failure Mode",
+          "type": "string"
+        },
+        "effect": {
+          "minLength": 3,
+          "title": "Effect",
+          "type": "string"
+        },
+        "cause": {
+          "minLength": 3,
+          "title": "Cause",
+          "type": "string"
+        },
+        "prevention_controls": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Prevention Controls",
+          "type": "array"
+        },
+        "detection_controls": {
+          "items": {
+            "$ref": "#/$defs/DetectionControl"
+          },
+          "title": "Detection Controls",
+          "type": "array"
+        },
+        "severity": {
+          "maximum": 10,
+          "minimum": 1,
+          "title": "Severity",
+          "type": "integer"
+        },
+        "occurrence": {
+          "maximum": 10,
+          "minimum": 1,
+          "title": "Occurrence",
+          "type": "integer"
+        },
+        "detection": {
+          "maximum": 10,
+          "minimum": 1,
+          "title": "Detection",
+          "type": "integer"
+        },
+        "hazard_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Hazard Ids",
+          "type": "array"
+        },
+        "characteristic": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Characteristic"
+        },
+        "special_characteristic": {
+          "default": false,
+          "title": "Special Characteristic",
+          "type": "boolean"
+        },
+        "actions": {
+          "items": {
+            "$ref": "#/$defs/PfmeaAction"
+          },
+          "title": "Actions",
+          "type": "array"
+        },
+        "adopted_from_suggestion": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "N4Suggestion the human adopted",
+          "title": "Adopted From Suggestion"
+        },
+        "rated_by": {
+          "description": "the human who set S / O / D (never a model)",
+          "title": "Rated By",
+          "type": "string"
+        },
+        "rpn_illustrative": {
+          "title": "Rpn Illustrative",
+          "type": "integer"
+        },
+        "attention_level": {
+          "enum": [
+            "HIGH",
+            "MEDIUM",
+            "LOW"
+          ],
+          "title": "Attention Level",
+          "type": "string"
+        },
+        "attention_basis": {
+          "title": "Attention Basis",
+          "type": "string"
+        },
+        "action_priority": {
+          "anyOf": [
+            {
+              "enum": [
+                "H",
+                "M",
+                "L"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "only with a licensed table",
+          "title": "Action Priority"
+        }
+      },
+      "required": [
+        "entry_id",
+        "process_step",
+        "function",
+        "failure_mode",
+        "effect",
+        "cause",
+        "severity",
+        "occurrence",
+        "detection",
+        "rated_by",
+        "rpn_illustrative",
+        "attention_level",
+        "attention_basis"
+      ],
+      "title": "N4PfmeaEntry",
+      "type": "object"
+    },
+    "PfmeaAction": {
+      "additionalProperties": false,
+      "properties": {
+        "action_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+          "title": "Action Id",
+          "type": "string"
+        },
+        "description": {
+          "minLength": 3,
+          "title": "Description",
+          "type": "string"
+        },
+        "owner": {
+          "title": "Owner",
+          "type": "string"
+        },
+        "due": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Due"
+        },
+        "capa_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Capa Id"
+        },
+        "status": {
+          "default": "OPEN",
+          "enum": [
+            "OPEN",
+            "DONE",
+            "VERIFIED"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "action_id",
+        "description",
+        "owner"
+      ],
+      "title": "PfmeaAction",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "pfmea_id": {
+      "title": "Pfmea Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "plan_id": {
+      "title": "Plan Id",
+      "type": "string"
+    },
+    "revision": {
+      "title": "Revision",
+      "type": "integer"
+    },
+    "entries": {
+      "items": {
+        "$ref": "#/$defs/N4PfmeaEntry"
+      },
+      "title": "Entries",
+      "type": "array"
+    },
+    "prioritization_method": {
+      "enum": [
+        "CUSTOM_ATTENTION_HEURISTIC",
+        "AIAG_VDA_AP_LICENSED"
+      ],
+      "title": "Prioritization Method",
+      "type": "string"
+    },
+    "prioritization_label": {
+      "default": "CUSTOM_ATTENTION_HEURISTIC: an internal prioritisation aid. It is NOT AIAG-VDA Action Priority, and the S×O×D product shown is illustrative only.",
+      "title": "Prioritization Label",
+      "type": "string"
+    },
+    "ap_license_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Ap License Ref"
+    },
+    "created_by": {
+      "title": "Created By",
+      "type": "string"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "pfmea_sha256": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Pfmea Sha256"
+    }
+  },
+  "required": [
+    "pfmea_id",
+    "tenant_id",
+    "plan_id",
+    "revision",
+    "entries",
+    "prioritization_method",
+    "created_by",
+    "created_at"
+  ],
+  "title": "N4Pfmea",
+  "type": "object"
+}

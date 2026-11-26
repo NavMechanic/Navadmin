@@ -1,0 +1,160 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n4_aoi_inference",
+  "$defs": {
+    "AoiImage": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "title": "Path",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "detections": {
+          "items": {
+            "$ref": "#/$defs/AoiRawDetection"
+          },
+          "title": "Detections",
+          "type": "array"
+        }
+      },
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "title": "AoiImage",
+      "type": "object"
+    },
+    "AoiModelBlock": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "version": {
+          "title": "Version",
+          "type": "string"
+        },
+        "framework": {
+          "default": "ultralytics-yolov8",
+          "title": "Framework",
+          "type": "string"
+        },
+        "weights_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Weights Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version",
+        "weights_sha256"
+      ],
+      "title": "AoiModelBlock",
+      "type": "object"
+    },
+    "AoiRawDetection": {
+      "additionalProperties": false,
+      "properties": {
+        "class": {
+          "title": "Class",
+          "type": "string"
+        },
+        "confidence": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "bbox_xyxy": {
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 4,
+          "minItems": 4,
+          "title": "Bbox Xyxy",
+          "type": "array"
+        }
+      },
+      "required": [
+        "class",
+        "confidence",
+        "bbox_xyxy"
+      ],
+      "title": "AoiRawDetection",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": "athena-aoi/1",
+      "default": "athena-aoi/1",
+      "title": "Format",
+      "type": "string"
+    },
+    "station_id": {
+      "title": "Station Id",
+      "type": "string"
+    },
+    "instrument_id": {
+      "title": "Instrument Id",
+      "type": "string"
+    },
+    "test_id": {
+      "title": "Test Id",
+      "type": "string"
+    },
+    "unit_serial": {
+      "title": "Unit Serial",
+      "type": "string"
+    },
+    "pcb_revision": {
+      "title": "Pcb Revision",
+      "type": "string"
+    },
+    "captured_at": {
+      "format": "date-time",
+      "title": "Captured At",
+      "type": "string"
+    },
+    "model": {
+      "$ref": "#/$defs/AoiModelBlock"
+    },
+    "images": {
+      "items": {
+        "$ref": "#/$defs/AoiImage"
+      },
+      "minItems": 1,
+      "title": "Images",
+      "type": "array"
+    },
+    "claimed_provenance": {
+      "default": "PHYSICAL",
+      "enum": [
+        "PHYSICAL",
+        "SYNTHETIC"
+      ],
+      "title": "Claimed Provenance",
+      "type": "string"
+    }
+  },
+  "required": [
+    "station_id",
+    "instrument_id",
+    "test_id",
+    "unit_serial",
+    "pcb_revision",
+    "captured_at",
+    "model",
+    "images"
+  ],
+  "title": "N4AoiInference",
+  "type": "object"
+}

@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n3_vendor_profile",
+  "$defs": {
+    "Money": {
+      "additionalProperties": false,
+      "properties": {
+        "amount": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Amount"
+        },
+        "currency": {
+          "pattern": "^[A-Z]{3}$",
+          "title": "Currency",
+          "type": "string"
+        }
+      },
+      "required": [
+        "amount",
+        "currency"
+      ],
+      "title": "Money",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "vendor_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+      "title": "Vendor Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "name": {
+      "title": "Name",
+      "type": "string"
+    },
+    "capabilities": {
+      "items": {
+        "enum": [
+          "ELECTRICAL_SCHEMATIC",
+          "PCB_LAYOUT",
+          "DFM",
+          "CIRCUIT_SIMULATION",
+          "MECHANICAL",
+          "THERMAL"
+        ],
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Capabilities",
+      "type": "array"
+    },
+    "ip_terms": {
+      "enum": [
+        "ASSIGNED_TO_CUSTOMER",
+        "EXCLUSIVE_LICENSE"
+      ],
+      "title": "Ip Terms",
+      "type": "string"
+    },
+    "nda_on_file": {
+      "title": "Nda On File",
+      "type": "boolean"
+    },
+    "max_budget": {
+      "$ref": "#/$defs/Money"
+    },
+    "onboarded_by": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Onboarded By"
+    },
+    "onboarded_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Onboarded At"
+    }
+  },
+  "required": [
+    "vendor_id",
+    "tenant_id",
+    "name",
+    "capabilities",
+    "ip_terms",
+    "nda_on_file",
+    "max_budget"
+  ],
+  "title": "N3VendorProfile",
+  "type": "object"
+}

@@ -15,3 +15,17 @@ streamlit>=1.35.0
 plotly>=5.22.0
 # MQTT broker (optional — required for live PLC streaming)
 paho-mqtt>=2.0.0
+# Project Athena — production orchestration loop
+pydantic>=2.6          # ATHENA DQ gateway (Canonical I-O Manifest, *.v1 schemas)
+httpx>=0.27.0
+fastapi>=0.111.0
+uvicorn[standard]>=0.30.0
+boto3>=1.34.0
+streamlit>=1.40.0
+# ATHENA data pipeline (data_pipeline/)
+pyyaml>=6.0
+jsonschema>=4.18
+pyarrow>=14.0
+pandas>=2.1
+pillow>=10.0
+# optional: h5py (PDEBench HDF5), scipy (NASA/Paderborn .mat files)

@@ -1,43 +1,160 @@
-"""CLI entry point for the Navadmin RAG pipeline."""
+"""CLI entry point for the Navadmin RAG pipeline.
+
+Every ingest command passes the ATHENA DQ Gateway before anything is indexed: supply the
+artifact's Canonical I-O Manifest with ``--submission`` (``dq-manifest`` generates one over the
+exact bytes the command reads), the tenant with ``--tenant`` and a persistent registry with
+``--dq-registry`` (rights grants, approvers, released revisions).
+"""
 
 import argparse
+import json
 import os
 import sys
 
+DEFAULT_DQ_REGISTRY = "data/.dq_registry.json"
 
-def cmd_ingest(args) -> None:
+
+# ---------------------------------------------------------------------------
+# DQ gateway helpers
+# ---------------------------------------------------------------------------
+
+def _dq_gateway(args):
+    from rag.dq_gateway import ArtifactRegistry, DQGateway
+
+    return DQGateway(registry=ArtifactRegistry(getattr(args, "dq_registry", None) or DEFAULT_DQ_REGISTRY))
+
+
+def _make_pipeline(args):
+    """RAGPipeline wired to a persistent DQ registry, tenant and enforce/sandbox mode."""
     from rag.pipeline import RAGPipeline
 
-    pipeline = RAGPipeline()
-    count = pipeline.ingest(args.path)
+    tenant = getattr(args, "tenant", None) or os.environ.get("ATHENA_TENANT_ID")
+    return RAGPipeline(dq_gateway=_dq_gateway(args), tenant_id=tenant,
+                       dq_mode="sandbox" if getattr(args, "dq_sandbox", False) else "enforce",
+                       actor_id=getattr(args, "actor", None) or "rag-pipeline")
+
+
+def _load_submission(path):
+    """Read a submission JSON: {"manifest": {...}, "required_critical"?, "use_for_training"?}.
+
+    The payload and bytes are never taken from this file: the pipeline builds them from what
+    it actually reads. A file of the form {"by_file": {"<name>": {...}}} maps PDFs in a directory.
+    """
+    if not path:
+        return None
+    with open(path, encoding="utf-8") as fh:
+        data = json.load(fh)
+    if "by_file" in data:
+        return {name: _load_submission_obj(v) for name, v in data["by_file"].items()}
+    return _load_submission_obj(data)
+
+
+def _load_submission_obj(data):
+    from rag.dq_gateway import ArtifactSubmission
+
+    unknown = set(data) - {"manifest", "required_critical", "use_for_training", "ai_provenance"}
+    if unknown:
+        raise SystemExit(f"submission file has unsupported keys {sorted(unknown)} "
+                         "(payload/content are derived from the ingested bytes)")
+    return ArtifactSubmission(manifest=data["manifest"], required_critical=data.get("required_critical", []),
+                              use_for_training=data.get("use_for_training", False),
+                              ai_provenance=data.get("ai_provenance"))
+
+
+def _print_decision(decision) -> None:
+    print(f"DQ gate: {decision.quality_gate}  artifact={decision.artifact_ref}  "
+          f"score={decision.weighted_score}  event={decision.event_id}")
+    for r in decision.failed_rules:
+        print(f"  ✗ {r.rule_id} [{r.severity}/{r.action_on_fail}] {r.error_code}: {r.message}")
+    for reason in decision.reasons:
+        print(f"  · {reason}")
+
+
+def _gated(args, pipeline, run):
+    """Run an ingest call; on HOLD with --approve-as, record the sign-off and re-run once."""
+    from rag.dq_gateway import DQGateRejected, DQGatewayError
+
+    try:
+        return run()
+    except DQGateRejected as exc:
+        d = exc.decision
+        if d is None:
+            raise SystemExit(str(exc))
+        if d.quality_gate == "HOLD" and getattr(args, "approve_as", None):
+            try:
+                approved = pipeline.dq_gateway.approve(d.event_id, args.approve_as, pipeline.tenant_id,
+                                                       notes="CLI sign-off")
+            except DQGatewayError as err:
+                _print_decision(d)
+                raise SystemExit(f"approval refused: {err}")
+            if approved.quality_gate == "RELEASED":
+                print(f"Approved by {args.approve_as}: {approved.artifact_ref} RELEASED")
+                return run()
+            d = approved
+        _print_decision(d)
+        raise SystemExit(2)
+
+
+def cmd_ingest(args) -> None:
+    pipeline = _make_pipeline(args)
+    sub = _load_submission(args.submission)
+    count = _gated(args, pipeline, lambda: pipeline.ingest(args.path, sub))
     print(f"Ingested {count} chunk(s) from: {args.path}")
 
 
 def cmd_ingest_telemetry(args) -> None:
     """Parse NexTest tester log files and index as structured failure events."""
-    from rag.pipeline import RAGPipeline
-
-    pipeline = RAGPipeline()
-    count = pipeline.ingest_telemetry(args.path)
+    pipeline = _make_pipeline(args)
+    sub = _load_submission(args.submission)
+    count = _gated(args, pipeline, lambda: pipeline.ingest_telemetry(args.path, sub))
     print(f"Ingested {count} telemetry chunk(s) from: {args.path}")
 
 
 def cmd_ingest_fea(args) -> None:
     """Parse FEA mesh JSON/CSV and index stress voxels."""
-    from rag.pipeline import RAGPipeline
-
-    pipeline = RAGPipeline()
-    count = pipeline.ingest_fea(args.path)
+    pipeline = _make_pipeline(args)
+    sub = _load_submission(args.submission)
+    count = _gated(args, pipeline, lambda: pipeline.ingest_fea(args.path, sub))
     print(f"Ingested {count} FEA voxel chunk(s) from: {args.path}")
 
 
 def cmd_ingest_cad(args) -> None:
     """Parse STEP file or CAD JSON manifest and index components."""
-    from rag.pipeline import RAGPipeline
-
-    pipeline = RAGPipeline()
-    count = pipeline.ingest_cad(args.path)
+    pipeline = _make_pipeline(args)
+    sub = _load_submission(args.submission)
+    count = _gated(args, pipeline, lambda: pipeline.ingest_cad(args.path, sub))
     print(f"Ingested {count} CAD component chunk(s) from: {args.path}")
+
+
+def cmd_dq_manifest(args) -> None:
+    """Generate a Canonical I-O Manifest over the exact bytes an ingest command will read."""
+    from rag.dq_gateway import build_manifest
+    from rag.dq_gateway.sources import read_kind
+
+    gw = _dq_gateway(args)
+    content, _ = read_kind(args.path, args.kind)
+    sources = [s for s in (args.sources or "").split(",") if s]
+    if not sources:
+        grant = gw.registry.rights_grant(args.project)
+        if grant is None:
+            raise SystemExit(f"project {args.project} has no G0 rights grant in {args.dq_registry}; "
+                             "pass --sources or record the grant first")
+        sources = [grant.ref]
+    manifest = build_manifest(
+        registry=gw.registry, project_id=args.project, node_id=args.node, artifact_id=args.artifact_id,
+        revision=args.rev, output_schema="document_corpus.v1", content=content, sources=sources,
+        evidence_ids=[e for e in args.evidence.split(",") if e], rights=args.rights,
+        classification=args.classification, origin=args.origin, model_or_tool=args.tool,
+        connector_mode=args.connector_mode, input_schema=args.input_schema,
+    )
+    out = json.dumps({"manifest": manifest}, indent=2, default=str)
+    if args.out:
+        with open(args.out, "w", encoding="utf-8") as fh:
+            fh.write(out + "\n")
+        print(f"Manifest for {args.path} ({args.kind}) written to {args.out}; "
+              f"output_file_sha256={manifest['output_file_sha256']}")
+    else:
+        print(out)
 
 
 def _parse_spatial_bbox(bbox_str: str) -> dict:
@@ -123,32 +240,44 @@ def cmd_query(args) -> None:
     print()
 
 
-def cmd_ingest_drive(args) -> None:
-    """Ingest documents from the Aviator Google Drive folders."""
-    from rag.ingestion.drive_loader import AviatorDriveLoader
-    from rag.pipeline import RAGPipeline
-    from rag.chunking.strategies import ChunkingStrategy
+def cmd_dq_seed_demo(args) -> None:
+    """Seed the SYNTHETIC demo tenant (project, NDA, G0 grant, approver) into the DQ registry."""
+    from rag.dq_gateway.demo import seed_demo
 
-    pipeline = RAGPipeline()
+    info = seed_demo(_dq_gateway(args))
+    if not info["seeded"]:
+        print(f"Demo tenant already present in {args.dq_registry}.")
+        return
+    print(f"Seeded tenant '{info['tenant']}', project '{info['project']}' into {args.dq_registry}.\n"
+          f"Approver: {info['approver']} (gates G1–G5, G7). Evidence: EV-NDA-DEMO. All demo data is SYNTHETIC.")
+
+
+def cmd_ingest_drive(args) -> None:
+    """Ingest documents from the Aviator Google Drive folders (through the DQ gateway)."""
+    from rag.ingestion.drive_loader import AviatorDriveLoader
+    from rag.dq_gateway.sources import aviator_mirror_bundle
+
+    pipeline = _make_pipeline(args)
+    sub = _load_submission(args.submission)
     loader = AviatorDriveLoader(credentials_path=args.credentials)
 
     if args.local_mirror:
         docs = loader.load_local_aviator_mirror(args.local_mirror)
+        content, files = aviator_mirror_bundle(args.local_mirror)
     else:
+        # The live Drive loader yields parsed text, not the downloaded bytes, so nothing can be
+        # checked against output_file_sha256: DQ05 quarantines it. Mirror locally to ingest.
         docs = loader.load_all_aviator()
+        content, files = None, {}
 
     print(f"Loaded {len(docs)} document(s) from Drive.")
     if not docs:
         print("No documents found — nothing to ingest.")
         return
 
-    embedder = pipeline._embedder if pipeline.config.chunking.strategy == "semantic" else None
-    chunker = ChunkingStrategy(pipeline.config.chunking)
-    chunks = chunker.chunk(docs, embedder=embedder)
-    print(f"Created {len(chunks)} chunk(s). Embedding and storing …")
-    pipeline._vector_store.add_chunks(chunks)
-    pipeline._retriever.index_for_bm25(chunks)
-    print(f"Done. {len(chunks)} chunk(s) indexed from Aviator Drive data.")
+    count = _gated(args, pipeline, lambda: pipeline.ingest_documents(
+        docs, sub, source_kind="document", content=content, file_bytes=files))
+    print(f"Done. {count} chunk(s) indexed from Aviator Drive data.")
 
 
 def cmd_reset(args) -> None:
@@ -296,12 +425,17 @@ def cmd_ipc_check(args) -> None:
 
 
 def cmd_ingest_pdf(args) -> None:
-    """Ingest a PDF file or directory with section and table detection."""
-    from rag.pipeline import RAGPipeline
+    """Ingest a PDF file or directory with section and table detection (through the DQ gateway)."""
+    from pathlib import Path
     from rag.ingestion.pdf_pipeline import PDFPipeline
 
-    pipeline = RAGPipeline()
-    pdf_pipeline = PDFPipeline(pipeline)
+    pipeline = _make_pipeline(args)
+    sub = _load_submission(args.submission)
+    if isinstance(sub, dict):
+        resolver = lambda path: sub.get(Path(path).name)  # noqa: E731
+    else:
+        resolver = lambda path: sub  # noqa: E731
+    pdf_pipeline = PDFPipeline(pipeline, submission_for=resolver)
 
     if os.path.isdir(args.path):
         results = pdf_pipeline.ingest_local_directory(args.path)
@@ -312,12 +446,17 @@ def cmd_ingest_pdf(args) -> None:
 
 
 def cmd_ingest_pdf_drive(args) -> None:
-    """Sync and ingest PDFs from Google Drive Aviator folders."""
-    from rag.pipeline import RAGPipeline
+    """Sync and ingest PDFs from Google Drive Aviator folders (through the DQ gateway)."""
+    from pathlib import Path
     from rag.ingestion.drive_sync import DrivePDFSync
     from rag.ingestion.pdf_pipeline import PDFPipeline
 
-    pipeline = RAGPipeline()
+    pipeline = _make_pipeline(args)
+    sub = _load_submission(args.submission)
+    if isinstance(sub, dict):
+        pipeline.dq_submission_for = lambda path: sub.get(Path(path).name)
+    elif sub is not None:
+        raise SystemExit("ingest-pdf-drive needs a {\"by_file\": {...}} submission file (one manifest per PDF)")
     sync = DrivePDFSync(
         rag_pipeline=pipeline,
         credentials_path=args.credentials,
@@ -344,6 +483,71 @@ def cmd_pdf_drive_status(args) -> None:
 
     manifest = DriveSyncManifest(args.manifest)
     print(manifest.status_report())
+
+
+def cmd_athena_run(args) -> None:
+    """Execute Project Athena orchestration loop with optional RAG integration."""
+    from athena.orchestrator import AthenaOrchestrator
+
+    rag = None
+    try:
+        from rag.pipeline import RAGPipeline
+        print("Loading RAG pipeline …")
+        rag = RAGPipeline()
+        print("  ✓ RAG pipeline ready for RCA context")
+    except Exception as exc:
+        print(f"⚠  RAG pipeline unavailable ({type(exc).__name__}): running Athena without RCA context")
+
+    print("Starting Project Athena orchestrator …")
+    orchestrator = AthenaOrchestrator(rag_pipeline=rag)
+
+    print("Starting end-to-end hardware production loop …\n")
+    run = orchestrator.run(deal_id=args.deal_id)
+
+    # Pretty-print the run
+    sep = "=" * 70
+    print(f"\n{sep}")
+    print(f"  PROJECT ATHENA RUN  {run.run_id}")
+    print(f"  Status : {run.status.value.upper()}")
+    print(f"  Elapsed: {(run.completed_at - run.started_at).total_seconds():.1f}s")
+    print(sep)
+
+    if run.demand:
+        d = run.demand
+        print(f"\n[1] DEMAND  {d.signal.deal_id}  {d.recommended_build_qty}× units")
+
+    if run.sourcing:
+        s = run.sourcing
+        print(f"[2] SOURCING  {len(s.bom.lines)} parts  {s.shortage_count} shortages  risk={s.sourcing_risk}")
+
+    if run.simulation:
+        pv = run.simulation.physical_validation
+        print(f"[3] SIMULATION  physical={'PASS' if pv.passed else 'FAIL'}  "
+              f"stress={pv.max_stress_mpa}MPa  thermal={pv.thermal_delta_c}°C")
+
+    if run.execution:
+        ex = run.execution
+        print(f"[4] EXECUTION  ${ex.total_cost_usd:,.0f}  {ex.lead_time_days}d lead")
+
+    if run.quality:
+        q = run.quality
+        print(f"[5] QUALITY  yield={q.yield_rate*100:.1f}%  "
+              f"raas=${q.total_raas_monthly_usd:,.0f}/mo  yass=${q.total_yass_annual_usd:,.0f}/yr")
+
+    if run.errors:
+        print(f"\nWarnings ({len(run.errors)}):")
+        for e in run.errors:
+            print(f"  ⚠ {e}")
+
+    print(f"\n{sep}\n")
+
+    if args.json_out:
+        import json
+        with open(args.json_out, "w") as f:
+            json.dump(run.model_dump(mode="json"), f, indent=2, default=str)
+        print(f"Full run data written to {args.json_out}\n")
+
+    sys.exit(0 if run.status.value in ("success", "partial") else 1)
 
 
 def cmd_fishbone_diagram(args) -> None:
@@ -399,11 +603,24 @@ def build_parser() -> argparse.ArgumentParser:
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
+    def add_dq_args(p, submission_help="Submission JSON with the Canonical I-O Manifest (see dq-manifest)"):
+        g = p.add_argument_group("ATHENA DQ gateway")
+        g.add_argument("--submission", metavar="JSON", default=None, help=submission_help)
+        g.add_argument("--tenant", default=None, help="Tenant ID (default: $ATHENA_TENANT_ID)")
+        g.add_argument("--dq-registry", metavar="PATH", default=os.environ.get("ATHENA_DQ_REGISTRY", DEFAULT_DQ_REGISTRY),
+                       help=f"Persistent DQ registry (default: {DEFAULT_DQ_REGISTRY})")
+        g.add_argument("--dq-sandbox", action="store_true",
+                       help="Also index HOLD artifacts whose origin is SYNTHETIC (tagged dq_sandbox in Qdrant)")
+        g.add_argument("--actor", default=None, help="Submitting actor ID (default: rag-pipeline)")
+        g.add_argument("--approve-as", metavar="REVIEWER", default=None,
+                       help="Registered approver signing off a HOLD result (four-eyes: not the submitter)")
+
     # ingest
     ingest_parser = subparsers.add_parser(
         "ingest", help="Load documents into the vector index"
     )
     ingest_parser.add_argument("path", help="Path to a file or directory to ingest")
+    add_dq_args(ingest_parser)
     ingest_parser.set_defaults(func=cmd_ingest)
 
     # ingest-telemetry
@@ -414,6 +631,7 @@ def build_parser() -> argparse.ArgumentParser:
     ingest_tel_parser.add_argument(
         "path", help="Path to a NexTest .log/.txt file or directory of log files"
     )
+    add_dq_args(ingest_tel_parser)
     ingest_tel_parser.set_defaults(func=cmd_ingest_telemetry)
 
     # ingest-fea
@@ -424,6 +642,7 @@ def build_parser() -> argparse.ArgumentParser:
     ingest_fea_parser.add_argument(
         "path", help="Path to FEA mesh file (.json or .csv)"
     )
+    add_dq_args(ingest_fea_parser)
     ingest_fea_parser.set_defaults(func=cmd_ingest_fea)
 
     # ingest-cad
@@ -434,6 +653,7 @@ def build_parser() -> argparse.ArgumentParser:
     ingest_cad_parser.add_argument(
         "path", help="Path to STEP file (.stp/.step) or CAD JSON manifest (.json)"
     )
+    add_dq_args(ingest_cad_parser)
     ingest_cad_parser.set_defaults(func=cmd_ingest_cad)
 
     # query
@@ -483,6 +703,7 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="Load from a local directory mirror instead of the live Drive API (e.g. data/aviator)",
     )
+    add_dq_args(drive_parser)
     drive_parser.set_defaults(func=cmd_ingest_drive)
 
     # reset
@@ -574,6 +795,7 @@ def build_parser() -> argparse.ArgumentParser:
     ingest_pdf_parser.add_argument(
         "path", help="Path to a .pdf file or directory containing PDFs"
     )
+    add_dq_args(ingest_pdf_parser)
     ingest_pdf_parser.set_defaults(func=cmd_ingest_pdf)
 
     # ingest-pdf-drive
@@ -601,7 +823,45 @@ def build_parser() -> argparse.ArgumentParser:
         "--manifest", metavar="PATH", default="data/.drive_manifest.json",
         help="Path to the sync manifest JSON (default: data/.drive_manifest.json)",
     )
+    add_dq_args(ingest_pdf_drive_parser, '{"by_file": {"<pdf name>": {"manifest": {...}}}} — one manifest per PDF')
     ingest_pdf_drive_parser.set_defaults(func=cmd_ingest_pdf_drive)
+
+    # dq-manifest
+    dq_manifest_parser = subparsers.add_parser(
+        "dq-manifest",
+        help="Generate a Canonical I-O Manifest (document_corpus.v1) over the bytes an ingest command reads",
+    )
+    dq_manifest_parser.add_argument("path", help="File or directory that will be ingested")
+    dq_manifest_parser.add_argument("--kind", required=True,
+                                    choices=["document", "telemetry_log", "fea_mesh", "cad", "pdf", "drive_mirror"],
+                                    help="Which ingest command will read it (decides the hashed file set)")
+    dq_manifest_parser.add_argument("--project", required=True)
+    dq_manifest_parser.add_argument("--node", required=True, choices=["N1", "N2", "N3", "N4", "N5", "N6", "N7", "N8", "X"])
+    dq_manifest_parser.add_argument("--artifact-id", required=True)
+    dq_manifest_parser.add_argument("--rev", required=True, help="Immutable revision label")
+    dq_manifest_parser.add_argument("--rights", required=True,
+                                    choices=["APPROVED", "APPROVED_NO_TRAIN", "UNVERIFIED", "PROHIBITED"])
+    dq_manifest_parser.add_argument("--classification", required=True,
+                                    choices=["PUBLIC", "INTERNAL", "CONFIDENTIAL", "RESTRICTED"])
+    dq_manifest_parser.add_argument("--origin", required=True, choices=["REAL", "SYNTHETIC", "DERIVED"])
+    dq_manifest_parser.add_argument("--tool", required=True, help="<kind>:<name>[@version], e.g. tool:nextest@4.2")
+    dq_manifest_parser.add_argument("--evidence", required=True, help="Comma-separated evidence IDs (e.g. the NDA)")
+    dq_manifest_parser.add_argument("--sources", default=None,
+                                    help="Comma-separated upstream refs ID@REV (default: the project's G0 grant)")
+    dq_manifest_parser.add_argument("--connector-mode", default="CLI",
+                                    choices=["API", "SDK", "MCP", "CLI", "BATCH", "PORTAL", "MANUAL"])
+    dq_manifest_parser.add_argument("--input-schema", default="raw_file.v1")
+    dq_manifest_parser.add_argument("--dq-registry", metavar="PATH",
+                                    default=os.environ.get("ATHENA_DQ_REGISTRY", DEFAULT_DQ_REGISTRY))
+    dq_manifest_parser.add_argument("--out", metavar="JSON", default=None, help="Write the submission file here")
+    dq_manifest_parser.set_defaults(func=cmd_dq_manifest)
+
+    # dq-seed-demo
+    dq_seed_parser = subparsers.add_parser(
+        "dq-seed-demo", help="Seed the SYNTHETIC demo tenant into the DQ registry")
+    dq_seed_parser.add_argument("--dq-registry", metavar="PATH",
+                                default=os.environ.get("ATHENA_DQ_REGISTRY", DEFAULT_DQ_REGISTRY))
+    dq_seed_parser.set_defaults(func=cmd_dq_seed_demo)
 
     # pdf-drive-status
     pdf_status_parser = subparsers.add_parser(
@@ -613,6 +873,22 @@ def build_parser() -> argparse.ArgumentParser:
         help="Path to the sync manifest JSON (default: data/.drive_manifest.json)",
     )
     pdf_status_parser.set_defaults(func=cmd_pdf_drive_status)
+
+    # fishbone-diagram
+    # athena-run
+    athena_parser = subparsers.add_parser(
+        "athena-run",
+        help="Execute Project Athena end-to-end production orchestration with RAG integration",
+    )
+    athena_parser.add_argument(
+        "--deal-id", type=str, default=None,
+        help="Pecan AI deal ID to forecast (optional; mock if unset)",
+    )
+    athena_parser.add_argument(
+        "--json-out", type=str, default=None, metavar="PATH",
+        help="Write full run JSON to this file",
+    )
+    athena_parser.set_defaults(func=cmd_athena_run)
 
     # fishbone-diagram
     fishbone_parser = subparsers.add_parser(

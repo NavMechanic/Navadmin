@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n5_supplier_review_request",
+  "additionalProperties": false,
+  "properties": {
+    "decision": {
+      "enum": [
+        "APPROVED",
+        "REJECTED",
+        "SUSPENDED"
+      ],
+      "title": "Decision",
+      "type": "string"
+    },
+    "attestation": {
+      "description": "what the reviewer checked (identity, sites, channel proofs)",
+      "minLength": 20,
+      "title": "Attestation",
+      "type": "string"
+    },
+    "approved_until": {
+      "anyOf": [
+        {
+          "format": "date",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Approved Until"
+    },
+    "verified_channel_manufacturers": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Verified Channel Manufacturers",
+      "type": "array"
+    }
+  },
+  "required": [
+    "decision",
+    "attestation"
+  ],
+  "title": "N5SupplierReviewRequest",
+  "type": "object"
+}

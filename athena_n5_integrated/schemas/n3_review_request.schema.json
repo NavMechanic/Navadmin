@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n3_review_request",
+  "additionalProperties": false,
+  "properties": {
+    "assessment_id": {
+      "title": "Assessment Id",
+      "type": "string"
+    },
+    "decision": {
+      "enum": [
+        "APPROVED",
+        "REJECTED"
+      ],
+      "title": "Decision",
+      "type": "string"
+    },
+    "reason": {
+      "minLength": 5,
+      "title": "Reason",
+      "type": "string"
+    }
+  },
+  "required": [
+    "assessment_id",
+    "decision",
+    "reason"
+  ],
+  "title": "N3ReviewRequest",
+  "type": "object"
+}

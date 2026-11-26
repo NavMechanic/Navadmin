@@ -1,0 +1,155 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n3_action",
+  "$defs": {
+    "RankedProposal": {
+      "additionalProperties": false,
+      "properties": {
+        "rank": {
+          "title": "Rank",
+          "type": "integer"
+        },
+        "action_id": {
+          "title": "Action Id",
+          "type": "string"
+        },
+        "action_type": {
+          "title": "Action Type",
+          "type": "string"
+        },
+        "addresses": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Addresses",
+          "type": "array"
+        },
+        "total_cost": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Total Cost"
+        },
+        "net_value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Net Value"
+        },
+        "recommended": {
+          "title": "Recommended",
+          "type": "boolean"
+        },
+        "status": {
+          "const": "PROPOSED_NOT_EXECUTED",
+          "default": "PROPOSED_NOT_EXECUTED",
+          "title": "Status",
+          "type": "string"
+        },
+        "rationale": {
+          "title": "Rationale",
+          "type": "string"
+        }
+      },
+      "required": [
+        "rank",
+        "action_id",
+        "action_type",
+        "addresses",
+        "total_cost",
+        "net_value",
+        "recommended",
+        "rationale"
+      ],
+      "title": "RankedProposal",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "N3Action.v1",
+      "default": "N3Action.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "proposal_id": {
+      "title": "Proposal Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "assessment_id": {
+      "title": "Assessment Id",
+      "type": "string"
+    },
+    "assessment_decision": {
+      "enum": [
+        "PASS",
+        "REWORK",
+        "BLOCK"
+      ],
+      "title": "Assessment Decision",
+      "type": "string"
+    },
+    "decision_unchanged": {
+      "const": true,
+      "default": true,
+      "title": "Decision Unchanged",
+      "type": "boolean"
+    },
+    "ranked": {
+      "items": {
+        "$ref": "#/$defs/RankedProposal"
+      },
+      "title": "Ranked",
+      "type": "array"
+    },
+    "blocked": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Blocked",
+      "type": "array"
+    },
+    "note": {
+      "default": "Rework proposals are recommendations only. They never change the assessment decision; hard safety and engineering findings stay BLOCK / REWORK until a new delivery passes.",
+      "title": "Note",
+      "type": "string"
+    },
+    "created_by": {
+      "title": "Created By",
+      "type": "string"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "proposal_id",
+    "tenant_id",
+    "assessment_id",
+    "assessment_decision",
+    "ranked",
+    "blocked",
+    "created_by",
+    "created_at"
+  ],
+  "title": "N3Action",
+  "type": "object"
+}

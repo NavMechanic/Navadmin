@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n3_action_request",
+  "$defs": {
+    "ActionCandidate": {
+      "additionalProperties": false,
+      "properties": {
+        "action_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+          "title": "Action Id",
+          "type": "string"
+        },
+        "action_type": {
+          "enum": [
+            "FIX_IN_HOUSE",
+            "VENDOR_REWORK",
+            "RERUN_SIMULATION",
+            "ADD_CORNER",
+            "RELAYOUT",
+            "COMPONENT_SWAP",
+            "ADD_THERMAL_MITIGATION",
+            "WAIVER_REQUEST"
+          ],
+          "title": "Action Type",
+          "type": "string"
+        },
+        "addresses": {
+          "description": "finding codes this action is meant to resolve",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Addresses",
+          "type": "array"
+        },
+        "cost": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Cost"
+        },
+        "delay_days": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Delay Days",
+          "type": "integer"
+        },
+        "delay_cost_per_day": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": "0",
+          "title": "Delay Cost Per Day"
+        },
+        "risk_reduction_value": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "description": "user-supplied value of resolving the findings",
+          "title": "Risk Reduction Value"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        }
+      },
+      "required": [
+        "action_id",
+        "action_type",
+        "addresses",
+        "cost",
+        "risk_reduction_value"
+      ],
+      "title": "ActionCandidate",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "assessment_id": {
+      "title": "Assessment Id",
+      "type": "string"
+    },
+    "currency": {
+      "pattern": "^[A-Z]{3}$",
+      "title": "Currency",
+      "type": "string"
+    },
+    "budget_cap": {
+      "anyOf": [
+        {
+          "minimum": 0.0,
+          "type": "number"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Budget Cap"
+    },
+    "candidates": {
+      "items": {
+        "$ref": "#/$defs/ActionCandidate"
+      },
+      "minItems": 1,
+      "title": "Candidates",
+      "type": "array"
+    }
+  },
+  "required": [
+    "assessment_id",
+    "currency",
+    "candidates"
+  ],
+  "title": "N3ActionRequest",
+  "type": "object"
+}

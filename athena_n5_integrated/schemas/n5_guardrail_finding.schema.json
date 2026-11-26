@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n5_guardrail_finding",
+  "additionalProperties": false,
+  "properties": {
+    "finding_id": {
+      "title": "Finding Id",
+      "type": "string"
+    },
+    "code": {
+      "title": "Code",
+      "type": "string"
+    },
+    "outcome": {
+      "enum": [
+        "BLOCK",
+        "REWORK",
+        "INFO"
+      ],
+      "title": "Outcome",
+      "type": "string"
+    },
+    "level": {
+      "enum": [
+        "OFFER",
+        "LINE",
+        "REPORT"
+      ],
+      "title": "Level",
+      "type": "string"
+    },
+    "message": {
+      "title": "Message",
+      "type": "string"
+    },
+    "line": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Line"
+    },
+    "offer_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Offer Id"
+    },
+    "quote_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Quote Id"
+    },
+    "supplier_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Supplier Id"
+    }
+  },
+  "required": [
+    "finding_id",
+    "code",
+    "outcome",
+    "level",
+    "message"
+  ],
+  "title": "N5GuardrailFinding",
+  "type": "object"
+}

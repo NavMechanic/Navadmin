@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n4_finding",
+  "additionalProperties": false,
+  "properties": {
+    "finding_id": {
+      "title": "Finding Id",
+      "type": "string"
+    },
+    "code": {
+      "title": "Code",
+      "type": "string"
+    },
+    "outcome": {
+      "enum": [
+        "BLOCK",
+        "REWORK",
+        "INFO"
+      ],
+      "title": "Outcome",
+      "type": "string"
+    },
+    "category": {
+      "title": "Category",
+      "type": "string"
+    },
+    "message": {
+      "title": "Message",
+      "type": "string"
+    },
+    "test_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Test Id"
+    },
+    "requirement_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Requirement Id"
+    },
+    "evidence_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Evidence Ids",
+      "type": "array"
+    }
+  },
+  "required": [
+    "finding_id",
+    "code",
+    "outcome",
+    "category",
+    "message"
+  ],
+  "title": "N4Finding",
+  "type": "object"
+}

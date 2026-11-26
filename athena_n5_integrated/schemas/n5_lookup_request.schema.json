@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n5_lookup_request",
+  "additionalProperties": false,
+  "properties": {
+    "connectors": {
+      "items": {
+        "enum": [
+          "DIGIKEY",
+          "MOUSER",
+          "NEXAR"
+        ],
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Connectors",
+      "type": "array"
+    },
+    "lines": {
+      "anyOf": [
+        {
+          "items": {
+            "type": "integer"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "BOM lines to look up (default: all)",
+      "title": "Lines"
+    },
+    "supplier_ids": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "description": "connector → N5 supplier record that sells through it",
+      "title": "Supplier Ids",
+      "type": "object"
+    }
+  },
+  "required": [
+    "connectors"
+  ],
+  "title": "N5LookupRequest",
+  "type": "object"
+}

@@ -1,0 +1,339 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n4_design_intake",
+  "$defs": {
+    "DesignRef": {
+      "additionalProperties": false,
+      "properties": {
+        "scope": {
+          "title": "Scope",
+          "type": "string"
+        },
+        "artifact": {
+          "description": "DSN ARTIFACT_ID@REVISION",
+          "title": "Artifact",
+          "type": "string"
+        },
+        "design_revision": {
+          "title": "Design Revision",
+          "type": "string"
+        },
+        "payload_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Payload Sha256",
+          "type": "string"
+        },
+        "manifest_id": {
+          "title": "Manifest Id",
+          "type": "string"
+        },
+        "approval_id": {
+          "title": "Approval Id",
+          "type": "string"
+        },
+        "n3_release_id": {
+          "title": "N3 Release Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "scope",
+        "artifact",
+        "design_revision",
+        "payload_sha256",
+        "manifest_id",
+        "approval_id",
+        "n3_release_id"
+      ],
+      "title": "DesignRef",
+      "type": "object"
+    },
+    "Hazard": {
+      "additionalProperties": false,
+      "description": "A product hazard from the N2 risk analysis. Every requirement it links becomes safety-critical\nfor N4: 100 % physical verification coverage before release.",
+      "properties": {
+        "hazard_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+          "title": "Hazard Id",
+          "type": "string"
+        },
+        "description": {
+          "minLength": 3,
+          "title": "Description",
+          "type": "string"
+        },
+        "severity": {
+          "maximum": 10,
+          "minimum": 1,
+          "title": "Severity",
+          "type": "integer"
+        },
+        "requirement_ids": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Requirement Ids",
+          "type": "array"
+        },
+        "standard_ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "e.g. IEC 62368-1 clause 5.4.9",
+          "title": "Standard Ref"
+        }
+      },
+      "required": [
+        "hazard_id",
+        "description",
+        "severity",
+        "requirement_ids"
+      ],
+      "title": "Hazard",
+      "type": "object"
+    },
+    "Tolerance": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "ABS",
+            "PCT"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "plus": {
+          "title": "Plus",
+          "type": "number"
+        },
+        "minus": {
+          "title": "Minus",
+          "type": "number"
+        }
+      },
+      "required": [
+        "kind",
+        "plus",
+        "minus"
+      ],
+      "title": "Tolerance",
+      "type": "object"
+    },
+    "TraceRequirement": {
+      "additionalProperties": false,
+      "properties": {
+        "req_id": {
+          "title": "Req Id",
+          "type": "string"
+        },
+        "parameter": {
+          "title": "Parameter",
+          "type": "string"
+        },
+        "value": {
+          "default": null,
+          "title": "Value"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit"
+        },
+        "tolerance": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Tolerance"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "value_origin": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "DERIVED values (N0 arithmetic) need no own test",
+          "title": "Value Origin"
+        },
+        "safety_critical": {
+          "title": "Safety Critical",
+          "type": "boolean"
+        },
+        "hazard_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Hazard Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "req_id",
+        "parameter",
+        "safety_critical"
+      ],
+      "title": "TraceRequirement",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "N4DesignIntake.v1",
+      "default": "N4DesignIntake.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "intake_id": {
+      "title": "Intake Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "project_id": {
+      "title": "Project Id",
+      "type": "string"
+    },
+    "prd_id": {
+      "title": "Prd Id",
+      "type": "string"
+    },
+    "prd_artifact": {
+      "title": "Prd Artifact",
+      "type": "string"
+    },
+    "prd_revision": {
+      "title": "Prd Revision",
+      "type": "string"
+    },
+    "prd_payload_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Prd Payload Sha256",
+      "type": "string"
+    },
+    "design_refs": {
+      "items": {
+        "$ref": "#/$defs/DesignRef"
+      },
+      "minItems": 1,
+      "title": "Design Refs",
+      "type": "array"
+    },
+    "design_revision": {
+      "title": "Design Revision",
+      "type": "string"
+    },
+    "pcb_revision": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Pcb Revision"
+    },
+    "requirements": {
+      "items": {
+        "$ref": "#/$defs/TraceRequirement"
+      },
+      "title": "Requirements",
+      "type": "array"
+    },
+    "hazards": {
+      "items": {
+        "$ref": "#/$defs/Hazard"
+      },
+      "title": "Hazards",
+      "type": "array"
+    },
+    "simulation_corners": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Simulation Corners",
+      "type": "array"
+    },
+    "release_source_id": {
+      "title": "Release Source Id",
+      "type": "string"
+    },
+    "synthetic": {
+      "title": "Synthetic",
+      "type": "boolean"
+    },
+    "locked_by": {
+      "title": "Locked By",
+      "type": "string"
+    },
+    "locked_at": {
+      "format": "date-time",
+      "title": "Locked At",
+      "type": "string"
+    },
+    "intake_sha256": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Intake Sha256"
+    },
+    "approval_scope": {
+      "default": "N4 verification release means the listed requirements were verified, for the stated design revision, by the recorded and calibrated evidence. It feeds the next controlled lifecycle step (N8 genealogy and monitoring, N6 / N7 planning). It is NOT product safety certification or a regulatory approval, except where an accredited laboratory certificate in the package states so for its own scope.",
+      "title": "Approval Scope",
+      "type": "string"
+    }
+  },
+  "required": [
+    "intake_id",
+    "tenant_id",
+    "project_id",
+    "prd_id",
+    "prd_artifact",
+    "prd_revision",
+    "prd_payload_sha256",
+    "design_refs",
+    "design_revision",
+    "requirements",
+    "hazards",
+    "release_source_id",
+    "synthetic",
+    "locked_by",
+    "locked_at"
+  ],
+  "title": "N4DesignIntake",
+  "type": "object"
+}

@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n4_instrument",
+  "additionalProperties": false,
+  "properties": {
+    "instrument_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+      "title": "Instrument Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "kind": {
+      "enum": [
+        "DMM",
+        "POWER_SUPPLY",
+        "ELECTRONIC_LOAD",
+        "OSCILLOSCOPE",
+        "POWER_ANALYZER",
+        "HIPOT_TESTER",
+        "INSULATION_TESTER",
+        "TOUCH_CURRENT_METER",
+        "THERMAL_CHAMBER",
+        "AOI_STATION",
+        "CALIPER",
+        "MEASURING_MICROSCOPE",
+        "OTHER"
+      ],
+      "title": "Kind",
+      "type": "string"
+    },
+    "manufacturer": {
+      "title": "Manufacturer",
+      "type": "string"
+    },
+    "model": {
+      "title": "Model",
+      "type": "string"
+    },
+    "serial": {
+      "title": "Serial",
+      "type": "string"
+    },
+    "firmware": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Firmware"
+    },
+    "resource": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "VISA resource or TCPIP0::host::5025::SOCKET",
+      "title": "Resource"
+    },
+    "registered_by": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Registered By"
+    },
+    "registered_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Registered At"
+    }
+  },
+  "required": [
+    "instrument_id",
+    "tenant_id",
+    "kind",
+    "manufacturer",
+    "model",
+    "serial"
+  ],
+  "title": "N4Instrument",
+  "type": "object"
+}

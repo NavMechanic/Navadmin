@@ -1,0 +1,3 @@
+record_id,record_type,buyer_name,buyer_country,buyer_type,relationship_stage,recorded_at,service_categories,stated_budget_amount,stated_budget_currency,budget_status,do_not_contact,buyer_identifiers
+CRM-0001,CRM_ACCOUNT,Stadtwerke Beispielstadt,DE,PUBLIC,WARM,2026-11-20T09:00:00Z,power_electronics,,,,false,vat=DE999999999
+CRM-0002,INTERVIEW,Example Hospital Group,IN,PRIVATE,COLD,2026-11-18T09:00:00Z,power_electronics,2500000,INR,APPROVED,false,

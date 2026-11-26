@@ -1,0 +1,29 @@
+{
+  "format": "athena-scpi-log/1",
+  "station_id": "ATE-01",
+  "operator": "op-1",
+  "test_id": "T-01",
+  "unit_serial": "PSU-0001",
+  "method_ref": {
+    "method_id": "SOP-ATE-001",
+    "revision": "C"
+  },
+  "instrument": {
+    "resource": "TCPIP0::10.0.0.5::5025::SOCKET",
+    "idn": "Keysight Technologies,34465A,MY59012345,A.03.01-02.40",
+    "calibration_id": "CAL-DMM-1"
+  },
+  "records": [
+    {
+      "t": "2026-11-20T09:00:00Z",
+      "command": "MEAS:VOLT:DC?",
+      "response": "+2.40012000E+01",
+      "characteristic": "output_voltage",
+      "unit": "V",
+      "expanded_uncertainty": "0.05",
+      "k": 2
+    }
+  ],
+  "attachments": [],
+  "claimed_provenance": "SYNTHETIC"
+}

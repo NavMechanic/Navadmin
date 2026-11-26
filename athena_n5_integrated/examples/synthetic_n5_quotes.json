@@ -1,0 +1,148 @@
+[
+  {
+    "format": "athena-quote/1",
+    "bom_intake_id": "N5I-DEMO",
+    "design_revision": "B",
+    "issued_at": "2026-11-25T09:00:00Z",
+    "valid_until": "2030-12-31T00:00:00Z",
+    "source_id": "SRC-QUOTES",
+    "supplier_id": "SUP-DEMO-DIST",
+    "quote_ref": "SQ-1001",
+    "offers": [
+      {
+        "line": null,
+        "quoted_mpn": "GRM32ER72A475KA88",
+        "currency": "INR",
+        "moq": 10,
+        "pack_multiple": 10,
+        "availability": "STOCK",
+        "stock_qty": 5000,
+        "lead_time_days": 5,
+        "price_breaks": [
+          {
+            "min_qty": 1,
+            "unit_price": "6.50"
+          }
+        ],
+        "line_charges": [
+          {
+            "kind": "HANDLING",
+            "amount": "12"
+          }
+        ]
+      },
+      {
+        "line": null,
+        "quoted_mpn": "SRP1270-220M",
+        "currency": "INR",
+        "moq": 1,
+        "pack_multiple": 1,
+        "availability": "STOCK",
+        "stock_qty": 5000,
+        "lead_time_days": 5,
+        "price_breaks": [
+          {
+            "min_qty": 1,
+            "unit_price": "9.00"
+          }
+        ],
+        "line_charges": [
+          {
+            "kind": "HANDLING",
+            "amount": "12"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "format": "athena-quote/1",
+    "bom_intake_id": "N5I-DEMO",
+    "design_revision": "B",
+    "issued_at": "2026-11-25T09:00:00Z",
+    "valid_until": "2030-12-31T00:00:00Z",
+    "source_id": "SRC-QUOTES",
+    "supplier_id": "SUP-DEMO-DIST2",
+    "quote_ref": "SQ-2002",
+    "offers": [
+      {
+        "line": null,
+        "quoted_mpn": "GRM32ER72A475KA88",
+        "currency": "INR",
+        "moq": 1,
+        "pack_multiple": 1,
+        "availability": "STOCK",
+        "stock_qty": 5000,
+        "lead_time_days": 5,
+        "price_breaks": [
+          {
+            "min_qty": 1,
+            "unit_price": "6.80"
+          }
+        ],
+        "line_charges": [
+          {
+            "kind": "HANDLING",
+            "amount": "12"
+          }
+        ]
+      },
+      {
+        "line": null,
+        "quoted_mpn": "SRP1270-220M",
+        "currency": "INR",
+        "moq": 1,
+        "pack_multiple": 1,
+        "availability": "STOCK",
+        "stock_qty": 6,
+        "lead_time_days": 5,
+        "price_breaks": [
+          {
+            "min_qty": 1,
+            "unit_price": "8.40"
+          }
+        ],
+        "line_charges": [
+          {
+            "kind": "HANDLING",
+            "amount": "12"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "format": "athena-quote/1",
+    "bom_intake_id": "N5I-DEMO",
+    "design_revision": "B",
+    "issued_at": "2026-11-25T09:00:00Z",
+    "valid_until": "2030-12-31T00:00:00Z",
+    "source_id": "SRC-QUOTES",
+    "supplier_id": "SUP-DEMO-BROKER",
+    "quote_ref": "SPOT-77",
+    "offers": [
+      {
+        "line": null,
+        "quoted_mpn": "GRM32ER72A475KA88",
+        "currency": "INR",
+        "moq": 1,
+        "pack_multiple": 1,
+        "availability": "STOCK",
+        "stock_qty": 5000,
+        "lead_time_days": 5,
+        "price_breaks": [
+          {
+            "min_qty": 1,
+            "unit_price": "5.20"
+          }
+        ],
+        "line_charges": [
+          {
+            "kind": "HANDLING",
+            "amount": "12"
+          }
+        ]
+      }
+    ]
+  }
+]

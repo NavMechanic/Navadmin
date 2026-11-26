@@ -1,0 +1,753 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:MarketBatchPayload.v1",
+  "$defs": {
+    "Derivation": {
+      "additionalProperties": false,
+      "properties": {
+        "formula": {
+          "title": "Formula",
+          "type": "string"
+        },
+        "inputs": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Inputs",
+          "type": "array"
+        },
+        "computed_by": {
+          "default": "n0-deterministic",
+          "title": "Computed By",
+          "type": "string"
+        }
+      },
+      "required": [
+        "formula",
+        "inputs"
+      ],
+      "title": "Derivation",
+      "type": "object"
+    },
+    "EvidenceSnippet": {
+      "additionalProperties": false,
+      "properties": {
+        "source_ref": {
+          "description": "blob_id, file URI or 'payload'",
+          "minLength": 1,
+          "title": "Source Ref",
+          "type": "string"
+        },
+        "text": {
+          "maxLength": 2000,
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        },
+        "page": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Page"
+        },
+        "char_start": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Char Start"
+        },
+        "char_end": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Char End"
+        }
+      },
+      "required": [
+        "source_ref",
+        "text"
+      ],
+      "title": "EvidenceSnippet",
+      "type": "object"
+    },
+    "MarketAmount": {
+      "additionalProperties": false,
+      "description": "Amount as stated by the source. Deliberately unconstrained in sign: N1.4 guardrails exclude\nnegative or malformed values per observation instead of rejecting the whole batch.",
+      "properties": {
+        "amount": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Amount"
+        },
+        "currency": {
+          "pattern": "^[A-Z]{3}$",
+          "title": "Currency",
+          "type": "string"
+        }
+      },
+      "required": [
+        "amount",
+        "currency"
+      ],
+      "title": "MarketAmount",
+      "type": "object"
+    },
+    "MarketObservation": {
+      "additionalProperties": false,
+      "description": "One piece of market evidence: a tender, an award, a trade statistic, a budget line, an\ninterview or a CRM fact. ``spend_type`` is decided by N1, not by the submitter.",
+      "properties": {
+        "schema_version": {
+          "const": "MarketObservation.v1",
+          "default": "MarketObservation.v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "evidence_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "observation_type": {
+          "enum": [
+            "TENDER_NOTICE",
+            "CONTRACT_AWARD",
+            "TRADE_STATISTIC",
+            "BUDGET_DOCUMENT",
+            "BUYER_INTERVIEW",
+            "CRM_RECORD"
+          ],
+          "title": "Observation Type",
+          "type": "string"
+        },
+        "source_connector": {
+          "enum": [
+            "UN_COMTRADE",
+            "SAM_GOV",
+            "TED_EU",
+            "INDIA_CPPP",
+            "CRM",
+            "INTERVIEW",
+            "MANUAL"
+          ],
+          "title": "Source Connector",
+          "type": "string"
+        },
+        "source_url": {
+          "anyOf": [
+            {
+              "maxLength": 2048,
+              "pattern": "^(https?|n0)://",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Url"
+        },
+        "source_record_id": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Record Id"
+        },
+        "buyer_name": {
+          "anyOf": [
+            {
+              "maxLength": 512,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Buyer Name"
+        },
+        "buyer_identifiers": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "e.g. {'uei': ..., 'vat': ...}",
+          "title": "Buyer Identifiers",
+          "type": "object"
+        },
+        "buyer_country": {
+          "anyOf": [
+            {
+              "pattern": "^[A-Z]{2}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Buyer Country"
+        },
+        "buyer_type": {
+          "anyOf": [
+            {
+              "enum": [
+                "PUBLIC",
+                "PRIVATE"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Buyer Type"
+        },
+        "title": {
+          "anyOf": [
+            {
+              "maxLength": 1024,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Title"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "maxLength": 20000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "service_category": {
+          "anyOf": [
+            {
+              "pattern": "^[a-z][a-z0-9_]{1,79}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Service Category"
+        },
+        "classification_codes": {
+          "additionalProperties": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "description": "{'cpv': [...], 'naics': [...], 'hs': [...]}",
+          "title": "Classification Codes",
+          "type": "object"
+        },
+        "amount": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MarketAmount"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "amount_kind": {
+          "anyOf": [
+            {
+              "enum": [
+                "AWARD_VALUE",
+                "ESTIMATED_VALUE",
+                "BUDGET",
+                "TRADE_VALUE",
+                "STATED_SPEND"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Amount Kind"
+        },
+        "budget_status": {
+          "anyOf": [
+            {
+              "enum": [
+                "APPROVED",
+                "PLANNED",
+                "EXPLORATORY"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Budget Status"
+        },
+        "published_at": {
+          "format": "date-time",
+          "title": "Published At",
+          "type": "string"
+        },
+        "deadline_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Deadline At"
+        },
+        "quantity": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Quantity"
+        },
+        "requirements": {
+          "items": {
+            "$ref": "#/$defs/Requirement"
+          },
+          "title": "Requirements",
+          "type": "array"
+        },
+        "compliance_standards": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Compliance Standards",
+          "type": "array"
+        },
+        "payment_terms": {
+          "anyOf": [
+            {
+              "maxLength": 512,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Payment Terms"
+        },
+        "corrigendum_seq": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Corrigendum Seq",
+          "type": "integer"
+        },
+        "related_evidence_ids": {
+          "description": "e.g. an award lists the notice it awards",
+          "items": {
+            "type": "string"
+          },
+          "title": "Related Evidence Ids",
+          "type": "array"
+        },
+        "attachments": {
+          "items": {
+            "$ref": "#/$defs/TenderAttachment"
+          },
+          "title": "Attachments",
+          "type": "array"
+        },
+        "relationship_stage": {
+          "anyOf": [
+            {
+              "enum": [
+                "NONE",
+                "COLD",
+                "WARM",
+                "ACTIVE"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Relationship Stage"
+        },
+        "do_not_contact": {
+          "default": false,
+          "title": "Do Not Contact",
+          "type": "boolean"
+        },
+        "extraction_method": {
+          "default": "STRUCTURED",
+          "enum": [
+            "STRUCTURED",
+            "SLM",
+            "MANUAL"
+          ],
+          "title": "Extraction Method",
+          "type": "string"
+        },
+        "extraction_model_run_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Extraction Model Run Id"
+        },
+        "evidence_snippets": {
+          "items": {
+            "$ref": "#/$defs/EvidenceSnippet"
+          },
+          "title": "Evidence Snippets",
+          "type": "array"
+        },
+        "raw_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Raw Sha256"
+        },
+        "synthetic": {
+          "default": false,
+          "title": "Synthetic",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "evidence_id",
+        "observation_type",
+        "source_connector",
+        "published_at"
+      ],
+      "title": "MarketObservation.v1",
+      "type": "object"
+    },
+    "Requirement": {
+      "additionalProperties": false,
+      "description": "One value. ``value_origin`` says who stated it: the customer, a measurement, N0's own\ndeterministic derivation, or a model extraction awaiting human confirmation.",
+      "properties": {
+        "schema_version": {
+          "const": "Requirement.v1",
+          "default": "Requirement.v1",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "req_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+          "title": "Req Id",
+          "type": "string"
+        },
+        "parameter": {
+          "description": "snake_case with a unit suffix, e.g. output_voltage_v",
+          "pattern": "^[a-z][a-z0-9_]{1,79}$",
+          "title": "Parameter",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Value"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit"
+        },
+        "tolerance": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Tolerance"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "operating_conditions": {
+          "additionalProperties": true,
+          "title": "Operating Conditions",
+          "type": "object"
+        },
+        "value_origin": {
+          "enum": [
+            "CUSTOMER",
+            "MEASURED",
+            "DERIVED",
+            "MODEL_EXTRACTED"
+          ],
+          "title": "Value Origin",
+          "type": "string"
+        },
+        "evidence_snippets": {
+          "items": {
+            "$ref": "#/$defs/EvidenceSnippet"
+          },
+          "title": "Evidence Snippets",
+          "type": "array"
+        },
+        "derivation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Derivation"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "si_value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Si Value"
+        },
+        "si_unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Si Unit"
+        }
+      },
+      "required": [
+        "req_id",
+        "parameter",
+        "value",
+        "value_origin"
+      ],
+      "title": "Requirement.v1",
+      "type": "object"
+    },
+    "TenderAttachment": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sha256"
+        },
+        "required": {
+          "default": false,
+          "title": "Required",
+          "type": "boolean"
+        },
+        "present": {
+          "default": true,
+          "title": "Present",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "TenderAttachment",
+      "type": "object"
+    },
+    "Tolerance": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "ABS",
+            "PCT"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "plus": {
+          "title": "Plus",
+          "type": "number"
+        },
+        "minus": {
+          "title": "Minus",
+          "type": "number"
+        }
+      },
+      "required": [
+        "kind",
+        "plus",
+        "minus"
+      ],
+      "title": "Tolerance",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "batch_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+      "title": "Batch Id",
+      "type": "string"
+    },
+    "connector": {
+      "enum": [
+        "UN_COMTRADE",
+        "SAM_GOV",
+        "TED_EU",
+        "INDIA_CPPP",
+        "CRM",
+        "INTERVIEW",
+        "MANUAL"
+      ],
+      "title": "Connector",
+      "type": "string"
+    },
+    "retrieved_at": {
+      "format": "date-time",
+      "title": "Retrieved At",
+      "type": "string"
+    },
+    "query": {
+      "additionalProperties": true,
+      "title": "Query",
+      "type": "object"
+    },
+    "raw_payload_sha256": {
+      "anyOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Raw Payload Sha256"
+    },
+    "observations": {
+      "items": {
+        "$ref": "#/$defs/MarketObservation"
+      },
+      "minItems": 1,
+      "title": "Observations",
+      "type": "array"
+    }
+  },
+  "required": [
+    "batch_id",
+    "connector",
+    "retrieved_at",
+    "observations"
+  ],
+  "title": "MarketBatchPayload.v1",
+  "type": "object"
+}

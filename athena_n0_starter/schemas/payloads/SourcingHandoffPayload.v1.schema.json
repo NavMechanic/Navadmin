@@ -1,0 +1,602 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:n0:schema:SourcingHandoffPayload.v1",
+  "$defs": {
+    "FxAssumption": {
+      "additionalProperties": false,
+      "properties": {
+        "fx_id": {
+          "title": "Fx Id",
+          "type": "string"
+        },
+        "from_currency": {
+          "pattern": "^[A-Z]{3}$",
+          "title": "From Currency",
+          "type": "string"
+        },
+        "to_currency": {
+          "pattern": "^[A-Z]{3}$",
+          "title": "To Currency",
+          "type": "string"
+        },
+        "rate": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "description": "1 unit of from_currency = rate units of to_currency",
+          "title": "Rate"
+        },
+        "as_of": {
+          "format": "date",
+          "title": "As Of",
+          "type": "string"
+        },
+        "source": {
+          "minLength": 3,
+          "title": "Source",
+          "type": "string"
+        },
+        "valid_until": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Valid Until"
+        }
+      },
+      "required": [
+        "fx_id",
+        "from_currency",
+        "to_currency",
+        "rate",
+        "as_of",
+        "source"
+      ],
+      "title": "FxAssumption",
+      "type": "object"
+    },
+    "LineCharge": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "HANDLING",
+            "REELING",
+            "CUT_TAPE",
+            "PACKAGING",
+            "MIN_ORDER_SURCHARGE"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "amount": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Amount"
+        }
+      },
+      "required": [
+        "kind",
+        "amount"
+      ],
+      "title": "LineCharge",
+      "type": "object"
+    },
+    "PriceBreak": {
+      "additionalProperties": false,
+      "properties": {
+        "min_qty": {
+          "minimum": 1,
+          "title": "Min Qty",
+          "type": "integer"
+        },
+        "unit_price": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Unit Price"
+        }
+      },
+      "required": [
+        "min_qty",
+        "unit_price"
+      ],
+      "title": "PriceBreak",
+      "type": "object"
+    },
+    "SourcedLine": {
+      "additionalProperties": false,
+      "description": "One BOM line with the eligible offer that ranked first by extended material cost.",
+      "properties": {
+        "line": {
+          "minimum": 1,
+          "title": "Line",
+          "type": "integer"
+        },
+        "mpn": {
+          "title": "Mpn",
+          "type": "string"
+        },
+        "manufacturer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Manufacturer"
+        },
+        "qty_per_unit": {
+          "minimum": 1,
+          "title": "Qty Per Unit",
+          "type": "integer"
+        },
+        "q_required": {
+          "minimum": 1,
+          "title": "Q Required",
+          "type": "integer"
+        },
+        "critical": {
+          "default": false,
+          "title": "Critical",
+          "type": "boolean"
+        },
+        "supplier_id": {
+          "title": "Supplier Id",
+          "type": "string"
+        },
+        "supplier_kind": {
+          "enum": [
+            "MANUFACTURER",
+            "DISTRIBUTOR",
+            "EMS",
+            "ODM"
+          ],
+          "title": "Supplier Kind",
+          "type": "string"
+        },
+        "supplier_qualification": {
+          "title": "Supplier Qualification",
+          "type": "string"
+        },
+        "quote_id": {
+          "title": "Quote Id",
+          "type": "string"
+        },
+        "quote_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Quote Sha256",
+          "type": "string"
+        },
+        "quote_source_id": {
+          "title": "Quote Source Id",
+          "type": "string"
+        },
+        "quoted_mpn": {
+          "title": "Quoted Mpn",
+          "type": "string"
+        },
+        "moq": {
+          "minimum": 1,
+          "title": "Moq",
+          "type": "integer"
+        },
+        "pack_multiple": {
+          "minimum": 1,
+          "title": "Pack Multiple",
+          "type": "integer"
+        },
+        "q_order": {
+          "minimum": 1,
+          "title": "Q Order",
+          "type": "integer"
+        },
+        "price_breaks": {
+          "items": {
+            "$ref": "#/$defs/PriceBreak"
+          },
+          "minItems": 1,
+          "title": "Price Breaks",
+          "type": "array"
+        },
+        "unit_price": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Unit Price"
+        },
+        "currency": {
+          "pattern": "^[A-Z]{3}$",
+          "title": "Currency",
+          "type": "string"
+        },
+        "line_charges": {
+          "items": {
+            "$ref": "#/$defs/LineCharge"
+          },
+          "title": "Line Charges",
+          "type": "array"
+        },
+        "extended_cost": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "description": "q_order × unit_price + line charges, quote currency",
+          "title": "Extended Cost"
+        },
+        "fx_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fx Id"
+        },
+        "fx_rate": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fx Rate"
+        },
+        "extended_cost_base": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Extended Cost Base"
+        },
+        "availability": {
+          "enum": [
+            "STOCK",
+            "FACTORY_ORDER"
+          ],
+          "title": "Availability",
+          "type": "string"
+        },
+        "stock_qty": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Stock Qty"
+        },
+        "lead_time_days": {
+          "minimum": 0,
+          "title": "Lead Time Days",
+          "type": "integer"
+        },
+        "valid_until": {
+          "format": "date-time",
+          "title": "Valid Until",
+          "type": "string"
+        },
+        "eligible_offers": {
+          "minimum": 1,
+          "title": "Eligible Offers",
+          "type": "integer"
+        },
+        "risk_flags": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Risk Flags",
+          "type": "array"
+        }
+      },
+      "required": [
+        "line",
+        "mpn",
+        "qty_per_unit",
+        "q_required",
+        "supplier_id",
+        "supplier_kind",
+        "supplier_qualification",
+        "quote_id",
+        "quote_sha256",
+        "quote_source_id",
+        "quoted_mpn",
+        "moq",
+        "pack_multiple",
+        "q_order",
+        "price_breaks",
+        "unit_price",
+        "currency",
+        "extended_cost",
+        "extended_cost_base",
+        "availability",
+        "lead_time_days",
+        "valid_until",
+        "eligible_offers"
+      ],
+      "title": "SourcedLine",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "N5 → N6 / N7: an indicative material quote for one engineering BOM revision. A draft input for\ncommercial bidding (N6) and costing (N7), never a purchase order or a full product cost.",
+  "properties": {
+    "handoff_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\-]{1,127}$",
+      "title": "Handoff Id",
+      "type": "string"
+    },
+    "target": {
+      "enum": [
+        "N6",
+        "N7"
+      ],
+      "title": "Target",
+      "type": "string"
+    },
+    "prd_ref": {
+      "title": "Prd Ref",
+      "type": "string"
+    },
+    "bom_ref": {
+      "description": "N3 BOM_RELEASE ARTIFACT_ID@REVISION",
+      "title": "Bom Ref",
+      "type": "string"
+    },
+    "design_revision": {
+      "maxLength": 16,
+      "minLength": 1,
+      "title": "Design Revision",
+      "type": "string"
+    },
+    "pcb_revision": {
+      "anyOf": [
+        {
+          "maxLength": 16,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Pcb Revision"
+    },
+    "build_quantity": {
+      "minimum": 1,
+      "title": "Build Quantity",
+      "type": "integer"
+    },
+    "report_id": {
+      "title": "Report Id",
+      "type": "string"
+    },
+    "report_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Report Sha256",
+      "type": "string"
+    },
+    "quote_hashes": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Quote Hashes",
+      "type": "array"
+    },
+    "review_id": {
+      "title": "Review Id",
+      "type": "string"
+    },
+    "approved_by": {
+      "title": "Approved By",
+      "type": "string"
+    },
+    "submitters": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Submitters",
+      "type": "array"
+    },
+    "quote_source_ids": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Quote Source Ids",
+      "type": "array"
+    },
+    "base_currency": {
+      "pattern": "^[A-Z]{3}$",
+      "title": "Base Currency",
+      "type": "string"
+    },
+    "lines": {
+      "items": {
+        "$ref": "#/$defs/SourcedLine"
+      },
+      "minItems": 1,
+      "title": "Lines",
+      "type": "array"
+    },
+    "fx_assumptions": {
+      "items": {
+        "$ref": "#/$defs/FxAssumption"
+      },
+      "title": "Fx Assumptions",
+      "type": "array"
+    },
+    "indicative_total": {
+      "anyOf": [
+        {
+          "minimum": 0.0,
+          "type": "number"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "description": "Σ extended_cost_base",
+      "title": "Indicative Total"
+    },
+    "indicative_unit_cost": {
+      "anyOf": [
+        {
+          "minimum": 0.0,
+          "type": "number"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "description": "indicative_total / build_quantity, 4 decimals",
+      "title": "Indicative Unit Cost"
+    },
+    "indicative_scope": {
+      "title": "Indicative Scope",
+      "type": "string"
+    },
+    "excluded_cost_categories": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Excluded Cost Categories",
+      "type": "array"
+    },
+    "excluded_items_reported": {
+      "description": "quoted NRE / freight etc., not in the total",
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Excluded Items Reported",
+      "type": "array"
+    },
+    "verification_ref": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "N4 VERIFICATION_RELEASE for this revision",
+      "title": "Verification Ref"
+    },
+    "commercial": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Commercial"
+    },
+    "finance": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Finance"
+    },
+    "approval_scope": {
+      "title": "Approval Scope",
+      "type": "string"
+    }
+  },
+  "required": [
+    "handoff_id",
+    "target",
+    "prd_ref",
+    "bom_ref",
+    "design_revision",
+    "build_quantity",
+    "report_id",
+    "report_sha256",
+    "quote_hashes",
+    "review_id",
+    "approved_by",
+    "quote_source_ids",
+    "base_currency",
+    "lines",
+    "indicative_total",
+    "indicative_unit_cost",
+    "indicative_scope",
+    "excluded_cost_categories",
+    "approval_scope"
+  ],
+  "title": "SourcingHandoffPayload.v1",
+  "type": "object"
+}

@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n4_qualification",
+  "additionalProperties": false,
+  "properties": {
+    "principal_id": {
+      "title": "Principal Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Tenant Id"
+    },
+    "methods": {
+      "items": {
+        "enum": [
+          "SIM",
+          "BENCH_ATE",
+          "ACCREDITED_LAB",
+          "INSPECTION"
+        ],
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Methods",
+      "type": "array"
+    },
+    "valid_until": {
+      "format": "date",
+      "title": "Valid Until",
+      "type": "string"
+    },
+    "basis": {
+      "description": "training record / competence evidence",
+      "minLength": 3,
+      "title": "Basis",
+      "type": "string"
+    },
+    "granted_by": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Granted By"
+    },
+    "granted_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Granted At"
+    }
+  },
+  "required": [
+    "principal_id",
+    "methods",
+    "valid_until",
+    "basis"
+  ],
+  "title": "N4Qualification",
+  "type": "object"
+}

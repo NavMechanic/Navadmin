@@ -1,0 +1,233 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:athena:schema:n1_action_optimization_result",
+  "$defs": {
+    "BlockedAction": {
+      "additionalProperties": false,
+      "properties": {
+        "action_id": {
+          "title": "Action Id",
+          "type": "string"
+        },
+        "action_type": {
+          "title": "Action Type",
+          "type": "string"
+        },
+        "policy_codes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Policy Codes",
+          "type": "array"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "action_id",
+        "action_type",
+        "policy_codes",
+        "reason"
+      ],
+      "title": "BlockedAction",
+      "type": "object"
+    },
+    "RankedAction": {
+      "additionalProperties": false,
+      "properties": {
+        "rank": {
+          "title": "Rank",
+          "type": "integer"
+        },
+        "action_id": {
+          "title": "Action Id",
+          "type": "string"
+        },
+        "action_type": {
+          "title": "Action Type",
+          "type": "string"
+        },
+        "target_account_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Target Account Id"
+        },
+        "execution_cost": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Execution Cost"
+        },
+        "delay_cost": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Delay Cost"
+        },
+        "expected_loss_avoided": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Expected Loss Avoided"
+        },
+        "net_value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Net Value"
+        },
+        "recommended": {
+          "title": "Recommended",
+          "type": "boolean"
+        },
+        "within_budget": {
+          "title": "Within Budget",
+          "type": "boolean"
+        },
+        "rationale": {
+          "title": "Rationale",
+          "type": "string"
+        },
+        "status": {
+          "const": "RECOMMENDED_NOT_EXECUTED",
+          "default": "RECOMMENDED_NOT_EXECUTED",
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "rank",
+        "action_id",
+        "action_type",
+        "target_account_id",
+        "execution_cost",
+        "delay_cost",
+        "expected_loss_avoided",
+        "net_value",
+        "recommended",
+        "within_budget",
+        "rationale"
+      ],
+      "title": "RankedAction",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "ActionOptimizationResult.v1",
+      "default": "ActionOptimizationResult.v1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "optimization_id": {
+      "title": "Optimization Id",
+      "type": "string"
+    },
+    "tenant_id": {
+      "title": "Tenant Id",
+      "type": "string"
+    },
+    "report_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Report Id"
+    },
+    "currency": {
+      "title": "Currency",
+      "type": "string"
+    },
+    "ranked": {
+      "items": {
+        "$ref": "#/$defs/RankedAction"
+      },
+      "title": "Ranked",
+      "type": "array"
+    },
+    "blocked": {
+      "items": {
+        "$ref": "#/$defs/BlockedAction"
+      },
+      "title": "Blocked",
+      "type": "array"
+    },
+    "total_recommended_cost": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "title": "Total Recommended Cost"
+    },
+    "executed": {
+      "const": false,
+      "default": false,
+      "title": "Executed",
+      "type": "boolean"
+    },
+    "execution_note": {
+      "default": "N1.5 ranks permissible actions for a human to decide on. It never sends outreach, submits bids or commits spend.",
+      "title": "Execution Note",
+      "type": "string"
+    },
+    "created_by": {
+      "title": "Created By",
+      "type": "string"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "optimization_id",
+    "tenant_id",
+    "report_id",
+    "currency",
+    "ranked",
+    "blocked",
+    "total_recommended_cost",
+    "created_by",
+    "created_at"
+  ],
+  "title": "ActionOptimizationResult.v1",
+  "type": "object"
+}
